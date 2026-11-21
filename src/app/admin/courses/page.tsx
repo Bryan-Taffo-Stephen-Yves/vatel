@@ -233,6 +233,8 @@ function printList(code: string, items: ShoppingItem[], total: number) {
     + list.map((i) => `<tr><td style="width:18px">☐</td><td>${escapeHtml(i.label)}</td><td style="text-align:right;white-space:nowrap">${escapeHtml(qtyLabel(i.qty, i.unit))}</td><td style="text-align:right;color:#666;white-space:nowrap">${i.est_cost ? fcfa(i.est_cost) : ""}</td></tr>`).join("")).join("");
   w.document.write(`<html><head><title>Courses ${escapeHtml(code)}</title><style>body{font-family:system-ui,sans-serif;padding:24px;color:#16181d}h1{margin:0;font-size:22px}p{color:#555;margin:4px 0 16px}table{width:100%;border-collapse:collapse;font-size:14px}td{padding:6px 4px;border-bottom:1px solid #eee}</style></head><body>
   <h1>Vatel Cantine · courses ${escapeHtml(code)}</h1><p>${new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Abidjan" })} · ${items.length} articles · budget estimé ${fcfa(total)} · calculé d'après les prévisions des 3 prochains jours</p>
-  <table>${rows}</table><script>window.print()</script></body></html>`);
+  <table>${rows}</table></body></html>`);
   w.document.close();
+  w.focus();
+  w.print();   // lancé d'ici : un script dans la fenêtre serait bloqué par la règle de sécurité (CSP)
 }

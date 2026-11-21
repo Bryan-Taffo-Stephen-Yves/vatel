@@ -13,14 +13,52 @@ const AREA_ROLES: Record<string, string[]> = {
 };
 
 
+// Politique de sécurité du contenu (CSP) : seuls les scripts de l'appli, porteurs du jeton de la visite (nonce),
+// peuvent s'exécuter ; les données ne partent que vers Supabase ; images seulement de l'appli, de Supabase et des
+// fonds de carte OpenStreetMap. Le jeton change à chaque visite : un script injecté ne peut pas le deviner.
+// 'wasm-unsafe-eval' seulement sur la caméra d'affluence (modèle de détection en WebAssembly).
+const SUPABASE_HOST = new URL(SUPABASE_URL).host;
+function contentSecurityPolicy(nonce: string, path: string) {
+  const dev = process.env.NODE_ENV !== "production";
+  const wasm = path.startsWith("/scan/camera") ? " 'wasm-unsafe-eval'" : "";
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${wasm}${dev ? " 'unsafe-eval'" : ""}`,
+    "style-src 'self' 'unsafe-inline'",
+    `img-src 'self' data: blob: https://${SUPABASE_HOST} https://tile.openstreetmap.org`,
+    "font-src 'self' data:",
+    `connect-src 'self' https://${SUPABASE_HOST} wss://${SUPABASE_HOST}${dev ? " ws:" : ""}`,
+    "media-src 'self' blob:",
+    "worker-src 'self' blob:",
+    "manifest-src 'self'",
+    "frame-src 'none'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    ...(dev ? [] : ["upgrade-insecure-requests"]),
+  ].join("; ");
+}
+
 export async function middleware(req: NextRequest) {
-  let res = NextResponse.next({ request: req });
+  const nonce = btoa(crypto.randomUUID());
+  const csp = contentSecurityPolicy(nonce, req.nextUrl.pathname);
+  // Next.js lit le jeton dans l'en-tête de la requête et l'ajoute à ses propres scripts
+  const next = () => {
+    const h = new Headers(req.headers);
+    h.set("x-nonce", nonce);
+    h.set("Content-Security-Policy", csp);
+    const r = NextResponse.next({ request: { headers: h } });
+    r.headers.set("Content-Security-Policy", csp);
+    return r;
+  };
+  let res = next();
   const sb = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
       getAll: () => req.cookies.getAll(),
       setAll: (list) => {
         list.forEach(({ name, value }) => req.cookies.set(name, value));
-        res = NextResponse.next({ request: req });
+        res = next();
         list.forEach(({ name, value, options }) => res.cookies.set(name, value, options));
       },
     },

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import "@fontsource-variable/plus-jakarta-sans";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/toast";
@@ -19,7 +20,9 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  // Lire les en-têtes rend chaque page à la demande : Next.js y ajoute alors le jeton CSP de la visite (middleware)
+  await headers();
   return (
     <html lang="fr">
       <body className="min-h-dvh">

@@ -172,6 +172,8 @@ function printReceipt(r: Receipt) {
   <h1>VATEL · Cantine</h1><div style="font-size:12px">Reçu de recharge (espèces)</div><hr/>
   <p><span>Client</span><b>${escapeHtml(r.client)}</b></p><p><span>Montant</span><b>${fcfa(r.amount)}</b></p><p><span>Nouveau solde</span><b>${fcfa(r.balance_after)}</b></p>
   <hr/><p><span>Caissier</span><span>${escapeHtml(r.cashier)}</span></p><p><span>Date</span><span>${dateTime(r.at)}</span></p><p><span>Réf.</span><span>${escapeHtml(r.transaction_id.slice(0, 8).toUpperCase())}</span></p>
-  <hr/><div style="text-align:center;font-size:12px">Merci et bon appétit !</div><script>window.print()</script></body></html>`);
+  <hr/><div style="text-align:center;font-size:12px">Merci et bon appétit !</div></body></html>`);
   w.document.close();
+  w.focus();
+  w.print();   // lancé d'ici : un script dans la fenêtre serait bloqué par la règle de sécurité (CSP)
 }
