@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import {
   LayoutDashboard, Wallet, CalendarDays, UtensilsCrossed, TrendingUp, Boxes, BarChart3, Trash2, Star,
-  ChefHat, ClipboardList, Bike, PhoneCall, FileText, Users, Settings, LogOut, ScanLine, Smartphone, UserCog, ShoppingCart, ShieldCheck, MoreHorizontal,
+  ChefHat, ClipboardList, Bike, PhoneCall, Bot, FileText, Users, Settings, LogOut, ScanLine, Smartphone, UserCog, ShoppingCart, ShieldCheck, MoreHorizontal,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { Logo } from "@/components/logo";
@@ -24,6 +24,7 @@ const NAV: { href: string; label: string; icon: typeof Wallet; roles: Role[] }[]
   { href: "/admin/previsions", label: "Prévisions", icon: TrendingUp, roles: ["chef", "admin"] },
   { href: "/admin/stock", label: "Stock", icon: Boxes, roles: ["chef", "admin"] },
   { href: "/admin/courses", label: "Courses", icon: ShoppingCart, roles: ["chef", "admin"] },
+  { href: "/admin/approvisionnement", label: "Agent d'achats", icon: Bot, roles: ["chef", "admin"] },
   { href: "/admin/appels", label: "Appels fournisseurs", icon: PhoneCall, roles: ["chef", "admin"] },
   { href: "/admin/livraisons", label: "Livraisons", icon: Bike, roles: ["chef", "admin"] },
   { href: "/admin/rapports", label: "Rapports", icon: FileText, roles: ["chef", "admin"] },

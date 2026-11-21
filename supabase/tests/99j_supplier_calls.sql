@@ -68,10 +68,10 @@ select tests.code(public._supplier_call_started(:'o4', 'c8', 'simulation'), 'MAX
 
 -- Carnet de prix : commande libre, depuis le stock, mise à jour du dernier prix
 select tests.ok((select count(*) from public.supplier_products) >= 4, 'carnet de prix rempli');
-select tests.eq((select last_price from public.supplier_products where label like 'poulets entiers%'), 3000, 'dernier prix retenu : 60 000 / 20 = 3 000 F');
+select tests.eq((select p.last_price from public.supplier_products p join public.suppliers s on s.id = p.supplier_id where s.name = 'Boucherie Bamba' and p.label like 'poulets entiers%'), 3000, 'dernier prix retenu : 60 000 / 20 = 3 000 F');
 select tests.login('chef');
 select (public.supplier_order_create((select id from public.suppliers where name = 'Marché de Cocody'),
-  jsonb_build_array(jsonb_build_object('product_id', (select id from public.supplier_products where label = 'kg d''oignons'), 'qty', 10))) ->> 'order_id')::uuid as o5 \gset
+  jsonb_build_array(jsonb_build_object('product_id', (select id from public.supplier_products where label = 'kg d''oignons' and supplier_id = (select id from public.suppliers where name = 'Marché de Cocody')), 'qty', 10))) ->> 'order_id')::uuid as o5 \gset
 select tests.as_service();
 select tests.eq((select budget from public.supplier_orders where id = :'o5'), 8000, 'commande libre depuis le carnet : 10 kg × 800 F');
 update public.ingredients set stock_qty = 0, alert_threshold = 10 where name in (select name from public.ingredients limit 1);
