@@ -1146,6 +1146,26 @@ journal et message dans le groupe.
 
 ---
 
+## 20 ter. Bons invités : réceptions payées par l'école (construit)
+
+> **Réalisé** : migration `20261121200000_guest_vouchers` (compte système « Réceptions de l'école » sans connexion,
+> tables `guest_events` / `guest_vouchers`, réglage `guest_budget` {monthly}, `guest_event_create / _cancel / _vouchers`,
+> `guest_overview`, `guest_budget_set` (admin), `guest_redeem` (comptoir), `guest_report`, `admin_forecast` compte les invités),
+> section « Réceptions · bons invités » de la page Caisse (`src/components/admin/guest-events.tsx`), scanner, Rapports,
+> Prévisions. Tests : `supabase/tests/99z_guest_vouchers.sql`.
+
+- La caisse ou l'admin crée un événement : nom, jour, repas, nombre d'invités (1 à 300), plats prévus (facultatif, du menu
+  de ce repas), note pour la cuisine. Un ticket par invité au nom du compte système, **à 0 F** : aucun portefeuille touché.
+- **Budget Réceptions** mensuel (300 000 F par défaut, modifiable par l'admin) : compte les repas servis + les bons encore
+  valables ; un bon expiré ou annulé est rendu au budget ; création refusée si le budget est dépassé.
+- **Feuille A4 de QR** (3 par ligne) : « VATEL-INVITE:<ticket>.<code secret> » (code secret = `qr_nonce`, 128 bits), textes
+  échappés (`escapeHtml`). Valable le jour et pour le repas de l'événement (30 min avant l'ouverture → fin du service).
+- **Comptoir** : le scan affiche « Invité · <événement> », « Invité 3/15 · encore 12 à servir » et les plats prévus ; l'agent
+  choisit le plat comme pour un élève (portions et stock déduits). Pas de notification ni d'allergie pour le compte système.
+- **Cuisine** : les invités s'ajoutent aux clients attendus (prévisions et guide de production), « + 15 invités · Visite du
+  ministère » sur la carte du repas ; le chef est prévenu à la création.
+- **Rapports** : section « Réceptions » (événements, repas servis, montant payé par l'école, bons rendus) + lignes CSV.
+
 ## 21. Commandes à heure de retrait, Jean (WhatsApp) et Jean au téléphone (Retell)
 
 ### 21.1 Commande d'un plat avec heure de retrait

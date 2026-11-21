@@ -20,7 +20,8 @@ import { audioPref, say, setAudioPref, soundError, soundOk, soundServed, type Au
 
 type Dish = { menu_item_id: string; name: string; photo_url: string | null; available: boolean; left: number | null };
 type Scan = { ticket_id: string; client: string; ticket: string; extras: Extra[]; dishes: Dish[]; batch_size?: number; remaining?: number; gift_from?: string | null; is_reward?: boolean; method?: "pin"; secured?: boolean; avatar?: string | null; user_id?: string;
-  order?: { no: number; dish: string; pickup_at: string; ready: boolean } };
+  order?: { no: number; dish: string; pickup_at: string; ready: boolean };
+  guest?: { event: string; seq: number; guests: number; left: number; dishes: { menu_item_id: string; name: string; qty: number }[] } };
 type Fail = { code: string; message: string };
 // Allergies du client (après le scan) : plats à ne pas servir / à signaler
 type Risk = { severe: string[]; reasons: string[] };
@@ -137,14 +138,20 @@ export default function ScanPage() {
       setTimeout(reset, 3500);
       return;
     }
-    const r = await edge<Scan>("redeem-ticket", { token, service_date: date, service });
+    // Bon invité (délégation) : QR imprimé « VATEL-INVITE:… », vérifié par la base
+    const r = /^VATEL-INVITE:/i.test(token.trim())
+      ? await rpc<Scan>("guest_redeem", { p_code: token.trim(), p_service_date: date, p_service: service })
+      : await edge<Scan>("redeem-ticket", { token, service_date: date, service });
     if (r.ok) {
       const sc = r as unknown as Scan;
       soundOk();
       const extras = sc.extras?.length ? `Avec ${sc.extras.map((e) => e.name).join(" et ")}.` : "Sans supplément.";
-      say(sc.order ? `${sc.client.split(" ")[0]}. Commande numéro ${sc.order.no}. ${sc.order.dish}. ${sc.extras?.length ? extras : ""}`
+      say(sc.guest ? `Invité. ${sc.guest.event}.`
+        : sc.order ? `${sc.client.split(" ")[0]}. Commande numéro ${sc.order.no}. ${sc.order.dish}. ${sc.extras?.length ? extras : ""}`
         : `${sc.client.split(" ")[0]}. ${sc.ticket} valide. ${extras}`);
-      setScan(sc); loadCounters(); loadAlert(sc.ticket_id);
+      setScan(sc); loadCounters();
+      if (sc.guest) return; // compte système « Réceptions » : pas d'allergies ni d'avatar à charger
+      loadAlert(sc.ticket_id);
       // Bitmoji du client (aide à le reconnaître) : chargé juste après, sans retarder la validation
       supabase().from("tickets").select("user_id, user:profiles!tickets_user_id_fkey(avatar)").eq("id", sc.ticket_id).single()
         .then(({ data }) => { if (data) setScan((s) => s && s.ticket_id === sc.ticket_id ? { ...s, user_id: data.user_id, avatar: (data.user as unknown as { avatar: string | null } | null)?.avatar ?? null } : s); });
@@ -333,6 +340,10 @@ export default function ScanPage() {
               </span>
             )}
             {scan.gift_from && <span className="rounded-full bg-white/20 px-3 py-1">🎁 Offert par {scan.gift_from}</span>}
+            {scan.guest && <span className="rounded-full bg-white px-3 py-1 text-ink">🎫 Invité {scan.guest.seq}/{scan.guest.guests} · encore {scan.guest.left} à servir</span>}
+            {scan.guest && scan.guest.dishes.length > 0 && (
+              <span className="rounded-full bg-white/20 px-3 py-1">Prévu : {scan.guest.dishes.map((d) => `${d.qty} ${d.name}`).join(", ")}</span>
+            )}
             {scan.is_reward && <span className="rounded-full bg-white/20 px-3 py-1">⭐ Ticket fidélité</span>}
             {scan.method === "pin" && <span className="rounded-full bg-white px-3 py-1 text-ink">🔑 Sans QR · code PIN</span>}
             {scan.secured && <span className="rounded-full bg-white px-3 py-1 text-ink">📵 Anciens QR désactivés</span>}

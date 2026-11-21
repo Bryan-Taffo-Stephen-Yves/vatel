@@ -8,6 +8,7 @@ import { Card, PageTitle, Badge, Empty, input } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { dateTime, fcfa, signedFcfa } from "@/lib/format";
+import { GuestEvents } from "@/components/admin/guest-events";
 
 type U = { id: string; full_name: string; phone: string | null; short_code: string; role: string; points: number; is_blocked: boolean; balance: number; email: string };
 type Tx = { id: string; type: string; amount: number; balance_after: number; note: string | null; created_at: string };
@@ -156,6 +157,7 @@ export default function CashierPage() {
           </div>
         )}
       </div>
+      <GuestEvents />
     </>
   );
 }

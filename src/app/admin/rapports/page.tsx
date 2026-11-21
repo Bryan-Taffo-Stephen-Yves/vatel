@@ -14,6 +14,7 @@ type Sales = { revenue: number; sales: number; recharges: number; tickets: numbe
 type Waste = { prepared: number; served: number; lost: number; cost: number; dishes: { name: string; lost: number; cost: number; rate: number | null }[] };
 type Ratings = { dishes: { name: string; avg_stars: number | null; n: number; complaints_30d: number }[]; complaints: { label: string; n: number }[] };
 type Stock = { name: string; unit: string; stock_qty: number; alert_threshold: number };
+type Guests = { events: number; served: number; returned: number; cost: number };
 
 const PERIODS = { "7": "7 jours", "30": "30 jours", mois: "Ce mois-ci" } as const;
 type P = keyof typeof PERIODS;
@@ -28,6 +29,7 @@ export default function ReportsPage() {
   const [w, setW] = useState<Waste | null>(null);
   const [r, setR] = useState<Ratings | null>(null);
   const [low, setLow] = useState<Stock[]>([]);
+  const [g, setG] = useState<Guests | null>(null);
 
   useEffect(() => {
     setS(null); setW(null);
@@ -35,6 +37,7 @@ export default function ReportsPage() {
     sb.rpc("admin_sales", { p_from: from, p_to: today }).then(({ data }) => setS(data as Sales));
     sb.rpc("admin_waste", { p_from: from, p_to: today }).then(({ data }) => setW(data as Waste));
     sb.rpc("admin_ratings").then(({ data }) => setR(data as Ratings));
+    sb.rpc("guest_report", { p_from: from, p_to: today }).then(({ data }) => setG(data?.ok ? (data as Guests) : null));
     sb.from("ingredients").select("name, unit, stock_qty, alert_threshold").order("name")
       .then(({ data }) => setLow(((data ?? []) as Stock[]).filter((i) => Number(i.stock_qty) < Number(i.alert_threshold))));
   }, [from, today]);
@@ -50,7 +53,8 @@ export default function ReportsPage() {
       ["Indicateur", "Valeur"],
       ["Chiffre d'affaires (repas servis)", s.revenue], ["Ventes de tickets", s.sales], ["Recharges", s.recharges],
       ["Tickets vendus", s.tickets], ["Repas servis", s.served], ["Tickets expirés", s.expired], ["Annulations", s.cancelled],
-      ["Portions préparées", w.prepared], ["Portions jetées", w.lost], ["Coût du gaspillage (F)", w.cost], [],
+      ["Portions préparées", w.prepared], ["Portions jetées", w.lost], ["Coût du gaspillage (F)", w.cost],
+      ["Réceptions : repas invités servis", g?.served ?? 0], ["Réceptions : payé par l'école (F)", g?.cost ?? 0], [],
       ["Jour", "Chiffre d'affaires", "Repas servis"], ...s.daily.map((d) => [d.day, d.revenue, d.tickets]), [],
       ["Plat", "Servis", "Recettes", "Note"], ...s.dishes.map((d) => [d.name, d.sold, d.revenue, d.stars]),
     ]);
@@ -102,6 +106,13 @@ export default function ReportsPage() {
                 ))}</tbody>
               </table>
             </Section>
+
+            {g && g.events > 0 && (
+              <Section title="Réceptions (invités payés par l'école)">
+                <p className="text-sm"><b>{g.served}</b> repas servis à des invités lors de <b>{g.events}</b> événement{g.events > 1 ? "s" : ""} ·{" "}
+                  <b>{fcfa(g.cost)}</b> pris sur le budget Réceptions{g.returned > 0 && <span className="text-muted"> · {g.returned} bon{g.returned > 1 ? "s" : ""} non utilisé{g.returned > 1 ? "s" : ""} rendu{g.returned > 1 ? "s" : ""} au budget</span>}.</p>
+              </Section>
+            )}
 
             <div className="grid gap-x-6 sm:grid-cols-2 print:grid-cols-2">
               <Section title="Plats les plus servis">

@@ -10,7 +10,8 @@ import { addDays, dayLong, dayShort, dayNum, fcfa, todayISO } from "@/lib/format
 import type { ServiceKind } from "@/lib/types";
 
 type F = {
-  services: { service: ServiceKind; label: string; history: number | null; outstanding: number; expected: number; basis: string }[];
+  services: { service: ServiceKind; label: string; history: number | null; outstanding: number; expected: number; basis: string;
+    guests?: number; guest_events?: { name: string; guests: number; dishes: { name: string; qty: number }[] }[] }[];
   items: { id: string; service: ServiceKind; dish: string; planned: number | null; share: number; expected: number; recommended: number; basis: string; popularity: number; observed: number | null; days: number; prior: number; stars: number | null }[];
   ingredients: { id: string; name: string; unit: string; stock: number; need: number; to_buy: number; cost: number }[];
 };
@@ -63,6 +64,11 @@ export default function ForecastPage() {
                 <p className="text-sm font-bold">{s.label}</p>
                 <p className="text-2xl font-extrabold leading-tight">{s.expected}</p>
                 <p className="text-xs text-muted">{s.history != null ? `moy. ${s.history} · ` : ""}{s.outstanding} tickets</p>
+                {(s.guest_events ?? []).map((e) => (
+                  <p key={e.name} className="mt-1 text-xs font-bold text-ink" title={e.dishes.map((d) => `${d.qty} ${d.name}`).join(", ")}>
+                    + {e.guests} invité{e.guests > 1 ? "s" : ""} · {e.name}
+                  </p>
+                ))}
               </div>
             </div>
           ))}
