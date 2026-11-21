@@ -2,6 +2,10 @@
   command = "npm run build"
   publish = ".next"
 
+# Module Next.js de Netlify : fait tourner l'appli (pages, middleware). Sans lui, le site répond « Page introuvable ».
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
 [build.environment]
   NODE_VERSION = "22"
   NEXT_TELEMETRY_DISABLED = "1"
