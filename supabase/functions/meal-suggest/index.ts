@@ -46,17 +46,19 @@ Deno.serve(async (req) => {
   const tomorrow = new Date(Date.now() + 86400e3).toISOString().slice(0, 10);
   const { data: menu } = await db.from("menu_items")
     .select("id, service_date, service, price, is_sold_out, is_full, dish:dishes(id, name, composition, kcal, allergens, traces, diet_tags, photo_url), menu:menus!inner(status)")
-    .eq("menu.status", "published").in("service_date", [today, tomorrow]);
+    .eq("menu.status", "published").gte("service_date", today).lte("service_date", new Date(Date.now() + 7 * 86400e3).toISOString().slice(0, 10));
   const slots = [...new Set((menu ?? []).map((m: any) => `${m.service_date}|${m.service}`))]
     .filter((k) => { const [d, sv] = k.split("|"); return d > today || hm < (svc[sv]?.end ?? "24:00"); })
     .sort((a, b) => (a.split("|")[0] + ORDER.indexOf(a.split("|")[1])).localeCompare(b.split("|")[0] + ORDER.indexOf(b.split("|")[1])));
   const target = body.service && body.date ? `${body.date}|${body.service}` : slots[0];
-  if (!target) return json({ ok: true, empty: true, message: "Pas de menu publié pour les prochains repas." });
+  if (!target) return json({ ok: true, empty: true, message: "Pas de menu publié pour les 7 prochains jours." });
   const [date, service] = target.split("|");
   const items = (menu ?? []).filter((m: any) => m.service_date === date && m.service === service && !(m.is_sold_out || m.is_full));
   const candidates = items.filter((m: any) => conflicts(profile, m.dish).length === 0);
   const EN_SVC: Record<string, string> = { breakfast: "Breakfast", lunch: "Lunch", snack: "Snack", dinner: "Dinner" };
-  const label = body.lang === "en" ? `${EN_SVC[service] ?? service} ${date === today ? "today" : "tomorrow"}` : `${svc[service]?.label ?? service} ${date === today ? "d'aujourd'hui" : "de demain"}`;
+  const wd = new Date(date + "T12:00:00Z").getUTCDay();
+  const FR_D = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"], EN_D = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const label = body.lang === "en" ? `${EN_SVC[service] ?? service} ${date === today ? "today" : date === tomorrow ? "tomorrow" : `on ${EN_D[wd]}`}` : `${svc[service]?.label ?? service} ${date === today ? "d'aujourd'hui" : date === tomorrow ? "de demain" : `de ${FR_D[wd]}`}`;
   if (!candidates.length) return json({ ok: true, date, service, label, intro: "Aucun plat de ce repas ne correspond à tes allergies ou à ton régime 😕 Parle-en à la cuisine.", items: [] });
 
   // Historique : 60 jours, avec les notes
