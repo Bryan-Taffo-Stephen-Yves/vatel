@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { Smartphone, Banknote, Info, CheckCircle2, XCircle, Loader2 } from "lucide-react";
-import { edge, rpc } from "@/lib/supabase/client";
+import { edge, rpc, supabase } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -13,6 +13,7 @@ import { BiometricConfirm } from "@/components/app/biometric-confirm";
 import { fcfa } from "@/lib/format";
 import { useLang, useT } from "@/lib/i18n";
 import { phoneDigits } from "@/lib/phone";
+import { mobileMoneyFee } from "@/lib/fees";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { AmountInput } from "@/components/ui/amount-input";
 
@@ -50,6 +51,14 @@ export default function RechargePage() {
   const value = custom !== null ? parseInt(custom, 10) || 0 : amount;
   const operator = OPERATORS.find((o) => o.id === op)!;
   const phoneOk = /^(01|05|07)\d{8}$/.test(phone) && (!operator.prefix || phone.startsWith(operator.prefix));
+  // Frais Mobile Money payés par l'élève (réglage admin) : affichés avant de payer ; la base recalcule le même montant
+  const [mm, setMm] = useState<{ mode?: string; fee_percent?: number } | null>(null);
+  useEffect(() => {
+    supabase().from("settings").select("value").eq("key", "mobile_money").maybeSingle()
+      .then(({ data }) => setMm((data?.value as { mode?: string; fee_percent?: number } | null) ?? {}));
+  }, []);
+  const fee = mm?.mode === "jeko" ? mobileMoneyFee(value, mm.fee_percent) : 0;
+  const total = value + fee;
 
   // Paramètres d'arrivée : recharge d'un enfant, ou retour de l'appli de paiement
   useEffect(() => {
@@ -209,8 +218,16 @@ export default function RechargePage() {
           </p>
         )}
 
-        <Button size="lg" block className="mt-6" loading={busy} disabled={value < 100 || value > 500000 || !phoneOk} onClick={start}>
-          {t("Payer")} {fcfa(value)}
+        {fee > 0 && value >= 100 && (
+          <div className="mt-4 rounded-2xl bg-card p-4 text-[14px] shadow-[var(--shadow-card)]">
+            <p className="flex justify-between"><span className="text-muted">{en ? "Credited to the account" : "Crédité sur le compte"}</span><b>{fcfa(value)}</b></p>
+            <p className="mt-1 flex justify-between"><span className="text-muted">{en ? "Mobile Money fees" : "Frais Mobile Money"}</span><b>+ {fcfa(fee)}</b></p>
+            <p className="mt-2 flex justify-between border-t border-line pt-2 text-[15px]"><span className="font-bold">{en ? "Charged to your phone" : "Débité sur ton téléphone"}</span><b>{fcfa(total)}</b></p>
+          </div>
+        )}
+
+        <Button size="lg" block className="mt-6" loading={busy || mm === null} disabled={value < 100 || value > 500000 || !phoneOk} onClick={start}>
+          {t("Payer")} {fcfa(total)}
         </Button>
       </div>
       <Sheet open={confirmOpen} onClose={() => setConfirmOpen(false)} title={t("Confirmer la recharge")}>

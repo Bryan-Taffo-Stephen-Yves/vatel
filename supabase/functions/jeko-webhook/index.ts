@@ -23,7 +23,7 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return reply({ error: "Method not allowed" }, 405);
-  const secret = Deno.env.get("JEKO_WEBHOOK_SECRET");
+  const secret = Deno.env.get("JEKO_WEBHOOK_SECRET")?.trim(); // un espace collé avec le secret ne casse pas tout
   if (!secret) { console.error("JEKO_WEBHOOK_SECRET manquant"); return reply({ error: "Not configured" }, 500); }
 
   const raw = await req.text(); // la signature porte sur le corps brut, avant JSON.parse
@@ -37,6 +37,12 @@ Deno.serve(async (req) => {
   try { tx = JSON.parse(raw); } catch { return reply({ error: "Invalid JSON" }, 400); }
 
   const reference = tx?.transactionDetails?.reference;
+  // Le franc CFA uniquement (un montant dans une autre devise ne doit jamais créditer)
+  const currency = tx?.amount?.currency ?? tx?.currency;
+  if (currency && currency !== "XOF") {
+    console.error("jeko-webhook: devise inattendue", reference, currency);
+    return reply({ received: true, ignored: "currency" });
+  }
   if (tx?.transactionType === "payment" && tx?.status === "success" && typeof reference === "string" && reference.startsWith("VAT-")) {
     const { data, error } = await db.rpc("_payment_success", {
       p_reference: reference, p_payment_request_id: tx.transactionDetails?.id ?? null,

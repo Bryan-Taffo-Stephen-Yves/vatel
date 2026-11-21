@@ -75,7 +75,9 @@ async function create(req: Request, body: any) {
     headers: jekoHeaders(),
     body: JSON.stringify({
       storeId: Deno.env.get("JEKO_STORE_ID"),
-      amountCents: start.amount * 100, // Jèko compte en centimes, même en franc CFA
+      // Jèko compte en centimes, même en franc CFA. total = recharge + frais Mobile Money payés par l'élève
+      // (ancienne base sans frais : total absent → montant seul)
+      amountCents: Number(start.total ?? start.amount) * 100,
       currency: "XOF",
       reference,
       paymentDetails: {
@@ -92,7 +94,8 @@ async function create(req: Request, body: any) {
     return fail("PROVIDER", friendly(pr?.id), 502);
   }
   await db.from("payments").update({ payment_request_id: pr.id }).eq("reference", reference);
-  return json({ ok: true, reference, mode: method === "mtn" || method === "moov" ? "ussd" : "redirect", redirect_url: pr.redirectUrl ?? null });
+  return json({ ok: true, reference, amount: start.amount, fee: start.fee ?? 0, total: start.total ?? start.amount,
+                mode: method === "mtn" || method === "moov" ? "ussd" : "redirect", redirect_url: pr.redirectUrl ?? null });
 }
 
 // Un échec n'envoie pas de webhook : on relit le statut chez Jèko (au plus toutes les 10 s par paiement)
@@ -109,7 +112,10 @@ async function status(userId: string, body: any) {
     const res = await fetch(`${JEKO_API}/payment_requests/${p.payment_request_id}`, { headers: jekoHeaders() });
     if (res.ok) {
       const pr = await res.json();
-      if (pr.status === "success" && pr.transaction) {
+      // Défense en profondeur : la réponse doit bien concerner CE paiement
+      if (pr.reference && pr.reference !== reference) {
+        console.error("jeko status: référence inattendue", reference, pr.reference);
+      } else if (pr.status === "success" && pr.transaction) {
         await db.rpc("_payment_success", { p_reference: reference, p_payment_request_id: pr.id,
           p_amount_cents: pr.transaction.amount?.amount ?? null, p_tx_id: pr.transaction.id ?? null, p_method: pr.paymentMethod ?? null });
       } else if (pr.status === "error") {

@@ -20,7 +20,7 @@ type Settings = {
   low_balance_threshold: number;
   service_days: number[];
   mfa_required_roles: string[];
-  mobile_money?: { mode: "simulation" | "jeko" };
+  mobile_money?: { mode: "simulation" | "jeko"; fee_percent?: number; sim_daily_max?: number };
 };
 type Extra = { id: string; name: string; price: number; kind: string; is_active: boolean };
 type Cat = { id: number; name: string; sort: number };
@@ -108,11 +108,21 @@ export default function SettingsPage() {
           <Row label="Plafond journalier"><N value={s.transfer_limits.daily_max} onChange={(v) => set({ transfer_limits: { ...s.transfer_limits, daily_max: v } })} suffix="FCFA" /></Row>
           <Row label="Alerte solde bas"><N value={s.low_balance_threshold} onChange={(v) => set({ low_balance_threshold: v })} suffix="FCFA" /></Row>
           <Row label="Recharge Mobile Money" hint={s.mobile_money?.mode === "jeko" ? "argent réel via Jèko : la simulation est refusée" : "démo : aucun débit réel"}>
-            <select value={s.mobile_money?.mode ?? "simulation"} onChange={(e) => set({ mobile_money: { mode: e.target.value as "simulation" | "jeko" } })} className={input}>
+            <select value={s.mobile_money?.mode ?? "simulation"} onChange={(e) => set({ mobile_money: { ...s.mobile_money, mode: e.target.value as "simulation" | "jeko" } })} className={input}>
               <option value="simulation">Simulation (démo)</option>
               <option value="jeko">Argent réel (Jèko)</option>
             </select>
           </Row>
+          {s.mobile_money && (
+            <Row label="Frais Mobile Money payés par l'élève" hint="commission Jèko ajoutée au montant payé (0 = la cantine la paie) ; ex. 1,6 % : 500 F crédités → 509 F payés">
+              <span className="flex items-center gap-2">
+                <input type="number" min={0} max={10} step={0.1} value={s.mobile_money.fee_percent ?? 0}
+                  onChange={(e) => set({ mobile_money: { ...s.mobile_money!, fee_percent: Math.min(Math.max(+e.target.value || 0, 0), 10) } })}
+                  className={clsx(input, "w-28 text-right font-bold")} />
+                <span className="text-sm text-muted">%</span>
+              </span>
+            </Row>
+          )}
         </Card>
         <Card title="Double authentification" subtitle="Code d'une application (Google Authenticator…) en plus du mot de passe">
           {([["admin", "Administrateurs"], ["caissier", "Caisse"], ["chef", "Cuisine"], ["agent", "Agents du comptoir"]] as const).map(([k, l]) => (
