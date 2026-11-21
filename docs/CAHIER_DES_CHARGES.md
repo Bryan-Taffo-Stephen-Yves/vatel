@@ -898,7 +898,7 @@ Double authentification désactivée en démo.
   rythme des scans.
 - Mobile Money réel (actuellement **simulé**), commande de groupe : pistes pour la suite.
 - Jean : numéro WhatsApp dédié (aujourd'hui instance Green API empruntée), passage à **Meta WhatsApp Cloud** (boutons officiels, PIN masqué par WhatsApp Flows), numéro de téléphone Retell ivoirien (SIP) et **appel de rappel 15 min avant la fin**.
-- **Approvisionnement automatique** (fournisseurs, agent vocal, journal Google Sheets, agent WhatsApp, Yango) : **pas encore construit**, spécifié en §20 pour le jour du concours.
+- **Approvisionnement automatique** : agent vocal (§20.4), tournée du coursier (§20.6 a) et **agent d'achats autonome** (§20 bis) construits ; reste le journal Google Sheets (§20.5).
 
 ---
 
@@ -1075,6 +1075,39 @@ bananes au marché), puis livre la cantine.
   qu'aux commandes du groupe (« OUI Bamba », « NON Bamba », « point »), jamais au reste de la conversation.
 - **Récapitulatif en temps réel** : chaque appel fournisseur, commande, validation, livraison et réception y est
   posté (exemples §20.5) ; « point » → résumé du jour (commandé, engagé / budget, en attente, livré).
+
+### 20 bis. Agent d'achats autonome (construit)
+
+> **Réalisé** : migration `supply_agent` (réglage `settings.supply_agent`, `supply_agent_tick` toutes les 30 s via pg_cron,
+> `_supply_needs`, `_supply_agent_plan`, `_supply_reroute`, `supplier_order_receive`, `supply_agent_overview / _configure / _run`,
+> `supply_order_cancel`, `_supply_group_decide` « OUI Koné », `_supply_point` « point »), Edge Function `supply-agent`
+> (discussion avec Claude depuis l'appli) et module `_shared/supply-agent.ts` (même cerveau dans le groupe WhatsApp, via
+> `jean-whatsapp`), page `/admin/approvisionnement` « Agent d'achats ». Tests : `supabase/tests/99v_supply_agent.sql`.
+
+L'agent tourne tout seul (bouton « Mettre l'agent en marche ») ; **les décisions sont dans le code**, Claude ne fait que
+parler avec l'équipe et l'agent vocal avec le fournisseur.
+
+| Étape | Règle |
+|---|---|
+| Besoin | par ingrédient : menus des `horizon_days` prochains jours (3) − stock − **déjà commandé ou en course** ; on commande quand le stock prévu passe sous le seuil, de quoi revenir à 2 × le seuil, arrondi au conditionnement du carnet |
+| Fournisseur | habituel (`supplier_products.backup_rank` = 0), sinon secours 1, 2… (moins cher à rang égal) ; une commande par fournisseur, avec le « pourquoi » |
+| Accord | au-dessus de `auto_limit` (100 000 F) ou si le budget du jour (`daily_budget`, 400 000 F) est dépassé → « ✋ j'attends votre accord » dans le groupe ; réponse « OUI Koné » / « NON Koné » (sans accent accepté) ou bouton dans l'appli |
+| Appel | un seul appel à la fois par numéro ; en mode réel seulement aux heures de l'agent (`hours_from`–`hours_to`) **et** du fournisseur (`suppliers.call_from`–`call_to`) |
+| Pas de réponse | nouvel essai après `retry_minutes` (15 min ; 1 min en simulation), 3 essais, puis fournisseur de secours |
+| « Rappelez à 15h » | rappel à l'heure dite (« 15h30 », « demain 9h », « dans 20 min ») |
+| Refus / prix refusé par l'équipe | fournisseur de secours ; plus aucun : fiche de courses d'un employé |
+| Article manquant | retiré de la commande, commandé chez le secours |
+| Ne livre pas | tournée du coursier créée et lancée automatiquement |
+| Refus de l'équipe (« NON ») | pas de secours, pas de nouvelle demande pendant 12 h pour ces ingrédients |
+| Réception | « Reçu » + montant payé → stock crédité, prix habituel = 70 % ancien + 30 % payé, alerte si +15 % |
+
+- **Démo** : `demo_phone` = téléphone du présentateur (tous les appels y vont) ; `sim_scenario` = `varie` fait jouer à
+  tour de rôle : ok, injoignable, ne livre pas, trop cher, article manquant, refus.
+- **Groupe WhatsApp** : chaque étape y est postée (« 🛒 Achats ») ; « point » = résumé du jour ; tout autre message du
+  chef ou de l'admin va à Claude (« commande 2 sacs de riz », « où en est le poulet ? », « annule le marché »), après Jean
+  si une tournée de coursier est en cours. Une commande demandée par l'équipe part sans redemander l'accord.
+- **Carnet** : 2 fournisseurs de secours ajoutés (Grossiste Diallo à Yopougon, Supermarché Riviera) ; `_supply_link_products()`
+  relie les produits aux ingrédients (appelée par le seed). La fiche de courses d'un employé déduit ce que l'agent a commandé.
 
 ### 20.7 Réception et stock
 

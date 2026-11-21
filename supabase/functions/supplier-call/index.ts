@@ -2,7 +2,8 @@
 // Agent vocal « l'appeleur » : il appelle un fournisseur au nom de la cantine (Retell), demande prix et livraison,
 // et l'appli décide (règles en base : _supplier_call_action). Accent et façon de parler ivoiriens.
 //  - { action: "setup" }                          (chef/admin) crée / met à jour l'agent Retell « Dabali – Achats »
-//  - { action: "call", order_id, simulate?, scenario? }  (chef/admin) appel réel, ou simulation (ok | cher | coursier)
+//  - { action: "call", order_id, simulate?, scenario? }  (chef/admin, ou l'agent d'achats via x-jean-secret) appel réel,
+//    ou simulation (ok | cher | coursier | injoignable | refuse | manque)
 //  - ?token=JEAN_VOICE_TOKEN&hook=tool            fonctions appelées par l'agent pendant l'appel (Retell)
 //  - ?token=JEAN_VOICE_TOKEN&hook=event           fin d'appel / analyse (webhook Retell)
 // Secrets : CLI_ANHTROPIC (ou RETELL_API_KEY) = clé Retell ; JEAN_VOICE_TOKEN.
@@ -143,12 +144,40 @@ async function simulate(order: any, scenario: string) {
   const say = (who: string, t: string) => db.from("supply_events").insert({ order_id: order.id, kind: "dialogue", message: `${who} ${t}` });
   const act = (a: string, args: unknown) => db.rpc("_supplier_call_action", { p_order: order.id, p_action: a, p_args: args });
   const items = order.items as any[];
-  const quote = scenario === "cher" ? Math.round(order.budget * 1.25 / 500) * 500 : Math.round(order.budget * 1.04 / 500) * 500;
+  if (scenario === "injoignable") { // ça sonne, personne ne décroche
+    await sleep(8000);
+    await db.rpc("_supplier_call_ended", { p_order: order.id, p_reason: "pas de réponse", p_recording: null, p_summary: null });
+    return;
+  }
+  const base = scenario === "manque" && items.length > 1 ? order.budget - items[0].qty * items[0].usual_price : order.budget;
+  const quote = scenario === "cher" ? Math.round(base * 1.25 / 500) * 500 : Math.round(base * 1.04 / 500) * 500;
   await sleep(2500);
   await say("🤖", "Allô, bonjour ! Ici l'assistant de la cantine Vatel. Je vous appelle pour notre commande, l'appel est enregistré. Ça va un peu ?");
   await sleep(3000); await say("👤", "Ça va oh, merci. C'est quoi on va vous donner aujourd'hui ?");
   await sleep(3000); await say("🤖", `On voudrait ${items.map((i) => `${String(i.qty).replace(".", ",")} ${sing(i.qty, i.label)}`).join(", ")}. Ça fait combien en tout ?`);
-  await sleep(3500); await say("👤", `Pour tout ça là, c'est ${fcfa(scenario === "cher" ? Math.round(quote * 1.08 / 500) * 500 : quote)}.`);
+  if (scenario === "refuse") {
+    await sleep(3500); await say("👤", "Non mon frère, cette semaine je ne peux pas. Je n'ai plus de stock, essayez ailleurs.");
+    await act("refuse", { raison: "plus de stock cette semaine" });
+    await sleep(2500); await say("🤖", "D'accord, y a pas de problème. Merci quand même, bonne journée !");
+    await sleep(1500);
+    await db.rpc("_supplier_call_ended", { p_order: order.id, p_reason: null, p_recording: null, p_summary: "Le fournisseur n'a plus de stock et refuse la commande." });
+    return;
+  }
+  if (scenario === "manque" && items.length === 1) {
+    await sleep(3500); await say("👤", `Les ${items[0].label}, y en a pas aujourd'hui, désolé.`);
+    await act("refuse", { raison: `pas de ${items[0].label} aujourd'hui` });
+    await sleep(2500); await say("🤖", "D'accord, on va prendre ça ailleurs. Merci, bonne journée !");
+    await sleep(1500);
+    await db.rpc("_supplier_call_ended", { p_order: order.id, p_reason: null, p_recording: null, p_summary: `Pas de ${items[0].label} aujourd'hui.` });
+    return;
+  }
+  if (scenario === "manque" && items.length > 1) {
+    await sleep(3500); await say("👤", `Les ${items[0].label}, y en a pas aujourd'hui. Pour le reste là, c'est ${fcfa(quote)}.`);
+    await act("item_unavailable", { article: items[0].label });
+    await sleep(2500); await say("🤖", "D'accord, on va prendre ça ailleurs.");
+  } else {
+    await sleep(3500); await say("👤", `Pour tout ça là, c'est ${fcfa(scenario === "cher" ? Math.round(quote * 1.08 / 500) * 500 : quote)}.`);
+  }
   if (scenario === "cher") {
     await sleep(3000); await say("🤖", `Hum, d'habitude on prend à ${fcfa(order.budget)} chez vous. Vous pouvez faire un effort ?`);
     await sleep(3000); await say("👤", `Tout a augmenté cette semaine, je peux descendre à ${fcfa(quote)}, pas moins.`);
@@ -225,7 +254,7 @@ Deno.serve(async (req) => {
     const st = await db.rpc("_supplier_call_started", { p_order: order.id, p_call_id: `sim_${crypto.randomUUID()}`, p_mode: "simulation" });
     if (!(st.data as any)?.ok) return fail("CALL", (st.data as any)?.message ?? "Appel impossible.");
     // @ts-ignore EdgeRuntime existe dans Supabase
-    EdgeRuntime.waitUntil(simulate(order, ["ok", "cher", "coursier"].includes(body.scenario) ? body.scenario : "ok").catch((e) => console.error("sim", e)));
+    EdgeRuntime.waitUntil(simulate(order, ["ok", "cher", "coursier", "injoignable", "refuse", "manque"].includes(body.scenario) ? body.scenario : "ok").catch((e) => console.error("sim", e)));
     return json({ ok: true, simulation: true });
   }
   return fail("ACTION", "Action inconnue.");

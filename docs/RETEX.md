@@ -125,6 +125,20 @@ agent Green API sur un numéro dédié.
   sur Supabase) : la carte s'y affiche grise, c'est normal.
 - Après `next build`, relancer proprement `next start` (sinon CSS en 400 et page blanche).
 
+## 4 septies. Agent d'achats autonome
+
+- Toujours compter ce qui est **déjà commandé** dans le besoin, sinon l'agent recommande la même chose à chaque passage.
+- Mémoriser les fournisseurs qui ont refusé (12 h) et les refus de l'équipe, sinon l'agent rappelle en boucle.
+- En démo, tous les appels vont au même téléphone : **un seul appel à la fois par numéro**.
+- Sur une installation neuve, les produits du carnet n'étaient reliés à aucun ingrédient (les ingrédients arrivent avec le
+  seed, après les migrations) → `_supply_link_products()` à la fin du seed.
+- Les fonctions appelées par la base (`supplier-call`, `group-post`, `delivery`) se déploient avec `--no-verify-jwt`
+  (elles vérifient elles-mêmes le secret `x-jean-secret`).
+- **Deux sessions qui déploient sur le même projet Supabase s'écrasent** : `jean-whatsapp` et `supplier-call` en ligne
+  contenaient du code absent du dépôt (nom « Vatel », sondage repas du personnel). Avant de déployer une fonction,
+  comparer la version en ligne (API `functions/<slug>/body`) au dépôt ; pousser son code avant de déployer ; et ne pas
+  donner deux fois le même numéro de migration.
+
 ## 5. Ce qui manque encore (à faire avant le jour J)
 
 - [x] Script unique « tout installer » : `scripts/install.sh`.
@@ -136,3 +150,5 @@ agent Green API sur un numéro dédié.
 - [ ] Réinitialiser la double authentification Retell (secret apparu dans une conversation).
 - [ ] Groupe WhatsApp « Dabali – Approvisionnement » avec le numéro de Jean, puis écrire « #dabali » dedans.
 - [ ] Appels fournisseurs réels : acheter un numéro Retell autorisé vers +225, l'enregistrer dans Appels fournisseurs ; voix à accent ivoirien.
+- [ ] Agent d'achats : appliquer la migration `supply_agent`, déployer `supply-agent`, `supplier-call`, `group-post`, `delivery`,
+  `jean-whatsapp`, puis « Mettre l'agent en marche » (page Agent d'achats) avec le numéro du présentateur en démo.

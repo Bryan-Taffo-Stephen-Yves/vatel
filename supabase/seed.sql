@@ -492,3 +492,6 @@ update public.settings set value = '[]' where key = 'mfa_required_roles';
 
 -- Démo : bitmojis (le compte Client = Aya avec son foulard ; les autres clients en reçoivent un au hasard dans l'appli)
 update public.profiles set avatar = 'aya' where short_code = 'DB-2026';
+
+-- Carnet de prix des fournisseurs : relier chaque produit à son ingrédient (l'agent d'achats en a besoin)
+select public._supply_link_products();

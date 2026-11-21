@@ -8,6 +8,7 @@ import Anthropic from "npm:@anthropic-ai/sdk";
 import { adminClient, json } from "../_shared/http.ts";
 import { prepareOrder } from "../_shared/order.ts";
 import { activeRun, teamMessage } from "../_shared/run-agent.ts";
+import { supplyMessage } from "../_shared/supply-agent.ts";
 import { dietConflicts } from "../_shared/diet.ts";
 
 const MODEL = "claude-opus-5-5";
@@ -73,14 +74,30 @@ async function handleGroup(cfg: Cfg, body: any, text: string | undefined) {
     }
     const { data: s } = await db.from("settings").select("value").eq("key", "jean").single();
     await db.from("settings").update({ value: { ...(s?.value as any), group_id: chatId } }).eq("key", "jean");
-    await sendGroup(cfg, chatId, "✅ Groupe enregistré. J'y posterai chaque étape des courses du coursier (achats, trajet, livraison).\nVous pouvez me dire par exemple « laisse tomber les tomates » ou « où en est le coursier ? ».");
+    await sendGroup(cfg, chatId, "✅ Groupe enregistré. J'y posterai chaque commande aux fournisseurs (appels, prix, livraisons) et chaque étape du coursier.\nVous pouvez me dire « OUI Koné » / « NON Koné », « point », « commande 2 sacs de riz », « laisse tomber les tomates » ou « où en est le coursier ? ».");
     return;
   }
   if ((!cfg.dry && (!cfg.group_id || chatId !== cfg.group_id)) || !staff) return; // autres groupes ou membres non autorisés : silence
+  const first = String(who!.full_name).split(" ")[0];
+  // Achats, sans IA : « OUI Koné » / « NON Koné » (accord ou prix), « point » (résumé du jour)
+  if (["chef", "admin"].includes(who!.role)) {
+    const { data: d } = await db.rpc("_supply_group_decide", { p_text: text, p_author: first });
+    if ((d as any)?.handled) { if ((d as any).reply) await sendGroup(cfg, chatId, (d as any).reply); return; }
+  }
+  if (/^\s*point\s*[.!?]*\s*$/i.test(text)) {
+    const { data: p } = await db.rpc("_supply_point");
+    if (p) await sendGroup(cfg, chatId, String(p));
+    return;
+  }
+  // Tournée du coursier en cours : Jean d'abord ; s'il n'est pas concerné, l'agent d'achats
   const runId = await activeRun();
-  if (!runId) return;
-  await db.from("delivery_events").insert({ run_id: runId, kind: "equipe", message: `💬 ${String(who!.full_name).split(" ")[0]} : ${text}`, author: who!.full_name });
-  await teamMessage(runId, text, String(who!.full_name).split(" ")[0]); // la réponse part dans le groupe via l'événement « jean »
+  if (runId) {
+    await db.from("delivery_events").insert({ run_id: runId, kind: "equipe", message: `💬 ${first} : ${text}`, author: who!.full_name });
+    if (await teamMessage(runId, text, first)) return; // la réponse part dans le groupe via l'événement « jean »
+  }
+  if (!["chef", "admin"].includes(who!.role)) return; // seuls le chef et l'admin font commander
+  const reply = await supplyMessage(text, first);
+  if (reply) await sendGroup(cfg, chatId, `🛒 ${reply}`);
 }
 
 /** Étape de la tournée → message dans le groupe (avec le lien de suivi au départ et au retour) */

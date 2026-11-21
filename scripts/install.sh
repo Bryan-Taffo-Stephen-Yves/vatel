@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Dabali — installation complète d'un projet Supabase en une commande.
 #
-#   1. migrations (dans l'ordre, une seule fois chacune)   4. Edge Functions (4)
+#   1. migrations (dans l'ordre, une seule fois chacune)   4. Edge Functions (dont les achats)
 #   2. données de démo (si la base est vide)                 5. vérifications
 #   3. clé Anthropic dans Supabase Vault (si fournie)
 #
@@ -116,8 +116,10 @@ fi
 # ── 4. Edge Functions ──
 step "Edge Functions"
 if [ "$FUNCTIONS" = 1 ]; then
-  for fn in ticket-token redeem-ticket forecast-assistant shopping-organize menu-assistant send-push; do
-    extra=""; [ "$fn" = send-push ] && extra="--no-verify-jwt"   # appelée par la base avec un secret, pas par un utilisateur
+  for fn in ticket-token redeem-ticket forecast-assistant shopping-organize menu-assistant send-push \
+            supplier-call group-post delivery supply-agent; do
+    # appelées par la base (pg_net, secret x-jean-secret) ou par Retell (jeton dans l'adresse), pas par un utilisateur
+    extra=""; case "$fn" in send-push|supplier-call|group-post|delivery) extra="--no-verify-jwt" ;; esac
     npx --yes supabase@latest functions deploy "$fn" --project-ref "$SUPABASE_PROJECT_REF" --use-api $extra >/dev/null \
       || die "Déploiement de $fn impossible"
     ok "$fn"
