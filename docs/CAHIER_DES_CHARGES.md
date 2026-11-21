@@ -1,4 +1,4 @@
-# Dabali : cahier des charges complet (reproduction à l'identique)
+# Vatel Cantine : cahier des charges complet (reproduction à l'identique)
 
 > **But de ce document** : permettre à un autre développeur de refaire **exactement** l'application en ligne sur
 > <https://dabalix.netlify.app> : mêmes écrans, mêmes règles, mêmes couleurs, mêmes animations, mêmes sons,
@@ -41,7 +41,7 @@
 
 ## 1. Le produit en bref
 
-**Dabali** (« manger » en dioula) est la cantine connectée d'une école hôtelière à **Abidjan**.
+**Vatel Cantine** est la cantine connectée d'une école hôtelière à **Abidjan**.
 
 - Les étudiants **rechargent** un solde prépayé, **achètent des tickets** par type de repas, et présentent un
   **QR** au comptoir. Le **plat se choisit au comptoir**.
@@ -504,7 +504,7 @@ La fenêtre « Comment était ton … ? » s'ouvre **toute seule** 30 min après
 - Un même QR n'est pas relu pendant 4 s ; la caméra est en pause quand le panneau « Sans téléphone » est ouvert.
 
 **Sans téléphone** (panneau blanc, `components/scan/no-phone-sheet.tsx`)
-1. « Demandez son nom ou son code Dabali (DB-…). Ticket **Déjeuner**. » + recherche (3 caractères min., 300 ms).
+1. « Demandez son nom ou son code Vatel Cantine (DB-…). Ticket **Déjeuner**. » + recherche (3 caractères min., 300 ms).
 2. Résultats (8 max) : bitmoji, nom, code, puce noire « 2 tickets » ou rouge « Aucun ticket Déjeuner » / « Pas de
    code PIN : QR obligatoire » / « Code PIN bloqué » (non cliquables).
 3. Étape PIN : rappel du client, « Tendez le téléphone au client : **lui seul** tape son code PIN », case
@@ -780,7 +780,7 @@ et appli ajoutée à l'écran d'accueil (message explicatif sinon).
 
 ## 13. Appli installable (PWA) et mode hors ligne
 
-- Manifeste (`src/app/manifest.ts`) : nom « Dabali — Cantine connectée », court « Dabali », `start_url /app`,
+- Manifeste (`src/app/manifest.ts`) : nom « Vatel — Cantine connectée », court « Vatel », `start_url /app`,
   `display standalone`, portrait, couleurs `#F6F7F9`, icônes 192/512/maskable, raccourcis « Mon QR » et « Menu ».
   Icône Apple : `/icons/apple-touch-icon.png`.
 - Bouton « Installer l'appli » (`install-app.tsx`) : utilise l'invitation `beforeinstallprompt` (gardée dans
@@ -925,7 +925,7 @@ Stock sous le seuil (déjà en place : fiche de courses automatique, §9.12)
 ```
 
 Les deux agents **ne se parlent pas** : ils passent par le tableau. Si l'un tombe en panne, l'autre continue, et tout
-reste tracé. **La base Dabali reste la référence** ; le Google Sheet en est la copie lisible pour l'équipe et pour
+reste tracé. **La base Vatel Cantine reste la référence** ; le Google Sheet en est la copie lisible pour l'équipe et pour
 l'agent 2 (une erreur dans le tableau ne dérègle pas l'appli).
 
 ### 20.2 Carnet de fournisseurs (nouvelles tables)
@@ -955,7 +955,7 @@ WhatsApp » (lien `wa.me` avec le message déjà écrit) en secours manuel.
 > `supplier_order_create` / `_create_demo` / `supplier_orders_from_stock`, règles `_supplier_call_action` (prix ≤ budget
 > + 10 % → commandé ; sinon à valider ; prix validé par le chef accepté au rappel ; ne livre pas → coursier ; 3 essais),
 > `supplier_order_decide`, `supplier_order_send_courier` (→ tournée §20.6 a), `supplier_calls_set_number` (admin).
-> Edge Functions `supplier-call` (crée l'agent Retell « Dabali – Achats fournisseurs » par l'API, script ivoirien,
+> Edge Functions `supplier-call` (crée l'agent Retell « Vatel Cantine – Achats fournisseurs » par l'API, script ivoirien,
 > appels réels `create-phone-call`, fonctions et webhook Retell, simulation ok / cher / coursier) et `group-post`
 > (relais dans le groupe WhatsApp). Page `/admin/appels`. Tests : `supabase/tests/99j_supplier_calls.sql`.
 > Voix : Retell n'a pas de voix ivoirienne dans son catalogue ; ajouter une voix ElevenLabs à accent ivoirien,
@@ -964,7 +964,7 @@ WhatsApp » (lien `wa.me` avec le message déjà écrit) en secours manuel.
 
 - **Outil** : Retell AI (ou Vapi, ElevenLabs Agents), voix française, numéro Twilio. Appels **aux heures d'ouverture**
   du fournisseur seulement, **uniquement vers les numéros du carnet**.
-- **Script** : « Bonjour, c'est l'assistant de la cantine Dabali de l'école hôtelière. Cet appel est enregistré. Nous
+- **Script** : « Bonjour, c'est l'assistant de la cantine Vatel Cantine de l'école hôtelière. Cet appel est enregistré. Nous
   voudrions [liste]. Ça fait combien ? Vous pouvez livrer quand ? Sinon on envoie un livreur Yango. Le paiement se
   fait par Wave. »
 - **Fonctions** que l'agent appelle pendant l'appel (Edge Function `supplier-call-webhook`, signature vérifiée) :
@@ -1012,7 +1012,7 @@ Telegram.
 
 ### 20.6 Livraison suivie par GPS (notre propre suivi, sans Yango)
 
-> Décision : pas de compte entreprise Yango → **Dabali fait son propre suivi**. Le coursier (moto-taxi, livreur du
+> Décision : pas de compte entreprise Yango → **Vatel Cantine fait son propre suivi**. Le coursier (moto-taxi, livreur du
 > fournisseur ou employé) n'a besoin que d'un téléphone avec un navigateur : pas de compte, pas d'appli à installer.
 
 - **Tables** : `deliveries` (id, supplier_order_id, courier_name, courier_phone, vehicle, status `assignee` →
@@ -1068,7 +1068,7 @@ bananes au marché), puis livre la cantine.
   coche les articles un par un ; la page de suivi montre la carte, les arrêts (fait / en cours / annulé), la liste
   d'achats, « arrivée dans X min » et le bouton « Appeler le coursier » (numéro fictif en démo).
 
-### 20.6 bis Groupe WhatsApp « Dabali – Approvisionnement »
+### 20.6 bis Groupe WhatsApp « Vatel Cantine – Approvisionnement »
 
 - Créé par l'équipe (chef, admin, magasinier) avec le **numéro de Jean** (puce dédiée) ; dans le groupe, quelqu'un
   écrit « #dabali » → Jean enregistre l'identifiant du groupe (`settings.jean.group_id`, `…@g.us`). Jean ne répond

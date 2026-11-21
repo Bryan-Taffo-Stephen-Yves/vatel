@@ -1,4 +1,4 @@
-# Retour d'expérience : refaire Dabali en 2 à 3 heures le jour du hackathon
+# Retour d'expérience : refaire Vatel Cantine en 2 à 3 heures le jour du hackathon
 
 Ce projet est une **répétition**. Le jour J, on doit tout reconstruire vite. Ce fichier liste ce qui nous a fait
 perdre du temps et ce qu'il faut préparer **avant** le hackathon. À compléter à chaque répétition.
@@ -83,7 +83,7 @@ est alors demandée à la première connexion).
 ## 4 ter. Client sans téléphone (éteint, perdu, volé)
 
 - **Pas de réseau** : le QR est gardé dans le téléphone, il s'affiche en mode avion.
-- **Téléphone éteint ou perdu** : au scanner, bouton « Sans téléphone » → nom ou code Dabali → le **client** tape
+- **Téléphone éteint ou perdu** : au scanner, bouton « Sans téléphone » → nom ou code Vatel Cantine → le **client** tape
   son code PIN sur le téléphone de l'agent (`redeem_with_pin`). Le ticket est validé comme un scan.
   Sécurité : 3 PIN faux = PIN bloqué 15 min + alerte au client ; 10 PIN faux en 1 h = ce mode bloqué pour l'agent ;
   le client est prévenu à chaque repas validé sans QR ; marqué « sans QR » dans l'historique des scans.
@@ -148,7 +148,7 @@ agent Green API sur un numéro dédié.
 - [ ] Jean : test réel Retell (Test Audio), puis numéro de téléphone et appel de rappel 15 min avant la fin.
 - [ ] Jean : validation Meta WhatsApp Cloud (boutons officiels, PIN masqué).
 - [ ] Réinitialiser la double authentification Retell (secret apparu dans une conversation).
-- [ ] Groupe WhatsApp « Dabali – Approvisionnement » avec le numéro de Jean, puis écrire « #dabali » dedans.
+- [ ] Groupe WhatsApp « Vatel Cantine – Approvisionnement » avec le numéro de Jean, puis écrire « #dabali » dedans.
 - [ ] Appels fournisseurs réels : acheter un numéro Retell autorisé vers +225, l'enregistrer dans Appels fournisseurs ; voix à accent ivoirien.
 - [ ] Agent d'achats : appliquer la migration `supply_agent`, déployer `supply-agent`, `supplier-call`, `group-post`, `delivery`,
   `jean-whatsapp`, puis « Mettre l'agent en marche » (page Agent d'achats) avec le numéro du présentateur en démo.

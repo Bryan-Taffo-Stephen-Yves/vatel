@@ -5,6 +5,7 @@ réservation et commande de plats, tickets QR, suivi parent, cuisine pilotée pa
 (WhatsApp, téléphone, achats fournisseurs). Hackathon « Cantine de Vatel » — novembre 2026.
 
 > **Démo en ligne : https://vatel-cantine.netlify.app** (installable sur téléphone : PWA)
+> **Guide d'utilisation, rôle par rôle : [docs/GUIDE_UTILISATION.md](docs/GUIDE_UTILISATION.md)**
 > Cahier des charges détaillé : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md) · Retours d'expérience : [docs/RETEX.md](docs/RETEX.md)
 
 > **Comment ce dépôt a été construit.** Application préparée à partir du cahier des charges reçu en amont, comme
@@ -14,7 +15,7 @@ réservation et commande de plats, tickets QR, suivi parent, cuisine pilotée pa
 
 ## Les problèmes et nos réponses
 
-| Problème du sujet | Réponse dans Dabali |
+| Problème du sujet | Réponse dans Vatel Cantine |
 |---|---|
 | Longues files d'attente | Achat et **commande à l'avance avec heure de retrait** ; QR scanné en 1 s au comptoir ; affluence du réfectoire en direct |
 | Gaspillage faute de planification | **Prévisions** par plat (popularité, historique) + **guide de production** du chef (portions, reprises, ingrédients, restes saisis qui font apprendre le système) |
@@ -52,7 +53,7 @@ réservation et commande de plats, tickets QR, suivi parent, cuisine pilotée pa
 | Suggestions personnalisées (IA) | Carte « Pour toi » sur l'accueil (Claude : goûts, notes, allergies, régime, solde) |
 | Multi-langue | Français / anglais (bouton FR / EN : connexion, profil) |
 | Application mobile | PWA installable (Android / iOS), Face ID |
-| Mobile Money (Wave, Orange Money) | Recharge et recharge parent (simulée pour la démo) |
+| Mobile Money (Wave, Orange Money, MTN, Moov, Djamo) | Recharge et recharge parent en vrai via Jèko (frais de 1,6 % affichés et payés par l'élève) |
 | Notifications push temps réel | Web Push + notifications dans l'appli + WhatsApp |
 | Mode hors ligne | QR et menu disponibles sans réseau |
 
@@ -149,6 +150,10 @@ Sources acceptées : webcam (`0`), fichier vidéo, flux RTSP, ou téléphone And
 (`http://IP:8080/video`). Une image analysée toutes les 2 s, un relevé envoyé toutes les 10 s. Sans relevé
 depuis 2 minutes, l'appli bascule sur une estimation à partir du rythme des scans.
 
+**Rythme du comptoir** (`_scan_rhythm`, écrans Pilote du service et Affluence) : l'écart entre deux scans de l'agent
+mesure l'affluence sans caméra. Un QR scanné toutes les 10 à 30 s = forte affluence ; des écarts qui s'allongent = la
+file diminue. Le Pilote propose un renfort quand le comptoir est sous pression et que la caméra ne voit pas la file.
+
 ## Variables d'environnement
 
 Voir [.env.example](.env.example) et [vision/.env.example](vision/.env.example).
@@ -162,5 +167,5 @@ La clé `service_role` ne doit **jamais** être exposée au navigateur (pas de p
 
 ## Phase 2 (hors hackathon)
 
-Mobile Money réel (CinetPay…), OTP SMS, scanner hors ligne avec file de synchronisation, planning des équipes,
+OTP SMS, scanner hors ligne avec file de synchronisation, planning des équipes,
 multi-établissements, notifications push (table `push_subscriptions` prête).
