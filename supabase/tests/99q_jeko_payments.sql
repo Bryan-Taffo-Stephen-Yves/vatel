@@ -26,7 +26,7 @@ select tests.eq(public._payment_success(:'r'::jsonb ->> 'reference', 'pr_1', 500
 select tests.eq(public._payment_success(:'r'::jsonb ->> 'reference', 'pr_1', 500000, 'tx_1', 'wave') ->> 'code', 'already_paid',
   'webhook rejoué : pas de second crédit');
 select tests.eq((select balance from public.wallets where user_id = tests.uid('alice')), :b0 + 5000, 'solde crédité une seule fois (+5 000)');
-select tests.ok(exists (select 1 from public.notifications where user_id = tests.uid('alice') and title = 'Recharge reçue'), 'notification envoyée');
+select tests.ok(exists (select 1 from public.notifications where user_id = tests.uid('alice') and title = 'Recharge réussie ✅'), 'notification envoyée (texte court, 20261121233000)');
 select tests.check_ledger();
 
 -- Face ID activé : demandé au départ, mais le crédit arrivé plus tard passe
