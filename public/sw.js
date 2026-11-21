@@ -3,8 +3,8 @@
 // - pages de l'appli : réseau d'abord, repli sur la dernière version en cache
 // - fichiers statiques Next (/_next/static) : cache d'abord (noms versionnés)
 // - API Supabase : jamais mise en cache ici (les jetons QR sont gardés par l'appli dans localStorage)
-const VERSION = "vatel-v6";
-const PAGES = ["/app", "/app/tickets", "/app/menu", "/app/profil"];
+const VERSION = "vatel-v7";
+const PAGES = ["/app", "/app/tickets", "/app/menu", "/app/profil", "/app/commander"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(PAGES).catch(() => {})).then(() => self.skipWaiting()));

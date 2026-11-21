@@ -1,6 +1,7 @@
 "use client";
 import { supabase } from "@/lib/supabase/client";
 import { readCache, writeCache } from "@/lib/offline";
+import { todayISO } from "@/lib/format";
 import type { MenuItem, ServiceKind } from "@/lib/types";
 
 export const MENU_ITEM_COLUMNS =
@@ -15,7 +16,9 @@ export async function fetchMenu(from: string, to: string): Promise<MenuItem[]> {
   const { data, error } = await supabase().from("menu_items").select(MENU_ITEM_COLUMNS)
     .gte("service_date", from).lte("service_date", to).order("service_date").order("price", { ascending: false });
   if (error || !data) return offline();
-  writeCache("dabali:menu", data);
+  // On remplace seulement les jours demandés : la page Commander (jour même) n'efface pas le menu de la semaine
+  const kept = (readCache<MenuItem[]>("dabali:menu") ?? []).filter((i) => i.service_date < from || i.service_date > to);
+  writeCache("dabali:menu", [...kept, ...(data as unknown as MenuItem[])].filter((i) => i.service_date >= todayISO()));
   return data as unknown as MenuItem[];
 }
 

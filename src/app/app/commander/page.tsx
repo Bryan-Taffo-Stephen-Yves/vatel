@@ -2,7 +2,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
-import { Clock, ChefHat, Info, Minus, Plus } from "lucide-react";
+import { Clock, ChefHat, Info, Minus, Plus, WifiOff } from "lucide-react";
 import { rpc, supabase } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/app/page-header";
 import { ServiceIcon } from "@/components/app/service-icon";
@@ -20,12 +20,15 @@ import { SERVICES, type Extra, type MenuItem, type ServiceKind } from "@/lib/typ
 import { dietConflicts, severeHits, warnEn } from "@/lib/diet";
 import { deny } from "@/lib/deny";
 import { useT, useLang, type Lang } from "@/lib/i18n";
+import { myId } from "@/lib/supabase/client";
+import { readCache, writeCache } from "@/lib/offline";
+import { queueOrder, queuedOrders } from "@/lib/offline-orders";
 
 // Mots de dietConflicts (français) rendus en anglais ; les noms d'allergènes restent tels quels (données)
 
 type Slot = { at: string; left: number };
 type Win = { open: string | null; close: string | null; paused?: boolean };
-type OrderCfg = { windows?: Partial<Record<ServiceKind, Win>> };
+type OrderCfg = { windows?: Partial<Record<ServiceKind, Win>>; slot_minutes?: number; min_lead_minutes?: number };
 
 /** État des commandes du jour pour un repas (plage fixée par la cuisine, pause) */
 function windowState(win: Win | undefined, isToday: boolean, lang: Lang, now = new Date()) {
@@ -83,15 +86,33 @@ function Order() {
   const [pinError, setPinError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ no: number; dish: string; at: string } | null>(null);
+  const [queued, setQueued] = useState<{ summary: string; at: string | null } | null>(null);
+  // Hors ligne : la commande est gardée sur le téléphone et part au retour du réseau (revérifiée par le serveur)
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    const f = () => setOnline(navigator.onLine);
+    f(); window.addEventListener("online", f); window.addEventListener("offline", f);
+    return () => { window.removeEventListener("online", f); window.removeEventListener("offline", f); };
+  }, []);
+  const [pendingTotal, setPendingTotal] = useState(0);
+  useEffect(() => {
+    const q = () => myId().then((id) => setPendingTotal(queuedOrders(id).reduce((a, o) => a + o.total, 0)));
+    q(); window.addEventListener("vatel:order-queue", q);
+    return () => window.removeEventListener("vatel:order-queue", q);
+  }, []);
   const [orderCfg, setOrderCfg] = useState<OrderCfg>({});
 
   useEffect(() => {
     fetchMenu(today, today).then(setItems); // commandes du jour uniquement
     fetchServices().then(setServices);
+    // Suppléments et règles de commande gardés sur le téléphone pour commander hors ligne
+    setExtras(readCache<Extra[]>("vatel:extras") ?? []);
+    setOrderCfg(readCache<OrderCfg>("vatel:orders-cfg") ?? {});
+    if (!navigator.onLine) return;
     supabase().from("extras").select("id, name, price, kind").eq("is_active", true).in("kind", ["starter", "dessert"]).order("sort")
-      .then(({ data }) => setExtras((data ?? []) as Extra[]));
+      .then(({ data }) => { if (data) { setExtras(data as Extra[]); writeCache("vatel:extras", data); } });
     supabase().from("settings").select("value").eq("key", "orders").maybeSingle()
-      .then(({ data }) => data?.value && setOrderCfg(data.value as OrderCfg));
+      .then(({ data }) => { if (data?.value) { setOrderCfg(data.value as OrderCfg); writeCache("vatel:orders-cfg", data.value); } });
   }, [today]);
 
   // Repas encore commandables (service pas terminé)
@@ -152,7 +173,7 @@ function Order() {
   const total = lines.reduce((a, l) => a + l.item.price * l.qty, 0) + chosenExtras.reduce((s, e) => s + e.price * e.qty, 0);
   const needsPin = true; // chaque commande est confirmée par le titulaire (PIN)
   const win = windowState(service ? orderCfg.windows?.[service] : undefined, day === today, lang);
-  const insufficient = balance !== null && item !== null && balance < total;
+  const insufficient = balance !== null && item !== null && balance - pendingTotal < total; // commandes en attente déjà comptées
 
   // Heure limite d'annulation : 1 h 30 avant le début du service
   const cancelUntil = cfg && day ? (() => {
@@ -165,15 +186,54 @@ function Order() {
   useEffect(() => {
     if (!day || !service) return;
     setSlots(null); setSlot(null);
+    if (!online) {
+      // Hors ligne : heures du service (sans le nombre de places) ; c'est une heure SOUHAITÉE,
+      // le serveur prendra la plus proche libre au retour du réseau
+      const c = (services ?? undefined)?.[service];
+      if (!c) { setSlots([]); return; }
+      const step = orderCfg.slot_minutes ?? 15, lead = orderCfg.min_lead_minutes ?? 20;
+      const l: Slot[] = [];
+      for (let t = new Date(`${day}T${c.start}:00Z`).getTime(); t < new Date(`${day}T${c.end}:00Z`).getTime(); t += step * 60_000) {
+        if (t >= Date.now() + lead * 60_000) l.push({ at: new Date(t).toISOString(), left: 99 });
+      }
+      setSlots(l); setSlot(l[0]?.at ?? null);
+      return;
+    }
     rpc<Slot[]>("order_slots", { p_date: day, p_service: service }).then((r) => {
       const l = (Array.isArray(r) ? r : []) as Slot[];
       setSlots(l);
       setSlot(l.find((s) => s.left > 0)?.at ?? null);
     });
-  }, [day, service]);
+  }, [day, service, online, services, orderCfg.slot_minutes, orderCfg.min_lead_minutes]);
+
+  const summary = [...lines.map((l) => `${l.qty > 1 ? `${l.qty} × ` : ""}${l.item.dish.name}`), ...chosenExtras.map((e) => `${e.qty > 1 ? `${e.qty} × ` : ""}${e.name}`)].join(" + ");
+
+  // Sans réseau : la commande attend sur le téléphone (PIN chiffré) et part toute seule au retour du réseau
+  const queue = useCallback(async (pin: string) => {
+    if (!item || !day) return;
+    const uid = await myId();
+    if (!uid) return toast("err", t("Connexion requise."));
+    setBusy(true);
+    const r = await queueOrder({
+      user_id: uid, date: day, summary, total, pickup_pref: slot,
+      items: lines.map((l) => ({ menu_item_id: l.item.id, qty: l.qty })),
+      extras: chosenExtras.map((e) => ({ extra_id: e.id, qty: e.qty })),
+    }, pin);
+    setBusy(false);
+    setPinOpen(false);
+    if (!r.ok) return toast("err", r.message);
+    buzz([20, 60, 40]);
+    setQueued({ summary, at: slot });
+    setTimeout(() => router.replace("/app"), 3200);
+  }, [item, day, summary, total, slot, lines, chosenExtras, toast, router, t]);
 
   const order = useCallback(async (pin?: string) => {
     if (!item || !slot) return;
+    if (!navigator.onLine) {
+      // Face ID demande le serveur : sans réseau, seul le code PIN peut accompagner la commande
+      if (!pin || pin === "BIOMETRIC") { setPinError(en ? "No connection: use your PIN code." : "Pas de connexion : utilise ton code PIN."); setPinOpen(true); return; }
+      return queue(pin);
+    }
     setBusy(true);
     const r = await rpc<{ ticket_id: string; order_no: number; dish: string; pickup_at: string }>("place_order_cart", {
       p_items: lines.map((l) => ({ menu_item_id: l.item.id, qty: l.qty })), p_pickup_at: slot,
@@ -194,7 +254,7 @@ function Order() {
     setDone({ no: r.order_no, dish: r.dish, at: r.pickup_at });
     await Promise.all([syncTokens(), new Promise((ok) => setTimeout(ok, 2200))]);
     router.replace(`/app/tickets/${r.ticket_id}`);
-  }, [item, lines, slot, chosenExtras, day, service, refresh, router, toast, t]);
+  }, [item, lines, slot, chosenExtras, day, service, refresh, router, toast, t, queue, en]);
 
   const dayLabel = (d: string) => (d === today ? t("aujourd'hui") : d === addDays(today, 1) ? t("demain") : en ? enShort(d, "long") : `${dayShort(d).toLowerCase()} ${dayNum(d)}`);
 
@@ -203,6 +263,14 @@ function Order() {
       <PageHeader title={t("Commander")} />
       <div className="px-4">
         <p className="text-sm font-semibold text-muted">{t("Choisis tes plats (en quantité) et ton heure : la cuisine prépare, tu n'as plus qu'à passer le prendre.")}</p>
+        {!online && (
+          <p className="mt-3 flex gap-2 rounded-2xl bg-warn-soft px-3.5 py-3 text-[13px] font-semibold text-ink">
+            <WifiOff className="mt-0.5 size-4 shrink-0" />
+            <span>{en
+              ? "No connection: your order is kept on this phone and sent as soon as the network is back. Stock, balance and allergies are checked then."
+              : "Pas de connexion : ta commande est gardée sur ce téléphone et part dès le retour du réseau. Stock, solde et allergies sont vérifiés à ce moment-là."}</span>
+          </p>
+        )}
 
         {/* Jour */}
         <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
@@ -297,7 +365,8 @@ function Order() {
         {/* Heure de retrait */}
         {item && (
           <section className="mt-5">
-            <h2 className="flex items-center gap-1.5 text-[15px] font-extrabold"><Clock className="size-4" />{en ? `I'll pick it up ${day ? dayLabel(day) : ""} at…` : `Je passe le prendre ${day ? dayLabel(day) : ""} à…`}</h2>
+            <h2 className="flex items-center gap-1.5 text-[15px] font-extrabold"><Clock className="size-4" />{en ? `I'll pick it up ${day ? dayLabel(day) : ""} ${online ? "at" : "around"}…` : `Je passe le prendre ${day ? dayLabel(day) : ""} ${online ? "à" : "vers"}…`}</h2>
+            {!online && <p className="mt-0.5 text-xs font-semibold text-muted">{en ? "Preferred time: if it's full when the order is sent, the nearest free time is taken." : "Heure souhaitée : si elle est complète à l'envoi, la plus proche libre est prise."}</p>}
             <div className="mt-2 grid grid-cols-4 gap-2">
               {slots === null && [0, 1, 2, 3].map((i) => <div key={i} className="h-12 animate-pulse rounded-2xl bg-card" />)}
               {slots?.map((s) => (
@@ -330,15 +399,25 @@ function Order() {
         )}
         <Button id="order-btn" size="lg" block variant="dark" disabled={!item || !slot || insufficient || !win.ok} loading={busy}
           onClick={() => (needsPin ? (setPinError(null), setPinOpen(true)) : order())}>
-          <span className="whitespace-nowrap">{item ? <>{t("Commander")}{n > 1 ? (en ? ` ${n} dishes` : ` ${n} plats`) : ""}{slot ? ` · ${hm(slot)}` : ""} <span className="text-lime">·</span> {fcfa(total)}</> : t("Choisis tes plats")}</span>
+          <span className="whitespace-nowrap">{item ? <>{online ? t("Commander") : (en ? "Order offline" : "Commander hors ligne")}{n > 1 ? (en ? ` ${n} dishes` : ` ${n} plats`) : ""}{slot ? ` · ${hm(slot)}` : ""} <span className="text-lime">·</span> {fcfa(total)}</> : t("Choisis tes plats")}</span>
         </Button>
       </div>
 
       <Sheet open={pinOpen} onClose={() => setPinOpen(false)} title={t("Confirmer la commande")}>
-        <p className="-mt-2 mb-4 text-sm text-muted">{[...lines.map((l) => `${l.qty > 1 ? `${l.qty} × ` : ""}${l.item.dish.name}`), ...chosenExtras.map((e) => `${e.qty > 1 ? `${e.qty} × ` : ""}${e.name}`)].join(" + ")} · {t("retrait")} {slot ? hm(slot) : ""} · <b className="text-ink">{fcfa(total)}</b></p>
-        <BiometricConfirm enabled={!!profile?.biometric_enabled} mode="send" onConfirmed={(p) => order(p)} pinError={pinError} busy={busy} />
+        <p className="-mt-2 mb-4 text-sm text-muted">{summary} · {t("retrait")} {online ? "" : (en ? "around " : "vers ")}{slot ? hm(slot) : ""} · <b className="text-ink">{fcfa(total)}</b></p>
+        {/* Hors ligne : Face ID a besoin du serveur, on confirme avec le code PIN (vérifié à l'envoi) */}
+        <BiometricConfirm enabled={online && !!profile?.biometric_enabled} mode="send" onConfirmed={(p) => order(p)} pinError={pinError} busy={busy} />
       </Sheet>
 
+      {queued && (
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-ink px-8 text-center text-white" role="status">
+          <span className="animate-pop grid size-24 place-items-center rounded-full bg-lime text-ink"><WifiOff className="size-12" /></span>
+          <p className="mt-6 text-sm font-bold uppercase tracking-wider text-lime">{en ? "Kept on your phone" : "Gardée sur ton téléphone"}</p>
+          <p className="mt-1 text-3xl font-extrabold">{en ? "Sent when the network is back" : "Envoyée au retour du réseau"}</p>
+          <p className="mt-3 text-lg font-semibold text-white/80">{queued.summary}{queued.at ? <><br />{en ? `around ${hm(queued.at)}` : `vers ${time(queued.at)}`}</> : null}</p>
+          <p className="mt-6 text-sm text-white/60">{en ? "You'll get a message when it reaches the kitchen. Nothing is charged until then." : "Un message te prévient quand elle arrive en cuisine. Rien n'est débité avant."}</p>
+        </div>
+      )}
       {done && (
         <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-ink px-8 text-center text-white" role="status">
           <span className="animate-pop grid size-24 place-items-center rounded-full bg-lime text-ink"><ChefHat className="size-12" /></span>

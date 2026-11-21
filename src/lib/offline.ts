@@ -2,7 +2,7 @@
 /** Pages de l'appli client gardées sur le téléphone (avec leurs fichiers JS/CSS) pour fonctionner sans réseau. */
 export const OFFLINE_PAGES = [
   "/app", "/app/menu", "/app/tickets", "/app/historique", "/app/profil", "/app/notifications",
-  "/app/acheter", "/app/recharger", "/app/transferer",
+  "/app/acheter", "/app/recharger", "/app/transferer", "/app/commander",
 ];
 
 /** Demande au service worker d'enregistrer ces pages et tout ce qu'elles chargent (sans effet hors ligne). */

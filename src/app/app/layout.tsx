@@ -3,6 +3,7 @@ import { BottomNav } from "@/components/app/bottom-nav";
 import { ReviewPrompt } from "@/components/app/review-prompt";
 import { OfflineBanner } from "@/components/app/offline-banner";
 import { AppLock } from "@/components/app/app-lock";
+import { OfflineOrderSync } from "@/components/app/offline-order-sync";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <BottomNav />
       <ReviewPrompt />
       <AppLock />
+      <OfflineOrderSync />
     </AppDataProvider>
   );
 }
