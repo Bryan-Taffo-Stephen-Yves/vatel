@@ -13,6 +13,7 @@ import { useLang, useT } from "@/lib/i18n";
 import { useAppData } from "@/components/app/app-data";
 import { WhatsAppLink } from "@/components/app/whatsapp-link";
 import { PushToggle } from "@/components/push-toggle";
+import { ChildStats } from "@/components/app/child-stats";
 
 type Child = { link_id: string; status: "pending" | "active"; id: string; name: string; short_code: string; balance: number | null;
   allergies: string[] | null; diets: string[] | null; spent_week: number | null;
@@ -160,6 +161,7 @@ export default function FamilyPage() {
                     <Button className="flex-1" onClick={() => { setAmount(5000); setRecharge(c); }}><Wallet className="size-4" />{t("Recharger son compte")}</Button>
                     <Button variant="outline" onClick={() => openDiet(c)}><Salad className="size-4" />{t("Allergies")}</Button>
                   </div>
+                  <ChildStats childId={c.id} firstName={c.name.split(" ")[0]} />
                   <div className="border-t border-line px-4 py-3">
                     <p className="mb-2 flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-muted"><Utensils className="size-3.5" />{t("Ce qu'il a mangé (14 jours)")}</p>
                     {(c.meals ?? []).length === 0 ? <p className="text-sm text-muted">{t("Aucun repas servi récemment.")}</p> : (
