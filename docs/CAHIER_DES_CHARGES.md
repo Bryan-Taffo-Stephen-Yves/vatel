@@ -1183,6 +1183,21 @@ journal et message dans le groupe.
 - Élèves : niveau en mots (« Peu de monde », « Il y a du monde », « Très plein », « Attente probable »), jamais le nombre
   de plateaux.
 
+## 20 quinquies. Palmarès des plats et gaspillage dans les prévisions (construit)
+
+> **Réalisé** : migration `20261121202000_dish_leaderboard` (`dish_leaderboard(mois)`, `_dish_left`, `admin_forecast`
+> avec `left_pct` / `portion_cut` / `waste_advice`), carte « Palmarès » en haut de `/admin/avis`
+> (`src/components/admin/dish-leaderboard.tsx`), colonne « Laissé » et encart « Assiettes laissées à moitié » dans
+> `/admin/previsions`, consigne de `forecast-assistant` complétée. Tests : `supabase/tests/99zb_dish_leaderboard.sql`.
+
+- **Palmarès du mois** : 5 plats les plus aimés et 5 moins aimés (jamais dans les deux listes ; avec peu de plats notés,
+  la moitié haute d'un côté et le reste de l'autre). Note **pondérée par le nombre d'avis** (moyenne bayésienne, K = 5),
+  repas servis (tickets + personnel), % laissé dans l'assiette (photos d'assiettes rendues, au moins 3).
+- **Conseil au chef** en une ou deux phrases : « Le plus aimé : « Garba » (4,7★, 412 repas), à garder au menu. Le moins
+  aimé : « Salade composée » (2,6★, 46 % laissé dans l'assiette) : réduire la portion ou revoir la recette. »
+- **Prévisions** : % laissé par plat sur 30 jours ; un plat souvent laissé réduit ses besoins en ingrédients de la moitié
+  du % laissé (au plus −25 %) ; conseil pour chaque plat laissé à 25 % ou plus ; l'assistant IA en tient compte.
+
 ## 21. Commandes à heure de retrait, Jean (WhatsApp) et Jean au téléphone (Retell)
 
 ### 21.1 Commande d'un plat avec heure de retrait
