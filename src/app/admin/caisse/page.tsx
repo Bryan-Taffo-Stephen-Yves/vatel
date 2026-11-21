@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { dateTime, fcfa, signedFcfa } from "@/lib/format";
 import { GuestEvents } from "@/components/admin/guest-events";
+import { CashDay } from "@/components/admin/cash-day";
 
 type U = { id: string; full_name: string; phone: string | null; short_code: string; role: string; points: number; is_blocked: boolean; balance: number; email: string };
 type Tx = { id: string; type: string; amount: number; balance_after: number; note: string | null; created_at: string };
@@ -27,6 +28,7 @@ export default function CashierPage() {
   const [txs, setTxs] = useState<Tx[]>([]);
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
+  const [credited, setCredited] = useState(0);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
 
   const search = useCallback(async (query: string) => {
@@ -51,6 +53,7 @@ export default function CashierPage() {
     if (!r.ok) return toast("err", r.message);
     setReceipt({ ...r.receipt, transaction_id: r.transaction_id });
     toast("ok", `${fcfa(v)} crédités à ${sel.full_name}.`);
+    setCredited((n) => n + 1); // bilan de caisse à jour tout de suite
     const nu = { ...sel, balance: r.balance };
     open(nu); setReceipt({ ...r.receipt, transaction_id: r.transaction_id }); search(q);
   }
@@ -157,6 +160,7 @@ export default function CashierPage() {
           </div>
         )}
       </div>
+      <div className="mt-4"><CashDay version={credited} /></div>
       <GuestEvents />
     </>
   );

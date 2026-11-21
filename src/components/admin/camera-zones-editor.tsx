@@ -127,7 +127,7 @@ export function CameraZonesEditor() {
                   {z.kind === "table" && (
                     <span className="flex items-center gap-2">
                       <button aria-label="Moins de places" onClick={() => edit(zones.map((x) => (x.id === z.id ? { ...x, seats: Math.max(1, x.seats - 1) } : x)))} className="grid size-7 place-items-center rounded-full bg-canvas"><Minus className="size-3.5" /></button>
-                      <span className="w-16 text-center font-bold">{z.seats} places</span>
+                      <span className="w-16 text-center font-bold">{z.seats} place{z.seats > 1 ? "s" : ""}</span>
                       <button aria-label="Plus de places" onClick={() => edit(zones.map((x) => (x.id === z.id ? { ...x, seats: Math.min(20, x.seats + 1) } : x)))} className="grid size-7 place-items-center rounded-full bg-canvas"><Plus className="size-3.5" /></button>
                     </span>
                   )}

@@ -244,6 +244,7 @@ export default function CameraPage() {
     c.width = r.width * dpr; c.height = r.height * dpr;
     const g = c.getContext("2d")!; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, r.width, r.height);
     const W = r.width, H = r.height;
+    if (!running) return; // caméra arrêtée : pas de zones par-dessus les consignes
     zones.forEach((z, i) => {
       const occ = z.kind === "table" && tables.current[z.id]?.occupied;
       g.fillStyle = z.kind === "queue" ? "rgba(250,204,21,0.18)" : occ ? "rgba(239,68,68,0.22)" : "rgba(34,197,94,0.18)";
@@ -260,7 +261,7 @@ export default function CameraPage() {
       const d = draft.current; g.setLineDash([6, 4]); g.strokeStyle = "#fff";
       g.strokeRect(Math.min(d.x0, d.x1) * W, Math.min(d.y0, d.y1) * H, Math.abs(d.x1 - d.x0) * W, Math.abs(d.y1 - d.y0) * H); g.setLineDash([]);
     }
-  }, [boxes, zones, stats.queue, edit]);
+  }, [boxes, zones, stats.queue, edit, running]);
 
   // Tracé d'une zone au doigt
   const pt = (e: React.PointerEvent) => { const r = (e.target as HTMLElement).getBoundingClientRect(); return { x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)) }; };
@@ -375,7 +376,7 @@ export default function CameraPage() {
               {z.kind === "table" && (
                 <span className="flex items-center gap-2">
                   <button aria-label="Moins de places" onClick={() => saveZones(zones.map((x) => x.id === z.id ? { ...x, seats: Math.max(1, x.seats - 1) } : x))} className="grid size-7 place-items-center rounded-full bg-white/10"><Minus className="size-3.5" /></button>
-                  <span className="w-16 text-center font-bold">{z.seats} places</span>
+                  <span className="w-16 text-center font-bold">{z.seats} place{z.seats > 1 ? "s" : ""}</span>
                   <button aria-label="Plus de places" onClick={() => saveZones(zones.map((x) => x.id === z.id ? { ...x, seats: Math.min(20, x.seats + 1) } : x))} className="grid size-7 place-items-center rounded-full bg-white/10"><Plus className="size-3.5" /></button>
                 </span>
               )}

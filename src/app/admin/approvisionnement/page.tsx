@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { Bot, Play, Power, Check, X, PackageCheck, Trash2, Send, Settings2, PhoneCall, Bike, AlertTriangle, MessageCircle } from "lucide-react";
+import { Bot, Play, Power, Check, X, PackageCheck, Trash2, Send, Settings2, PhoneCall, Bike, AlertTriangle } from "lucide-react";
 import { edge, rpc } from "@/lib/supabase/client";
 import { Card, PageTitle, Badge, Kpi, Empty, Segmented, input } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
@@ -129,7 +129,6 @@ export default function SupplyAgentPage() {
           <Badge tone={cfg.mode === "reel" ? "dark" : "gray"}>{cfg.mode === "reel" ? "Appels réels (Retell)" : "Appels simulés"}</Badge>
           {cfg.demo_phone && <Badge tone="lime"><PhoneCall className="size-3" />Démo : tous les appels vers {cfg.demo_phone}</Badge>}
           {data && !data.ready.functions && <Badge tone="err"><AlertTriangle className="size-3" />Adresse des fonctions manquante (réglage Jean)</Badge>}
-          {data && !data.ready.group && <Badge tone="gray"><MessageCircle className="size-3" />Groupe WhatsApp pas encore relié (« #vatel »)</Badge>}
           {cfg.last_tick_at && <span className="text-xs text-muted">Dernier passage : {time(cfg.last_tick_at)}</span>}
         </div>
         {showCfg && (
@@ -246,7 +245,7 @@ export default function SupplyAgentPage() {
         </div>
 
         <div className="min-w-0 space-y-4">
-          <Card title="Parler à l'agent" subtitle="Comme dans le groupe WhatsApp : « où en est le riz ? », « commande 20 poulets », « annule le marché »">
+          <Card title="Parler à l'agent" subtitle="Écrivez-lui comme à un collègue : « où en est le riz ? », « commande 20 poulets », « annule le marché »">
             <div className="mb-3 max-h-72 space-y-2 overflow-y-auto">
               {chat.length === 0 && <p className="text-sm text-muted">Exemples : « qu&apos;est-ce qu&apos;on a commandé aujourd&apos;hui ? » · « commande 2 sacs de riz » · « oui pour Koné »</p>}
               {chat.map((m, k) => (
@@ -261,7 +260,7 @@ export default function SupplyAgentPage() {
             </form>
           </Card>
 
-          <Card title="Ce que fait l'agent" subtitle="En direct · aussi posté dans le groupe WhatsApp de l'équipe">
+          <Card title="Ce que fait l'agent" subtitle="En direct : chaque appel, relance, accord et réception">
             {(data?.events.length ?? 0) === 0 ? <Empty>Rien pour l&apos;instant.</Empty> : (
               <ul className="max-h-[560px] space-y-2 overflow-y-auto">
                 {data?.events.map((e) => (
