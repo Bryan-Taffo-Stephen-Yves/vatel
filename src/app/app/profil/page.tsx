@@ -6,7 +6,7 @@ import { PushToggle } from "@/components/push-toggle";
 import { InstallApp } from "@/components/install-app";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { LogOut, KeyRound, Bell, Sparkles, Gift, ChevronRight, LayoutDashboard, ScanLine, PhoneOff, Smartphone, ScanFace, Users } from "lucide-react";
+import { LogOut, KeyRound, Bell, Sparkles, Gift, ChevronRight, LayoutDashboard, ScanLine, PhoneOff, Smartphone, ScanFace, Users, Wallet, ReceiptText, ArrowLeftRight } from "lucide-react";
 import { biometricLabel, biometricSupported, disableBiometric, enableBiometric, prepareBiometric, prepareEnable } from "@/lib/biometric";
 import { syncTokens } from "@/lib/tickets";
 import { rpc, supabase } from "@/lib/supabase/client";
@@ -181,6 +181,15 @@ export default function ProfilePage() {
               : <>Vous pouvez quand même manger : au comptoir, donnez votre nom ou votre code <b className="text-ink">{profile?.short_code}</b>, puis tapez votre code PIN sur le téléphone de l&apos;agent.</>}</p>
           </div>
         </section>}
+
+        {/* Onglet « Moi » : l'argent et l'historique, rangés ici (la barre du bas garde Aujourd'hui · Menu · QR · Moi) */}
+        {!profile?.is_parent && (
+          <div className="mt-4 divide-y divide-line overflow-hidden rounded-[24px] bg-card shadow-[var(--shadow-card)]">
+            <Row icon={Wallet} label={t("Recharger")} hint={t("Wave, Orange Money, MTN, Moov")} onClick={() => router.push("/app/recharger")} />
+            <Row icon={ReceiptText} label={t("Historique")} hint={t("Repas et argent, détail de chaque opération")} onClick={() => router.push("/app/historique")} />
+            <Row icon={ArrowLeftRight} label={t("Envoyer de l'argent")} hint={t("À un camarade, avec son code")} onClick={() => router.push("/app/transferer")} />
+          </div>
+        )}
 
         <div className="mt-4 space-y-3"><InstallApp variant="row" /><PushToggle /></div>
         <div className="mt-4 divide-y divide-line overflow-hidden rounded-[24px] bg-card shadow-[var(--shadow-card)]">

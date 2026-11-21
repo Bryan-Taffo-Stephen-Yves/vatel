@@ -243,7 +243,7 @@ export default function ScanPage() {
                 "left-0 bottom-0 border-l-[6px] border-b-[6px] rounded-bl-3xl", "right-0 bottom-0 border-r-[6px] border-b-[6px] rounded-br-3xl"].map((c) => (
                 <span key={c} className={clsx("absolute size-14 border-lime", c)} />
               ))}
-              <span className="absolute inset-x-4 top-1/2 h-0.5 animate-pulse bg-lime/80 shadow-[0_0_16px_#C8F135]" />
+              <span className="absolute inset-x-4 top-1/2 h-0.5 animate-pulse bg-lime/80 shadow-[0_0_16px_#53B5FD]" />
             </div>
           </div>
         )}

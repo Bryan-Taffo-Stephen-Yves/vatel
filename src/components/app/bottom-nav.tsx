@@ -1,17 +1,17 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, UtensilsCrossed, QrCode, ReceiptText, UserRound, Users, Bell } from "lucide-react";
+import { Home, Sun, UtensilsCrossed, QrCode, ReceiptText, UserRound, Users, Bell } from "lucide-react";
 import { useAppData } from "@/components/app/app-data";
 import clsx from "clsx";
 import { useT } from "@/lib/i18n";
 
+// Élève : 4 onglets centrés sur « manger » ; l'argent et l'historique sont dans « Moi »
 const TABS = [
-  { href: "/app", label: "Accueil", icon: Home, exact: true },
+  { href: "/app", label: "Aujourd'hui", icon: Sun, exact: true },
   { href: "/app/menu", label: "Menu", icon: UtensilsCrossed },
   { href: "/app/tickets", label: "Mon QR", icon: QrCode, center: true },
-  { href: "/app/historique", label: "Historique", icon: ReceiptText },
-  { href: "/app/profil", label: "Profil", icon: UserRound },
+  { href: "/app/profil", label: "Moi", icon: UserRound, also: ["/app/historique", "/app/recharger", "/app/transferer", "/app/famille", "/app/notifications"] },
 ];
 // Compte parent : pas de menu ni de QR (il ne mange pas à la cantine) ; ses enfants, ses alertes, son profil
 const PARENT_TABS = [
@@ -26,7 +26,7 @@ export function BottomNav() {
   const path = usePathname();
   const t = useT();
   const { profile } = useAppData();
-  const tabs: { href: string; label: string; icon: typeof Home; exact?: boolean; center?: boolean }[] = profile?.is_parent ? PARENT_TABS : TABS;
+  const tabs: { href: string; label: string; icon: typeof Home; exact?: boolean; center?: boolean; also?: string[] }[] = profile?.is_parent ? PARENT_TABS : TABS;
   // Écrans avec leur propre bouton d'action en bas : pas de barre d'onglets
   if (/^\/app\/(menu\/.+|recharger|transferer|acheter)/.test(path)) return null;
   // Profil pas encore connu (première ouverture) : pas d'onglets élève affichés à un parent, même un instant
@@ -35,7 +35,7 @@ export function BottomNav() {
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
       <div className="flex items-end justify-between rounded-[26px] border border-line bg-card/95 px-2 pb-2 pt-1.5 shadow-[var(--shadow-float)] backdrop-blur">
         {tabs.map((tab) => {
-          const active = tab.exact ? path === tab.href : path.startsWith(tab.href);
+          const active = tab.exact ? path === tab.href : path.startsWith(tab.href) || !!tab.also?.some((a) => path.startsWith(a));
           const Icon = tab.icon;
           if (tab.center) {
             return (
@@ -43,7 +43,7 @@ export function BottomNav() {
                 className="-mt-7 flex flex-1 flex-col items-center gap-1">
                 <span className={clsx(
                   "grid size-[60px] place-items-center rounded-[22px] ring-[5px] ring-canvas transition active:scale-95",
-                  active ? "bg-ink text-lime" : "bg-lime text-ink shadow-[0_6px_18px_rgb(143_181_21/0.45)]",
+                  active ? "bg-ink text-lime" : "bg-lime text-ink shadow-[0_6px_18px_rgb(83_181_253/0.45)]",
                 )}>
                   <Icon key={String(active)} className={clsx("size-7", active && "animate-nav")} strokeWidth={2.2} />
                 </span>

@@ -131,7 +131,7 @@ export function AreaLine({ data, height = 180, max: fixedMax, format = (n: numbe
 }
 
 // Rampe séquentielle à une teinte (vert), du clair au foncé
-const RAMP = ["#F4F9E4", "#E3F1B8", "#C8E27A", "#A6C93D", "#7E9E1B", "#566E0C"];
+const RAMP = ["#EEF7FF", "#CFE8FD", "#95D1F7", "#53B5FD", "#1F86D1", "#0F5A93"];
 
 export function Heatmap({ rows, cols, value, rowLabel, colLabel, format }: {
   rows: number[]; cols: number[]; value: (r: number, c: number) => number | undefined;

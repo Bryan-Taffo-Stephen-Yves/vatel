@@ -47,7 +47,7 @@ function StudentHome() {
   useEffect(() => {
     const m = document.querySelector('meta[name="theme-color"]');
     const before = m?.getAttribute("content");
-    m?.setAttribute("content", "#C8F135");
+    m?.setAttribute("content", "#53B5FD");
     return () => { if (m && before) m.setAttribute("content", before); };
   }, []);
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
