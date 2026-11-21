@@ -20,11 +20,11 @@ import { AmountInput } from "@/components/ui/amount-input";
 
 const AMOUNTS = [2000, 5000, 10000, 25000, 50000, 100000];
 const OPERATORS = [
-  { id: "wave", name: "Wave", color: "#1DC3FF", prefix: null },
-  { id: "orange", name: "Orange Money", color: "#FF7900", prefix: "07" },
-  { id: "mtn", name: "MTN MoMo", color: "#FFCB05", prefix: "05" },
-  { id: "moov", name: "Moov Money", color: "#0066B3", prefix: "01" },
-  { id: "djamo", name: "Djamo", color: "#111827", prefix: null },
+  { id: "wave", logo: "/landing/pay/wave.png", name: "Wave", color: "#1DC3FF", prefix: null },
+  { id: "orange", logo: "/landing/pay/orange.svg", name: "Orange Money", color: "#FF7900", prefix: "07" },
+  { id: "mtn", logo: "/landing/pay/mtn.svg", name: "MTN MoMo", color: "#FFCB05", prefix: "05" },
+  { id: "moov", logo: "/landing/pay/moov.png", name: "Moov Money", color: "#0066B3", prefix: "01" },
+  { id: "djamo", logo: null, name: "Djamo", color: "#111827", prefix: null },
 ] as const;
 
 type Wait = { reference: string; ussd: boolean; state: "pending" | "success" | "error"; amount?: number; reason?: string | null };
@@ -187,7 +187,10 @@ export default function RechargePage() {
             <button key={o.id} onClick={() => setOp(o.id)}
               className={clsx("flex h-14 items-center gap-2.5 rounded-2xl border-2 bg-card px-3 text-left text-sm font-bold transition",
                 op === o.id ? "border-ink" : "border-transparent shadow-[var(--shadow-card)]")}>
-              <span className="grid size-8 place-items-center rounded-xl text-white" style={{ background: o.color }}><Smartphone className="size-4" /></span>
+              {o.logo
+                // eslint-disable-next-line @next/next/no-img-element
+                ? <img src={o.logo} alt="" width={32} height={32} className="size-8 shrink-0 rounded-xl bg-white object-contain ring-1 ring-black/5" />
+                : <span className="grid size-8 shrink-0 place-items-center rounded-xl text-white" style={{ background: o.color }}><Smartphone className="size-4" /></span>}
               {o.name}
             </button>
           ))}
