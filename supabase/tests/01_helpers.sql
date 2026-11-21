@@ -108,6 +108,8 @@ declare
   v_attieke uuid; v_garba uuid; v_vip uuid; v_cat int;
   r record;
 begin
+  -- Les tests rechargent beaucoup en mode démo : plafond journalier de la simulation levé (testé à part dans 99w)
+  update public.settings set value = value || '{"sim_daily_max": 100000000}' where key = 'mobile_money';
   for r in select * from (values
       ('alice',  'Alice Kouassi', '+2250701020304', 'client'),
       ('bob',    'Bob Traoré',    '+2250505050505', 'client'),
