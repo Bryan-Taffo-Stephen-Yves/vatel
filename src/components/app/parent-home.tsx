@@ -1,9 +1,8 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { Bell, ChevronRight, UserPlus, Wallet, AlertTriangle, ShieldCheck } from "lucide-react";
-import { rpc } from "@/lib/supabase/client";
+import { useFamilyOverview } from "@/lib/family-cache";
 import { useAppData } from "@/components/app/app-data";
 import { WhatsAppLink } from "@/components/app/whatsapp-link";
 import { fcfa, firstName, time } from "@/lib/format";
@@ -31,9 +30,7 @@ export function ParentHome() {
   const { profile, unread } = useAppData();
   const t = useT();
   const en = useLang() === "en";
-  const [o, setO] = useState<Overview | null>(null);
-  const load = useCallback(() => rpc<Overview>("family_overview").then((r) => r.ok && setO(r as unknown as Overview)), []);
-  useEffect(() => { load(); }, [load]);
+  const { data: o } = useFamilyOverview<Overview>(profile?.id);
   const kids = o?.children.filter((c) => c.status === "active") ?? [];
   const h = new Date().getUTCHours();
 

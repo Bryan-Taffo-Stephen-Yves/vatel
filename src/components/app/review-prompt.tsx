@@ -23,6 +23,8 @@ export function ReviewPrompt() {
   const [p, setP] = useState<PendingReview | null>(null);
 
   const check = useCallback(async () => {
+    // Compte parent : jamais de ticket à noter
+    try { if (JSON.parse(localStorage.getItem("dabali:me") ?? "null")?.profile?.is_parent) return; } catch {}
     const { data } = await supabase().rpc("pending_review");
     const r = data as PendingReview | null;
     let later: string[] = [];

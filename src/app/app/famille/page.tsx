@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { UserPlus, Wallet, Utensils, Star, Check, X, AlertTriangle, ShieldCheck, Salad } from "lucide-react";
 import { rpc } from "@/lib/supabase/client";
@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { dateTime, fcfa } from "@/lib/format";
 import { ALLERGIES, DIETS, allergenLabel } from "@/lib/diet";
 import { useLang, useT } from "@/lib/i18n";
+import { useFamilyOverview } from "@/lib/family-cache";
 import { useAppData } from "@/components/app/app-data";
 import { WhatsAppLink } from "@/components/app/whatsapp-link";
 import { PushToggle } from "@/components/push-toggle";
@@ -27,7 +28,6 @@ export default function FamilyPage() {
   const toast = useToast();
   const t = useT();
   const en = useLang() === "en";
-  const [o, setO] = useState<Overview | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const { profile } = useAppData();
@@ -55,8 +55,7 @@ export default function FamilyPage() {
     toast("ok", en ? `${dietFor.name.split(" ")[0]}’s allergies saved. They’ve been notified.` : `Allergies de ${dietFor.name.split(" ")[0]} enregistrées. Il est prévenu.`); setDietFor(null); load();
   }
 
-  const load = useCallback(() => rpc<Overview>("family_overview").then((r) => r.ok && setO(r as unknown as Overview)), []);
-  useEffect(() => { load(); }, [load]);
+  const { data: o, load } = useFamilyOverview<Overview>(profile?.id);
   // Lien d'invitation (?code=DB-xxxx) : code prérempli ; depuis l'accueil (?recharge=id) : feuille de recharge ouverte
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);

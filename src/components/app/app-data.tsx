@@ -76,6 +76,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         // Données aussi : historique et menu de la semaine, même jamais ouverts
         const uid = await myId();
         if (!uid || !navigator.onLine) return;
+        // Compte parent : ni historique ni menu à préparer (il ne mange pas à la cantine)
+        try { if (JSON.parse(localStorage.getItem("dabali:me") ?? "null")?.profile?.is_parent) return; } catch {}
         const { data } = await supabase().from("transactions").select("id, type, amount, balance_after, note, created_at, counterpart_name")
           .eq("user_id", uid).order("created_at", { ascending: false }).limit(150);
         if (data) writeCache("dabali:tx", data);

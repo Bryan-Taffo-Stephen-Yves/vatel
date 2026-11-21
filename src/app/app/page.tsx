@@ -25,7 +25,9 @@ function greeting() {
 // Compte parent : accueil dédié (il suit et recharge ses enfants, il ne mange pas à la cantine)
 export default function HomePage() {
   const { profile } = useAppData();
-  return profile?.is_parent ? <ParentHome /> : <StudentHome />;
+  // Tant que le profil n'est pas connu, ni l'accueil élève ni l'accueil parent (évite de lancer les requêtes élève pour un parent)
+  if (!profile) return <main className="px-4 pt-[max(1rem,env(safe-area-inset-top))]"><div className="h-12 w-48 animate-pulse rounded-full bg-card" /><div className="mt-5 h-48 animate-pulse rounded-[26px] bg-card" /></main>;
+  return profile.is_parent ? <ParentHome /> : <StudentHome />;
 }
 
 function StudentHome() {
