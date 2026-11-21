@@ -1,7 +1,7 @@
 "use client";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { Flame, Star, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
@@ -24,7 +24,6 @@ export default function MenuPage() {
 }
 
 function Menu() {
-  const router = useRouter();
   const params = useSearchParams();
   const today = todayISO();
   const [items, setItems] = useState<MenuItem[] | null>(null);
@@ -47,7 +46,8 @@ function Menu() {
   const go = (patch: Record<string, string>) => {
     const p = new URLSearchParams(params);
     Object.entries(patch).forEach(([k, v]) => p.set(k, v));
-    router.replace(`/app/menu?${p}`, { scroll: false });
+    // Changement instantané (pas d'aller-retour serveur) : l'URL suit, useSearchParams se met à jour
+    window.history.replaceState(null, "", `/app/menu?${p}`);
   };
 
   useEffect(() => {
