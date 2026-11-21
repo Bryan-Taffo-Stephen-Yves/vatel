@@ -7,6 +7,11 @@ réservation et commande de plats, tickets QR, suivi parent, cuisine pilotée pa
 > **Démo en ligne : https://dabalix.netlify.app** (installable sur téléphone : PWA)
 > Cahier des charges détaillé : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md) · Retours d'expérience : [docs/RETEX.md](docs/RETEX.md)
 
+> **Comment ce dépôt a été construit.** Application préparée à partir du cahier des charges reçu en amont, comme
+> prévu par l'organisation. Le code a été remis ici le jour du concours en 14 blocs thématiques (un commit par bloc,
+> heure réelle). Le travail de la journée suit en commits normaux. Développé avec l'aide de l'IA (Claude), autorisée
+> par le règlement.
+
 ## Les problèmes et nos réponses
 
 | Problème du sujet | Réponse dans Dabali |
