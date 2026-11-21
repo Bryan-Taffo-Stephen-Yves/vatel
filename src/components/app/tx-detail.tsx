@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase/client";
 import { Sheet } from "@/components/ui/sheet";
 import { fcfa, signedFcfa, todayISO, dayLong, TZ } from "@/lib/format";
 import { useLang, useT } from "@/lib/i18n";
+import { useAppData } from "@/components/app/app-data";
 
 /** Opération du porte-monnaie (table transactions) */
 export type Tx = { id: string; type: string; amount: number; balance_after: number; note: string | null; created_at: string; counterpart_name: string | null };
@@ -41,15 +42,17 @@ export function TxDetail({ tx, payment: given, childName, onClose }: {
 }) {
   const t = useT();
   const en = useLang() === "en";
-  const [pay, setPay] = useState<Payment | null>(given ?? null);
+  const { profile } = useAppData();
+  const [loaded, setLoaded] = useState<Payment | null>(null);
+  const pay = given ?? loaded;
   const [copied, setCopied] = useState(false);
   const open = !!(tx || given);
 
   useEffect(() => {
-    setPay(given ?? null); setCopied(false);
+    setLoaded(null); setCopied(false);
     if (!tx || given || !tx.type.startsWith("recharge")) return;
     supabase().from("payments").select(PAYMENT_COLUMNS).eq("transaction_id", tx.id).maybeSingle()
-      .then(({ data }) => data && setPay(data as Payment));
+      .then(({ data }) => data && setLoaded(data as Payment));
   }, [tx, given]);
 
   if (!open) return null;
@@ -74,7 +77,8 @@ export function TxDetail({ tx, payment: given, childName, onClose }: {
   if (who && tx) rows.push([tx.type === "transfer_in" ? t("Expéditeur") : t("Bénéficiaire"), tx.counterpart_name!]);
   if (pay) {
     rows.push([t("Moyen de paiement"), METHOD_LABEL[pay.method] ?? pay.method]);
-    if (pay.payer_phone) rows.push([t("Numéro débité"), maskPhone(pay.payer_phone)]);
+    // Numéro débité : seulement pour celui qui a payé (l'élève ne voit pas le numéro de son parent)
+    if (pay.payer_phone && pay.payer_id === profile?.id) rows.push([t("Numéro débité"), maskPhone(pay.payer_phone)]);
     if (pay.fee) rows.push([t("Frais"), fcfa(pay.fee)]);
     if (pay.provider_tx_id) rows.push([t("Réf. opérateur"), <span key="p" className="font-mono text-xs">{pay.provider_tx_id}</span>]);
     if (pay.status === "error" && pay.error_reason) rows.push([t("Motif de l'échec"), pay.error_reason]);
