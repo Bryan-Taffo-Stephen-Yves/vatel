@@ -17,6 +17,7 @@ const TABS = [
 const PARENT_TABS = [
   { href: "/app", label: "Accueil", icon: Home, exact: true },
   { href: "/app/famille", label: "Ma famille", icon: Users },
+  { href: "/app/historique", label: "Historique", icon: ReceiptText },
   { href: "/app/notifications", label: "Alertes", icon: Bell },
   { href: "/app/profil", label: "Profil", icon: UserRound },
 ];

@@ -7,10 +7,12 @@ import { readCache, writeCache } from "@/lib/offline";
 import { PageHeader } from "@/components/app/page-header";
 import { fcfa, signedFcfa, relativeDay, time, todayISO, TZ } from "@/lib/format";
 import { useLang, useT, type Lang } from "@/lib/i18n";
+import { TxDetail, type Tx } from "@/components/app/tx-detail";
+import { useAppData } from "@/components/app/app-data";
+import { ParentHistory } from "@/components/app/parent-history";
 
 type Tr = (fr: string) => string;
 
-type Tx = { id: string; type: string; amount: number; balance_after: number; note: string | null; created_at: string; counterpart_name: string | null };
 
 // Une couleur par famille : vert = argent qui entre, bleu = transferts envoyés, gris = repas achetés
 const META: Record<string, { label: string; icon: typeof Gift; bg: string }> = {
@@ -69,6 +71,13 @@ const FILTERS = [
 ];
 
 export default function HistoryPage() {
+  const { profile } = useAppData();
+  // Compte parent : l'historique, ce sont les recharges qu'il a payées pour ses enfants
+  if (profile?.is_parent) return <ParentHistory />;
+  return <StudentHistory />;
+}
+
+function StudentHistory() {
   const t = useT();
   const lang = useLang();
   // Titre du jour : Aujourd'hui / Hier / Demain traduits, sinon la date dans la langue choisie
@@ -81,6 +90,7 @@ export default function HistoryPage() {
   const [filter, setFilter] = useState("all");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [stale, setStale] = useState(false);
+  const [sel, setSel] = useState<Tx | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -131,7 +141,7 @@ export default function HistoryPage() {
           <section key={day} className="mt-5">
             <h2 className="mb-2 text-xs font-extrabold uppercase tracking-wider text-muted">{dayTitle(day)}</h2>
             <div className="divide-y divide-line overflow-hidden rounded-[22px] bg-card shadow-[var(--shadow-card)]">
-              {rows(items).map((r) => r.items.length === 1 ? <TxRow key={r.key} t={r.items[0]} /> : (
+              {rows(items).map((r) => r.items.length === 1 ? <TxRow key={r.key} t={r.items[0]} onOpen={setSel} /> : (
                 <div key={r.key}>
                   <button onClick={() => setOpen((o) => ({ ...o, [r.key]: !o[r.key] }))} aria-expanded={!!open[r.key]}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-canvas">
@@ -145,13 +155,14 @@ export default function HistoryPage() {
                     </div>
                     <Amount amount={r.items.reduce((n, t) => n + t.amount, 0)} after={r.items[0].balance_after} />
                   </button>
-                  {open[r.key] && <div className="animate-rise border-t border-dashed border-line bg-canvas/60">{r.items.map((t) => <TxRow key={t.id} t={t} />)}</div>}
+                  {open[r.key] && <div className="animate-rise border-t border-dashed border-line bg-canvas/60">{r.items.map((t) => <TxRow key={t.id} t={t} onOpen={setSel} />)}</div>}
                 </div>
               ))}
             </div>
           </section>
         ))}
       </div>
+      <TxDetail tx={sel} onClose={() => setSel(null)} />
     </main>
   );
 }
@@ -172,17 +183,17 @@ function Amount({ amount, after }: { amount: number; after: number }) {
   );
 }
 
-function TxRow({ t }: { t: Tx }) {
+function TxRow({ t, onOpen }: { t: Tx; onOpen: (t: Tx) => void }) {
   const tr = useT();
   const lang = useLang();
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
+    <button onClick={() => onOpen(t)} className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-canvas">
       <Icon t={t} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold">{title(t, tr, lang)}</p>
         <p className="truncate text-xs text-muted">{detail(t, lang)}</p>
       </div>
       <Amount amount={t.amount} after={t.balance_after} />
-    </div>
+    </button>
   );
 }

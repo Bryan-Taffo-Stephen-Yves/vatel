@@ -100,4 +100,12 @@ export const EN_D: Record<string, string> = {
   "Ajouter un autre enfant": "Add another child",
   "Alertes": "Alerts",
   "Compte parent": "Parent account",
+  "Détail de l'opération": "Transaction details",
+  "Date": "Date", "Heure": "Time", "Type": "Type", "Objet": "Purpose", "Expéditeur": "Sender", "Bénéficiaire": "Recipient",
+  "Moyen de paiement": "Payment method", "Numéro débité": "Number charged", "Frais": "Fees", "Réf. opérateur": "Operator ref.",
+  "Motif de l'échec": "Failure reason", "Solde après": "Balance after", "Référence": "Reference",
+  "Réussie": "Successful", "En attente": "Pending", "Échouée": "Failed",
+  "Donnez cette référence à la caisse en cas de question.": "Give this reference to the cashier if you have a question.",
+  "Recharge pour": "Top-up for", "Compte cantine de": "Canteen account of", "moi": "me", "mon enfant": "my child",
+  "Rechargé ce mois-ci": "Topped up this month", "recharges réussies": "successful top-ups", "Aucune recharge pour l'instant.": "No top-ups yet.",
 };
