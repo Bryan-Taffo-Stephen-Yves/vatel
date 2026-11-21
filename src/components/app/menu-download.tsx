@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Download, Images, Loader2 } from "lucide-react";
-import { ChefArt, CloudBubble } from "@/components/chef";
+import { CloudBubble } from "@/components/chef";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -67,8 +67,7 @@ export function MenuDownload({ day, days, items, services }: { day: string; days
       {/* Bandeau compact (≈ 90 px) : animations jouées 3 fois puis arrêtées (batterie, fluidité) */}
       <section className="relative flex items-end gap-2 overflow-hidden rounded-[22px] bg-ink px-3 pb-2 pt-5 text-white shadow-[var(--shadow-card)]">
         <span className="cs-few relative h-[100px] shrink-0">
-          <ChefArt who="fouet" className="chef-in origin-bottom" />
-          {["🍅", "🌶️", "🧅"].map((e, i) => (
+                    {["🍅", "🌶️", "🧅"].map((e, i) => (
             <span key={e} aria-hidden className="chef-toss pointer-events-none absolute left-[55%] top-[22%] text-xs [animation-iteration-count:3]" style={{ animationDelay: `${i * 0.45}s` }}>{e}</span>
           ))}
         </span>

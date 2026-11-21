@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { setLang, useLang, type Lang } from "@/lib/i18n";
-import { ChefArt } from "@/components/chef";
 import type { ChefWho } from "@/lib/chefs-svg";
 
 /**
@@ -252,8 +251,7 @@ export function Landing() {
             <div className="absolute right-1/2 top-3 z-20 translate-x-1/2 sm:right-10 sm:translate-x-0">
               <Phone src="/landing/eleve-aujourdhui.webp" alt={c.heroAlt} tilt={4} />
             </div>
-            <div aria-hidden className="absolute bottom-4 left-0 z-30 hidden h-[330px] sm:block"><ChefArt who="chef" mood="happy" /></div>
-            <div className="absolute bottom-8 right-2 z-30 rotate-[-3deg] rounded-xl border border-[#d7e3ee] bg-white px-4 py-3 text-[#0d0d0c] shadow-[0_10px_22px_#0003] sm:right-0">
+                        <div className="absolute bottom-8 right-2 z-30 rotate-[-3deg] rounded-xl border border-[#d7e3ee] bg-white px-4 py-3 text-[#0d0d0c] shadow-[0_10px_22px_#0003] sm:right-0">
               <p className="text-[11px] font-bold text-[#5d6673]">{c.heroFloat[0]}</p>
               <p className="text-sm font-extrabold">{c.heroFloat[1]}</p>
             </div>
@@ -287,7 +285,7 @@ export function Landing() {
                 <div className={`relative flex min-w-0 justify-center py-6 ${i % 2 ? "lg:order-1" : ""}`}>
                   <div aria-hidden className={`absolute inset-y-6 rounded-[130px_130px_17px_17px] ${i % 2 ? "bg-[#10263a]" : "bg-[#132131]"} ${s.laptop ? "inset-x-0" : "left-1/2 w-[340px] -translate-x-1/2"}`} />
                   <div className="relative z-10">{s.laptop ? <Laptop src={s.img} alt={s.alt} /> : <Phone src={s.img} alt={s.alt} tilt={i % 2 ? -3 : 3} />}</div>
-                  {!s.laptop && <div aria-hidden className={`absolute bottom-4 z-20 hidden h-[260px] lg:block ${i % 2 ? "-right-4" : "-left-4"}`}><ChefArt who={s.who} mood="happy" /></div>}
+                  {!s.laptop && <div aria-hidden className={`absolute bottom-4 z-20 hidden h-[260px] lg:block ${i % 2 ? "-right-4" : "-left-4"}`}></div>}
                   <div className={`absolute top-16 z-30 flex rotate-[-3deg] flex-col rounded-xl border border-[#dfe8f0] bg-[#f4f8fb] px-4 py-2.5 text-[#0d0d0c] shadow-[0_10px_22px_#0004] ${i % 2 ? "left-0" : "right-0"}`}>
                     <span className="text-[11px] font-bold text-[#5d6673]">{s.float[0]}</span><strong className="text-sm">{s.float[1]}</strong>
                   </div>
@@ -307,8 +305,7 @@ export function Landing() {
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {c.audiences.map((a) => (
               <article key={a.title} className="rounded-2xl border border-[#1f2a35] bg-[#111820] p-5">
-                <div aria-hidden className="mx-auto flex h-[190px] justify-center rounded-[90px_90px_12px_12px] bg-[#dcefff] pt-3"><ChefArt who={a.who} mood="happy" anim={false} /></div>
-                <h3 className="mt-5 text-lg font-extrabold tracking-tight">{a.title}</h3>
+                                <h3 className="mt-5 text-lg font-extrabold tracking-tight">{a.title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-[#aebbc8]">{a.text}</p>
               </article>
             ))}

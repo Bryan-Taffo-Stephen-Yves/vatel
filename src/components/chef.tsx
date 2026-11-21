@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import clsx from "clsx";
 import { useT } from "@/lib/i18n";
-import { chefSvg, type ChefWho } from "@/lib/chefs-svg";
+import type { ChefWho } from "@/lib/chefs-svg";
 import type { Mood } from "@/lib/bitmoji";
 
 /**
@@ -23,30 +23,15 @@ const SCENES: Record<ChefScene, { who: ChefWho; mood: Mood; msg: string; badge: 
   sorry: { who: "chef", mood: "sad", msg: "Merci de nous le dire, on s'améliore.", badge: "🙏🏾" },
 };
 
-/** Le dessin SVG d'un membre de l'équipe (corps entier), à la hauteur de son conteneur. */
-export function ChefArt({ who, mood = "happy", anim = true, className }: { who: ChefWho; mood?: Mood; anim?: boolean; className?: string }) {
-  const html = useMemo(() => chefSvg(who, mood, anim), [who, mood, anim]);
-  return <span aria-hidden className={clsx("block h-full [&>svg]:h-full [&>svg]:w-auto", className)} dangerouslySetInnerHTML={{ __html: html }} />;
-}
-
-/** Personnage seul, qui entre en sautant ; geste de cuisine propre à l'étape. */
-export function ChefFigure({ scene, className }: { scene: ChefScene; className?: string }) {
-  const s = SCENES[scene];
-  return (
-    <span key={scene} className={clsx("relative inline-block shrink-0", s.no && "cs-no", className)}>
-      <ChefArt who={s.who} mood={s.mood} className="chef-in origin-bottom select-none" />
-      <span className="chef-badge absolute -right-6 top-0 grid size-8 place-items-center rounded-full bg-white text-base shadow-md">{s.badge}</span>
-      {scene === "preparing" && <span className="chef-steam pointer-events-none absolute left-[55%] top-[42%] text-lg">♨️</span>}
-      {(scene === "ready" || scene === "thanks") && <><span className="chef-spark pointer-events-none absolute -left-1 top-[30%] text-base">✨</span>
-        <span className="chef-spark pointer-events-none absolute right-1 top-[6%] text-sm" style={{ animationDelay: "0.5s" }}>✨</span></>}
-    </span>
-  );
+/** Mascottes retirées (demande du 21/11 : appli plus légère) : ne dessine plus rien. Gardé pour ne pas casser les imports. */
+export function ChefArt(props: { who: ChefWho; mood?: Mood; anim?: boolean; className?: string }) {
+  void props;
+  return null;
 }
 
 /**
- * La cuisine te parle : la mascotte apparaît AU CENTRE de l'écran, petite, avec un message dans une bulle.
- * La page reste visible derrière (voile léger). Se ferme d'un toucher ou toute seule après quelques secondes.
- * `backdrop` : voile sombre par défaut ; l'écran de l'agent passe une couleur franche (vert = servi, rouge = refusé).
+ * Message de la cuisine au centre de l'écran (carte simple, sans mascotte ni animation).
+ * Se ferme d'un toucher ou toute seule après quelques secondes. `backdrop` : couleur du voile.
  */
 export function ChefPopup({ scene, message, sub, backdrop, onClose, autoClose, children }: {
   scene: ChefScene; message?: React.ReactNode; sub?: React.ReactNode; backdrop?: string;
@@ -60,41 +45,19 @@ export function ChefPopup({ scene, message, sub, backdrop, onClose, autoClose, c
     return () => clearTimeout(id);
   }, [autoClose, onClose, scene]);
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-hidden px-6" onClick={onClose} role="status" aria-live="polite">
-      <div className={clsx("chef-veil absolute inset-0", backdrop ?? "bg-ink/45 backdrop-blur-[3px]")} />
+    <div className="fixed inset-0 z-50 grid place-items-center px-6" onClick={onClose} role="status" aria-live="polite">
+      <div className={clsx("absolute inset-0", (backdrop ?? "bg-ink/45").replace(/backdrop-blur-\S+/g, ""))} />
       {children}
-      <div key={scene} className="relative flex w-full max-w-[300px] flex-col items-center">
-        <CloudBubble className="chef-cloud w-full" tail="down">
-          <p className="text-[19px] font-extrabold leading-snug">{message ?? t(s.msg)}</p>
-          {sub && <div className="mt-1.5 text-sm font-semibold text-ink-2">{sub}</div>}
-        </CloudBubble>
-        <ChefFigure scene={scene} className="mt-7 h-64" />
+      <div className="relative w-full max-w-[320px] rounded-[28px] bg-white px-6 py-6 text-center text-ink shadow-xl">
+        <span className="text-4xl" aria-hidden>{s.badge}</span>
+        <p className="mt-2 text-[19px] font-extrabold leading-snug">{message ?? t(s.msg)}</p>
+        {sub && <div className="mt-1.5 text-sm font-semibold text-ink-2">{sub}</div>}
       </div>
     </div>
   );
 }
 
-/**
- * Bulle de conversation en forme de NUAGE : des bosses blanches sur le haut et le bas,
- * et deux petites bulles qui mènent à la mascotte (tail). Une seule ombre pour tout le nuage.
- */
-export function CloudBubble({ children, className, tail = "down" }: { children: React.ReactNode; className?: string; tail?: "down" | "left" | "none" }) {
-  return (
-    <div className={clsx("relative text-center text-ink [filter:drop-shadow(0_10px_18px_rgba(0,0,0,0.2))]", className)}>
-      <span aria-hidden className="absolute inset-0">
-        {/* bosses du haut */}
-        <span className="absolute -top-3 left-[8%] size-10 rounded-full bg-white" />
-        <span className="absolute -top-5 left-[30%] size-14 rounded-full bg-white" />
-        <span className="absolute -top-4 left-[56%] size-12 rounded-full bg-white" />
-        <span className="absolute -top-2 right-[6%] size-9 rounded-full bg-white" />
-        {/* bosses du bas */}
-        <span className="absolute -bottom-2.5 left-[16%] size-9 rounded-full bg-white" />
-        <span className="absolute -bottom-3 right-[22%] size-10 rounded-full bg-white" />
-        {/* petites bulles vers la mascotte */}
-        {tail === "down" && <><span className="absolute -bottom-6 left-[46%] size-4 rounded-full bg-white" /><span className="absolute -bottom-10 left-[50%] size-2.5 rounded-full bg-white" /></>}
-        {tail === "left" && <><span className="absolute -left-4 bottom-2 size-4 rounded-full bg-white" /><span className="absolute -left-7 bottom-0 size-2.5 rounded-full bg-white" /></>}
-      </span>
-      <div className="relative rounded-[30px] bg-white px-5 py-4">{children}</div>
-    </div>
-  );
+/** Bulle de texte (carte blanche simple). */
+export function CloudBubble({ children, className }: { children: React.ReactNode; className?: string; tail?: "down" | "left" | "none" }) {
+  return <div className={clsx("rounded-[24px] bg-white px-5 py-4 text-center text-ink shadow-md", className)}>{children}</div>;
 }

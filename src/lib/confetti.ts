@@ -1,5 +1,6 @@
 /** Petite pluie de confettis (sans bibliothèque). Ignorée si l'utilisateur préfère moins d'animations. */
 export function confetti(duration = 1800) {
+  if (duration >= 0) return; // animations retirées (appli allégée, 21/11)
   if (typeof window === "undefined" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const c = document.createElement("canvas");
   c.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999";

@@ -10,7 +10,6 @@ import { useToast } from "@/components/ui/toast";
 import { addDays, dayLong, time, todayISO } from "@/lib/format";
 import { say, soundOk } from "@/lib/scan-sounds";
 import { sfx } from "@/lib/sfx";
-import { ChefArt } from "@/components/chef";
 import { SERVICES, type Extra, type ServiceKind } from "@/lib/types";
 import { fetchServices, type Services } from "@/lib/menu";
 
@@ -118,7 +117,7 @@ export default function KitchenOrders() {
             return (
               <section key={c.key} className={clsx("rounded-3xl p-3", c.tone)}>
                 <h2 className="mb-3 flex items-center justify-between px-1 font-extrabold">
-                  <span className="flex items-end gap-2"><span className="-my-2 h-12"><ChefArt who={c.chef} anim={false} /></span>{c.title}</span><span className="grid min-w-7 place-items-center rounded-full bg-ink px-2 py-0.5 text-sm text-lime">{list.length}</span>
+                  <span className="flex items-end gap-2">{c.title}</span><span className="grid min-w-7 place-items-center rounded-full bg-ink px-2 py-0.5 text-sm text-lime">{list.length}</span>
                 </h2>
                 <div className="space-y-2.5">
                   {list.length === 0 && <p className="px-1 py-6 text-center text-sm font-semibold text-muted">—</p>}

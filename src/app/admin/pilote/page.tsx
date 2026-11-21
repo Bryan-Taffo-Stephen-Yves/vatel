@@ -9,7 +9,7 @@ import { BellRing, ChefHat, Flame, Loader2, Megaphone, Mic, Minus, Plus, Sparkle
 import { edge, rpc } from "@/lib/supabase/client";
 import { Badge, Card, Kpi, PageTitle } from "@/components/admin/ui";
 import { DishImage } from "@/components/app/dish-image";
-import { ChefArt, CloudBubble } from "@/components/chef";
+import { CloudBubble } from "@/components/chef";
 import { useToast } from "@/components/ui/toast";
 import { useStaff } from "@/components/admin/admin-shell";
 import { sfx } from "@/lib/sfx";
@@ -74,8 +74,7 @@ export default function ServicePilot() {
     <>
       <PageTitle title="Pilote du service" />
       <section className="flex items-end gap-4 overflow-hidden rounded-[22px] bg-ink px-5 pt-6 text-white">
-        <span className="h-[150px] shrink-0"><ChefArt who="louche" mood="sleep" /></span>
-        <CloudBubble tail="left" className="mb-8 max-w-lg text-left">
+                <CloudBubble tail="left" className="mb-8 max-w-lg text-left">
           <p className="text-[15px] font-bold">Aucun service en cours. Je reprends la main dès l&apos;ouverture
             {s.next ? ` : ${SERVICE_LABEL[s.next.service]} à ${time(s.next.starts_at)}.` : "."}</p>
         </CloudBubble>
@@ -103,8 +102,7 @@ export default function ServicePilot() {
         <Card title="À faire maintenant" subtitle={sugg.length ? "Le plus urgent en premier. Une action faite ou écartée ne revient pas pendant 20 min." : undefined}>
           {sugg.length === 0 ? (
             <div className="flex items-center gap-4 rounded-2xl bg-ok-soft p-4">
-              <span className="h-24 shrink-0"><ChefArt who="cupcakes" mood="laugh" anim={false} /></span>
-              <p className="font-bold text-[#15803d]">Tout roule : rien à signaler pour le moment. 👌</p>
+                            <p className="font-bold text-[#15803d]">Tout roule : rien à signaler pour le moment. 👌</p>
             </div>
           ) : (
             <ul className="space-y-3">
@@ -223,8 +221,7 @@ function AskPilot() {
     <Card title="Demande au pilote" subtitle="Il répond avec les chiffres du service, à voix haute"
       action={<button onClick={() => setVoice((v) => !v)} aria-label={voice ? "Couper la voix" : "Activer la voix"} className="grid size-8 place-items-center rounded-full bg-canvas">{voice ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}</button>}>
       <div className="flex items-end gap-2 rounded-2xl bg-ink px-3 pt-4">
-        <span className="h-[120px] shrink-0"><ChefArt who="chef" mood={thinking ? "wow" : "happy"} /></span>
-        <CloudBubble tail="left" className="mb-6 min-w-0 flex-1 text-left">
+                <CloudBubble tail="left" className="mb-6 min-w-0 flex-1 text-left">
           {thinking ? <p className="flex items-center gap-2 text-sm font-bold text-muted"><Loader2 className="size-4 animate-spin" />Je regarde le service…</p>
             : <p className="text-[15px] font-bold leading-snug">{answer ?? "Pose-moi une question sur le service, ou touche « Faire le point »."}</p>}
         </CloudBubble>

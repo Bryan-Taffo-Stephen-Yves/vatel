@@ -178,3 +178,9 @@ body {
 /* quelques tours seulement (cartes affichées longtemps : accueil, menu) */
 .cs-few .cs-anim * { animation-iteration-count: 4 !important; }
 @media (prefers-reduced-motion: reduce) { .cs-anim * { animation: none !important; } }
+
+/* Appli allégée (21/11) : plus d'animations décoratives. Seuls les indicateurs de chargement restent animés
+   (roue qui tourne, blocs gris en attente de données). */
+*:not(.animate-spin):not(.animate-pulse),
+*:not(.animate-spin):not(.animate-pulse)::before,
+*:not(.animate-spin):not(.animate-pulse)::after { animation: none !important; }

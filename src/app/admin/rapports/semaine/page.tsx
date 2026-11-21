@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase/client";
 import { Badge, Card, Kpi, PageTitle } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { DishImage } from "@/components/app/dish-image";
-import { ChefArt, CloudBubble } from "@/components/chef";
+import { CloudBubble } from "@/components/chef";
 import { useStaff } from "@/components/admin/admin-shell";
 import { COMPLAINTS, moodEmoji, reviewPhotoUrl } from "@/lib/reviews";
 import { addDays, todayISO, TZ } from "@/lib/format";
@@ -71,8 +71,7 @@ export default function WeeklyReportPage() {
         <div className="space-y-4">
           {/* Ce qu'il faut retenir : le chef le dit dans sa bulle */}
           <section className="flex items-end gap-3 overflow-hidden rounded-[22px] bg-ink px-4 pt-6 text-white">
-            <span className="hidden h-[150px] shrink-0 sm:block"><ChefArt who="chef" mood={r.worst.length ? "happy" : "laugh"} /></span>
-            <div className="mb-6 min-w-0 flex-1">
+                        <div className="mb-6 min-w-0 flex-1">
               <CloudBubble tail="left" className="max-w-2xl text-left">
                 <p className="text-xs font-extrabold uppercase tracking-wider text-muted">Ce qu&apos;il faut retenir</p>
                 {r.advice.length ? r.advice.map((a) => <p key={a} className="mt-1.5 text-[15px] font-bold leading-snug">{a}</p>)
