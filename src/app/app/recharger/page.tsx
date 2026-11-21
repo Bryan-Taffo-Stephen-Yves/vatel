@@ -14,6 +14,7 @@ import { fcfa } from "@/lib/format";
 import { useLang, useT } from "@/lib/i18n";
 import { phoneDigits } from "@/lib/phone";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { AmountInput } from "@/components/ui/amount-input";
 
 const AMOUNTS = [2000, 5000, 10000, 25000, 50000, 100000];
 const OPERATORS = [
@@ -40,13 +41,13 @@ export default function RechargePage() {
   const en = lang === "en";
   const { balance, profile, refresh } = useAppData();
   const [amount, setAmount] = useState(5000);
-  const [custom, setCustom] = useState("");
+  const [custom, setCustom] = useState<string | null>(null); // montant tapé à la main (null = une des pastilles)
   const [op, setOp] = useState<(typeof OPERATORS)[number]["id"]>("wave");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [child, setChild] = useState<{ id: string; name: string } | null>(null);
   const [wait, setWait] = useState<Wait | null>(null);
-  const value = custom ? parseInt(custom.replace(/\D/g, ""), 10) || 0 : amount;
+  const value = custom !== null ? parseInt(custom, 10) || 0 : amount;
   const operator = OPERATORS.find((o) => o.id === op)!;
   const phoneOk = /^(01|05|07)\d{8}$/.test(phone) && (!operator.prefix || phone.startsWith(operator.prefix));
 
@@ -157,19 +158,20 @@ export default function RechargePage() {
 
         <div className="mt-5 rounded-[26px] bg-card p-5 text-center shadow-[var(--shadow-card)]">
           <p className="text-sm font-bold text-muted">{t("Montant")}</p>
-          <p className="mt-1 text-[42px] font-extrabold tracking-tight">{fcfa(value)}</p>
+          <AmountInput value={value} onChange={(digits) => setCustom(digits)} onDone={() => { if (!custom || custom === "0" || AMOUNTS.includes(value)) { if (AMOUNTS.includes(value)) setAmount(value); setCustom(null); } }}
+            hint={en ? "Tap the amount to change it" : "Touchez le montant pour le modifier"} />
+          {custom !== null && value > 0 && (value < 100 || value > 500000) && (
+            <p className="mt-1 text-[13px] font-semibold text-err">{en ? "Between 100 and 500,000 FCFA." : "Entre 100 et 500 000 FCFA."}</p>
+          )}
           <div className="mt-4 grid grid-cols-3 gap-2">
             {AMOUNTS.map((a) => (
-              <button key={a} onClick={() => { setAmount(a); setCustom(""); }}
+              <button key={a} onClick={() => { setAmount(a); setCustom(null); }}
                 className={clsx("h-12 rounded-2xl text-[15px] font-extrabold transition",
-                  !custom && amount === a ? "bg-ink text-lime" : "bg-canvas text-ink active:bg-line")}>
+                  value === a ? "bg-ink text-lime" : "bg-canvas text-ink active:bg-line")}>
                 {fcfa(a, false)}
               </button>
             ))}
           </div>
-          <input inputMode="numeric" placeholder={t("Autre montant")} value={custom}
-            onChange={(e) => setCustom(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            className="mt-3 h-12 w-full rounded-2xl border border-line bg-card px-4 text-center text-[16px] font-bold outline-none focus:border-ink" />
         </div>
 
         <h2 className="mb-2.5 mt-6 text-[15px] font-extrabold">{t("Payer avec")}</h2>
