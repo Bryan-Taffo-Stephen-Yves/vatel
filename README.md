@@ -4,7 +4,7 @@ Application complète de gestion de cantine pour l'école hôtelière **Vatel Ab
 réservation et commande de plats, tickets QR, suivi parent, cuisine pilotée par les données et agents IA
 (WhatsApp, téléphone, achats fournisseurs). Hackathon « Cantine de Vatel » — novembre 2026.
 
-> **Démo en ligne : https://dabalix.netlify.app** (installable sur téléphone : PWA)
+> **Démo en ligne : https://vatel-cantine.netlify.app** (installable sur téléphone : PWA)
 > Cahier des charges détaillé : [docs/CAHIER_DES_CHARGES.md](docs/CAHIER_DES_CHARGES.md) · Retours d'expérience : [docs/RETEX.md](docs/RETEX.md)
 
 > **Comment ce dépôt a été construit.** Application préparée à partir du cahier des charges reçu en amont, comme
@@ -117,7 +117,7 @@ Postgres ≥ 15 et Node ≥ 22.18 suffisent (les tests simulent `auth.uid()` et 
 ```bash
 PGHOST=localhost PGUSER=postgres supabase/tests/run.sh      # 191 vérifications SQL + QR + concurrence
 SUPABASE_URL=… SUPABASE_ANON_KEY=… scripts/smoke-remote.sh  # API bout en bout (consomme un ticket de démo)
-BASE=https://dabalix.netlify.app SCAN_DATE=AAAA-MM-JJ node scripts/e2e-deployed.js  # parcours complet dans un navigateur sur le site en ligne
+BASE=https://vatel-cantine.netlify.app SCAN_DATE=AAAA-MM-JJ node scripts/e2e-deployed.js  # parcours complet dans un navigateur sur le site en ligne
 python -m pytest vision/ -q                                 # module vision
 ```
 
