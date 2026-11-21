@@ -58,7 +58,13 @@ export default function RechargePage() {
     const ref = q.get("ref");
     if (ref) setWait({ reference: ref, ussd: false, state: "pending" });
   }, []);
-  useEffect(() => { if (profile?.phone && !phone) setPhone(digits10(profile.phone)); }, [profile?.phone, phone]);
+  // Numéro du profil proposé UNE seule fois : si l'élève vide le champ pour mettre un autre numéro, on ne le réécrit pas
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (prefilled.current || !profile) return;
+    prefilled.current = true;
+    if (profile.phone) setPhone((cur) => cur || digits10(profile.phone));
+  }, [profile]);
 
   // Attente de la confirmation : interrogation toutes les 4 s (3 min au plus)
   const tries = useRef(0);
