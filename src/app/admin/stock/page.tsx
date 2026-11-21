@@ -11,6 +11,8 @@ import { useToast } from "@/components/ui/toast";
 import { dateTime, fcfa } from "@/lib/format";
 
 type Ing = { id: string; name: string; unit: string; stock_qty: number; alert_threshold: number; unit_cost: number };
+// Durée de conservation (jours) ; vide = produit sec. Sert à l'agent d'achats : le frais n'est acheté que pour ses jours.
+const SHELF: [string, string][] = [["", "sec"], ["1", "1 jour"], ["2", "2 jours"], ["3", "3 jours"], ["4", "4 jours"], ["5", "5 jours"], ["7", "1 semaine"], ["14", "2 semaines"], ["30", "1 mois"]];
 type Mv = { id: string; type: "in" | "out" | "loss" | "adjust"; qty: number; reason: string | null; created_at: string; ingredient: { name: string; unit: string } };
 
 const MV: Record<Mv["type"], { label: string; tone: "ok" | "gray" | "err" | "warn" }> = {
@@ -26,15 +28,24 @@ export default function StockPage() {
   const [qty, setQty] = useState("");
   const [reason, setReason] = useState("");
   const [creating, setCreating] = useState(false);
+  const [shelf, setShelf] = useState<Record<string, number | null> | null>(null);
+  async function setShelfLife(i: Ing, v: string) {
+    const r = await rpc("ingredient_set_shelf_life", { p_ingredient: i.id, p_days: v ? +v : null });
+    if (!r.ok) return toast("err", r.message);
+    setShelf((x) => ({ ...(x ?? {}), [i.id]: v ? +v : null }));
+    toast("ok", v ? `${i.name} : se garde ${SHELF.find((o) => o[0] === v)?.[1]} — l'agent n'en achète que pour ces jours-là.` : `${i.name} : produit sec (réserve gardée).`);
+  }
   const [nw, setNw] = useState({ name: "", unit: "kg", alert_threshold: "", unit_cost: "" });
 
   const load = useCallback(async () => {
     const sb = supabase();
-    const [a, b] = await Promise.all([
+    const [a, sl, b] = await Promise.all([
       sb.from("ingredients").select("id, name, unit, stock_qty, alert_threshold, unit_cost").order("name"),
+      sb.from("ingredients").select("id, shelf_life_days"),
       sb.from("stock_movements").select("id, type, qty, reason, created_at, ingredient:ingredients(name, unit)").order("created_at", { ascending: false }).limit(25),
     ]);
     setIngs((a.data ?? []) as Ing[]);
+    setShelf(Object.fromEntries(((sl.data ?? []) as { id: string; shelf_life_days: number | null }[]).map((x) => [x.id, x.shelf_life_days])));
     setMvs((b.data ?? []) as unknown as Mv[]);
   }, []);
   useEffect(() => { load(); }, [load]);
@@ -87,6 +98,15 @@ export default function StockPage() {
                   <div className="w-44 min-w-0">
                     <p className="truncate font-bold">{i.name}</p>
                     <p className="text-xs text-muted">seuil {num(i.alert_threshold)} {i.unit} · {fcfa(i.unit_cost)}/{i.unit}</p>
+                    {shelf && i.id in shelf && (
+                      <label className="mt-0.5 flex items-center gap-1 text-xs text-muted" title="Pour ne pas gaspiller : un produit frais n'est acheté que pour les repas avant qu'il s'abîme">
+                        se garde
+                        <select value={shelf[i.id] == null ? "" : String(shelf[i.id])} onChange={(e) => setShelfLife(i, e.target.value)}
+                          className="rounded-md border border-line bg-card px-1 py-0.5 text-xs font-bold text-ink">
+                          {SHELF.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                      </label>
+                    )}
                   </div>
                   <div className="min-w-32 flex-1">
                     <Meter value={Math.min(ratio, 1)} max={1} tone={isLow ? "err" : ratio < 0.6 ? "warn" : "ok"} />
