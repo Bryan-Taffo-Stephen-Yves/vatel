@@ -12,6 +12,8 @@ import { Sheet } from "@/components/ui/sheet";
 import { BiometricConfirm } from "@/components/app/biometric-confirm";
 import { fcfa } from "@/lib/format";
 import { useLang, useT } from "@/lib/i18n";
+import { phoneDigits } from "@/lib/phone";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 const AMOUNTS = [2000, 5000, 10000, 25000, 50000, 100000];
 const OPERATORS = [
@@ -23,7 +25,7 @@ const OPERATORS = [
 ] as const;
 
 type Wait = { reference: string; ussd: boolean; state: "pending" | "success" | "error"; amount?: number; reason?: string | null };
-const digits10 = (p?: string | null) => (p ?? "").replace(/\D/g, "").replace(/^225(?=\d{10}$)/, "").slice(0, 10);
+const digits10 = (p?: string | null) => phoneDigits(p).slice(0, 10);
 
 /**
  * Recharge par Mobile Money (paiement réel via Jèko), pour soi ou pour son enfant (?pour=<id>&nom=<prénom>).
@@ -184,10 +186,7 @@ export default function RechargePage() {
 
         <label className="mt-5 block">
           <span className="text-[15px] font-extrabold">{t("Numéro qui paie")}</span>
-          <input inputMode="tel" placeholder="07 01 02 03 04" value={phone.replace(/(\d{2})(?=\d)/g, "$1 ")}
-            onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-            className={clsx("mt-2 h-12 w-full rounded-2xl border bg-card px-4 text-[16px] font-bold tracking-wide outline-none focus:border-ink",
-              phone.length === 10 && !phoneOk ? "border-err" : "border-line")} />
+          <PhoneInput className="mt-2" value={phone} onChange={setPhone} invalid={phone.length === 10 && !phoneOk} />
           {phone.length === 10 && !phoneOk && (
             <span className="mt-1 block text-[13px] font-semibold text-err">
               {operator.prefix
