@@ -8,12 +8,12 @@ import type { Occupancy } from "@/lib/types";
 import { useT, useLang } from "@/lib/i18n";
 
 const LEVEL = {
-  low: { color: "#22C55E", soft: "bg-ok-soft", text: "text-[#15803d]", label: "Calme" },
-  mid: { color: "#F59E0B", soft: "bg-warn-soft", text: "text-[#b45309]", label: "Animé" },
+  low: { color: "#22C55E", soft: "bg-ok-soft", text: "text-[#15803d]", label: "Peu de monde" },
+  mid: { color: "#F59E0B", soft: "bg-warn-soft", text: "text-[#b45309]", label: "Il y a du monde" },
   high: { color: "#EF4444", soft: "bg-err-soft", text: "text-err", label: "Très plein" },
 };
 
-/** Indicateur d'affluence du réfectoire (vision YOLO, repli sur le rythme des scans) */
+/** Indicateur d'affluence du réfectoire (plateaux en salle, et caméra si elle tourne). Pas de chiffre de plateaux côté élève. */
 export function OccupancyCard() {
   const [o, setO] = useState<Occupancy | null>(null);
   const t = useT();
@@ -70,17 +70,19 @@ export function OccupancyCard() {
           <p className="font-bold">{t("Réfectoire")}</p>
           <span className={clsx("flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold", L.soft, L.text)}>
             <span className="relative flex size-1.5"><span className="absolute inline-flex size-full animate-ping rounded-full opacity-75" style={{ background: L.color }} /><span className="relative size-1.5 rounded-full" style={{ background: L.color }} /></span>
-            {t(L.label)}
+            {t(o.trays_full ? "Attente probable" : L.label)}
           </span>
         </div>
         <p className="mt-1 text-sm text-ink-2">
           {o.queue_count != null
             ? <><b>{o.queue_count === 0 ? t("Pas de file") : en ? `${o.queue_count} in line` : `${o.queue_count} dans la file`}</b> · {o.queue_count === 0 ? t("servi tout de suite") : <>~{o.wait_min}&nbsp;{en ? "min wait" : <>min d&apos;attente</>}</>}</>
-            : <><b>{Math.round(o.rate)}{en ? "% full" : <>&nbsp;% plein</>}</b> · ~{o.wait_min}&nbsp;{en ? "min wait" : <>min d&apos;attente</>}</>}
+            : o.trays_full
+              ? <><b>{t("plus de plateau libre pour l'instant")}</b> · ~{o.wait_min}&nbsp;{en ? "min wait" : <>min d&apos;attente</>}</>
+              : <><b>{Math.round(o.rate)}{en ? "% full" : <>&nbsp;% plein</>}</b> · ~{o.wait_min}&nbsp;{en ? "min wait" : <>min d&apos;attente</>}</>}
         </p>
         <p className="mt-1 flex items-center gap-3 text-xs text-muted">
           <span className="flex items-center gap-1"><Users className="size-3.5" />{o.occupied_tables}/{o.total_tables} tables{o.queue_count != null ? ` · ${Math.round(o.rate)} %` : ""}</span>
-          <span className="flex items-center gap-1"><Clock3 className="size-3.5" />{o.source === "vision" ? t("en direct") : t("estimation")}</span>
+          <span className="flex items-center gap-1"><Clock3 className="size-3.5" />{o.source.startsWith("vision") ? t("en direct") : t("estimation")}</span>
         </p>
       </div>
     </div>

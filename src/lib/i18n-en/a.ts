@@ -14,6 +14,8 @@ export const EN_A: Record<string, string> = {
   "Affluence indisponible pour le moment.": "Crowd level unavailable for now.", "Réfectoire fermé": "Canteen closed",
   "Aucun service prévu cette semaine": "No meal service planned this week", "Réfectoire": "Canteen",
   "Calme": "Quiet", "Animé": "Busy", "Très plein": "Very full", "Pas de file": "No line",
+  "Peu de monde": "Not busy", "Il y a du monde": "Getting busy", "Attente probable": "Wait likely",
+  "plus de plateau libre pour l'instant": "no free tray right now",
   "servi tout de suite": "served right away", "en direct": "live", "estimation": "estimate",
   // Menu
   "ticket": "ticket", "entrée ou dessert en option": "starter or dessert optional", "service terminé": "service over",

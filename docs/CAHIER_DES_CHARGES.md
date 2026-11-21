@@ -1166,6 +1166,23 @@ journal et message dans le groupe.
   ministère » sur la carte du repas ; le chef est prévenu à la création.
 - **Rapports** : section « Réceptions » (événements, repas servis, montant payé par l'école, bons rendus) + lignes CSV.
 
+## 20 quater. Affluence par plateaux (construit)
+
+> **Réalisé** : migration `20261121201000_trays_occupancy` (réglage `trays` {total: 100, meal_minutes: 25}, `_tray_outs`,
+> `_trays_at`, `occupancy_now` et `admin_occupancy` étendues, `trays_configure` (admin), index `tickets_used_at_idx`),
+> carte d'affluence élève, page `/admin/affluence`. Tests : `supabase/tests/99za_trays.sql`.
+
+- Un plateau sort à chaque repas servi (ticket scanné, repas du personnel) et revient au bout de la durée moyenne d'un
+  repas : **plateaux en salle = repas servis dans les 25 dernières minutes** (plafonné au nombre de plateaux).
+- **Caméra éteinte** : affluence = plateaux en salle / plateaux. **Caméra allumée** : la plus haute des deux mesures
+  (source `vision` ou `vision+trays`).
+- **Tous les plateaux sortis** : niveau « très plein », « Attente probable », attente = minutes avant le retour du plus
+  ancien plateau (et au moins l'attente de la file si la caméra du couloir tourne).
+- Équipe : « 80 sur 100 » plateaux en salle, courbe du jour et heures de pointe calculées avec les plateaux quand il n'y a
+  pas de relevés caméra, réglage du nombre de plateaux et de la durée d'un repas (admin).
+- Élèves : niveau en mots (« Peu de monde », « Il y a du monde », « Très plein », « Attente probable »), jamais le nombre
+  de plateaux.
+
 ## 21. Commandes à heure de retrait, Jean (WhatsApp) et Jean au téléphone (Retell)
 
 ### 21.1 Commande d'un plat avec heure de retrait
