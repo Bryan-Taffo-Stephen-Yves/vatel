@@ -52,7 +52,11 @@ async function create(req: Request, body: any) {
   if (prefix && phone.slice(4, 6) !== prefix) {
     return fail("WRONG_OPERATOR", `Ce numéro n'est pas un numéro ${NAME[method]} (il doit commencer par ${prefix}).`);
   }
-  if (!configured()) return fail("NOT_CONFIGURED", "Le paiement en ligne n'est pas encore activé.", 503);
+  // Interrupteur de l'admin (Paramètres) : tant qu'il est sur « simulation », la page reste en mode démo
+  const { data: mm } = await db.from("settings").select("value").eq("key", "mobile_money").maybeSingle();
+  if ((mm?.value as { mode?: string } | null)?.mode !== "jeko" || !configured()) {
+    return fail("NOT_CONFIGURED", "Le paiement en ligne n'est pas encore activé.", 503);
+  }
 
   // Règles vérifiées en base, avec l'identité de l'utilisateur (auth.uid())
   const userDb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {

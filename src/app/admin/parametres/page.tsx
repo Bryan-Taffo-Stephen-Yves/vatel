@@ -20,6 +20,7 @@ type Settings = {
   low_balance_threshold: number;
   service_days: number[];
   mfa_required_roles: string[];
+  mobile_money?: { mode: "simulation" | "jeko" };
 };
 type Extra = { id: string; name: string; price: number; kind: string; is_active: boolean };
 type Cat = { id: number; name: string; sort: number };
@@ -106,6 +107,12 @@ export default function SettingsPage() {
           <Row label="Transfert maximum"><N value={s.transfer_limits.max} onChange={(v) => set({ transfer_limits: { ...s.transfer_limits, max: v } })} suffix="FCFA" /></Row>
           <Row label="Plafond journalier"><N value={s.transfer_limits.daily_max} onChange={(v) => set({ transfer_limits: { ...s.transfer_limits, daily_max: v } })} suffix="FCFA" /></Row>
           <Row label="Alerte solde bas"><N value={s.low_balance_threshold} onChange={(v) => set({ low_balance_threshold: v })} suffix="FCFA" /></Row>
+          <Row label="Recharge Mobile Money" hint={s.mobile_money?.mode === "jeko" ? "argent réel via Jèko : la simulation est refusée" : "démo : aucun débit réel"}>
+            <select value={s.mobile_money?.mode ?? "simulation"} onChange={(e) => set({ mobile_money: { mode: e.target.value as "simulation" | "jeko" } })} className={input}>
+              <option value="simulation">Simulation (démo)</option>
+              <option value="jeko">Argent réel (Jèko)</option>
+            </select>
+          </Row>
         </Card>
         <Card title="Double authentification" subtitle="Code d'une application (Google Authenticator…) en plus du mot de passe">
           {([["admin", "Administrateurs"], ["caissier", "Caisse"], ["chef", "Cuisine"], ["agent", "Agents du comptoir"]] as const).map(([k, l]) => (
