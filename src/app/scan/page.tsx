@@ -1,5 +1,6 @@
 "use client";
 import { Bitmoji } from "@/components/bitmoji";
+import { ChefPopup } from "@/components/chef";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -156,7 +157,7 @@ export default function ScanPage() {
       supabase().from("tickets").select("user_id, user:profiles!tickets_user_id_fkey(avatar)").eq("id", sc.ticket_id).single()
         .then(({ data }) => { if (data) setScan((s) => s && s.ticket_id === sc.ticket_id ? { ...s, user_id: data.user_id, avatar: (data.user as unknown as { avatar: string | null } | null)?.avatar ?? null } : s); });
     } else {
-      soundError();
+      soundError((r as Fail).code);
       say(SPOKEN[(r as Fail).code] ?? "Refusé");
       setFail(r as Fail); setTimeout(reset, 2800);
     }
@@ -165,7 +166,7 @@ export default function ScanPage() {
   async function serve(d: Dish) {
     if (!scan) return;
     const r = await rpc<{ dish: string }>("serve_dish", { p_ticket_id: scan.ticket_id, p_menu_item_id: d.menu_item_id });
-    if (!r.ok) { setFail(r as Fail); soundError(); say(SPOKEN[(r as Fail).code] ?? "Refusé"); setScan(null); setTimeout(reset, 2500); return; }
+    if (!r.ok) { setFail(r as Fail); soundError((r as Fail).code); say(SPOKEN[(r as Fail).code] ?? "Refusé"); setScan(null); setTimeout(reset, 2500); return; }
     soundServed();
     setServed(r.dish);
     setScan(null);
@@ -373,20 +374,17 @@ export default function ScanPage() {
         </div>
       )}
 
+      {/* Servi / refusé : couleur franche (lisible de loin) + le chef au centre avec une bulle */}
       {served && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-ok px-8 text-center" role="alert">
-          <span className="animate-pop grid size-28 place-items-center rounded-full bg-white"><Check className="size-16 text-ok" strokeWidth={3} /></span>
-          <p className="mt-6 text-3xl font-extrabold">Servi</p>
-          <p className="mt-2 text-xl font-bold opacity-95">{served}</p>
-        </div>
+        <ChefPopup scene="ready" backdrop="bg-ok" message={<span className="flex items-center justify-center gap-2 text-3xl text-ok"><Check className="size-8" strokeWidth={3} />Servi</span>}
+          sub={<p className="text-xl font-extrabold text-ink">{served}</p>} />
       )}
 
       {fail && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-err px-8 text-center" role="alert">
-          <span className="animate-pop grid size-32 place-items-center rounded-full bg-white"><X className="size-20 text-err" strokeWidth={3} /></span>
-          <p className="mt-8 text-4xl font-extrabold">Refusé</p>
-          <p className="mt-3 max-w-sm text-2xl font-bold opacity-95">{fail.message}</p>
-        </div>
+        <ChefPopup scene="denied"
+          backdrop={fail.code === "ALREADY_USED" ? "bg-[repeating-linear-gradient(135deg,#b91c1c_0_28px,#16181d_28px_56px)]" : "bg-err"}
+          message={<span className="animate-shake flex items-center justify-center gap-2 text-3xl uppercase text-err"><X className="size-8" strokeWidth={3} />{fail.code === "ALREADY_USED" ? "Déjà utilisé" : "Refusé"}</span>}
+          sub={<p className="text-lg font-bold text-ink">{fail.message}</p>} />
       )}
     </main>
   );

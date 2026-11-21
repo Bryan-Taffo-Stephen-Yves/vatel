@@ -1,5 +1,6 @@
 "use client";
-import { Bitmoji } from "@/components/bitmoji";
+import { ChefPopup, type ChefScene } from "@/components/chef";
+import { sfx } from "@/lib/sfx";
 import Link from "next/link";
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -33,8 +34,10 @@ export default function TicketPage({ params }: { params: Promise<{ id: string }>
     supabase().rpc("ticket_cancel_deadline", { p_ticket_id: id }).then(({ data }) => { if (typeof data === "string") setDeadline(data); }, () => {});
   }, [id]);
   const [justScanned, setJustScanned] = useState(false);
+  const [cancelled, setCancelled] = useState<string | null>(null); // écran « commande annulée » avant de repartir
   const last = useRef<string | undefined>(undefined);
   const lastPrep = useRef<string | null | undefined>(undefined);
+  const [pop, setPop] = useState<ChefScene | null>(null); // mascotte au centre quand la commande change d'étape
 
   useEffect(() => {
     // 1) cache local : affichage immédiat, y compris en mode avion
@@ -49,8 +52,21 @@ export default function TicketPage({ params }: { params: Promise<{ id: string }>
       const { data } = await sb.from("tickets").select(TICKET_COLUMNS).eq("id", id).single();
       if (!data) return;
       const nt = data as unknown as Ticket;
-      if (last.current === "valid" && nt.status === "used") { setJustScanned(true); navigator.vibrate?.(120); refresh(); }
-      if (lastPrep.current && lastPrep.current !== "ready" && nt.prep_status === "ready") navigator.vibrate?.([80, 60, 80]);
+      if (last.current === "valid" && nt.status === "used") { setJustScanned(true); sfx.served(); refresh(); }
+      // la cuisine avance : petit son à chaque étape, cloche « ding-ding » quand c'est prêt
+      else if (lastPrep.current && lastPrep.current !== "ready" && nt.prep_status === "ready") sfx.ready();
+      else if (lastPrep.current === "received" && nt.prep_status === "preparing") sfx.preparing();
+      // Mascotte : à chaque nouvelle étape, et une fois à la première ouverture de l'étape en cours
+      if (isOrder(nt) && nt.status === "valid") {
+        const sc = chefScene(nt.status, nt.prep_status);
+        const seenKey = `dabali:chef:${id}`;
+        let seen: string | null = null;
+        try { seen = localStorage.getItem(seenKey); } catch {}
+        if (seen !== sc && (lastPrep.current === undefined || lastPrep.current !== nt.prep_status)) {
+          setPop(sc);
+          try { localStorage.setItem(seenKey, sc); } catch {}
+        }
+      }
       last.current = nt.status;
       lastPrep.current = nt.prep_status;
       setT(nt);
@@ -106,10 +122,13 @@ export default function TicketPage({ params }: { params: Promise<{ id: string }>
       r = await rpc<{ refunded: number; no_refund?: boolean }>("cancel_ticket", { p_ticket_id: id, p_no_refund: true });
     }
     if (!r.ok) return toast("err", r.message);
-    toast("ok", r.no_refund ? tr("Commande annulée, sans remboursement.")
-      : r.refunded > 0 ? (en ? `${fcfa(r.refunded)} refunded to your balance.` : `${fcfa(r.refunded)} remboursés sur votre solde.`) : tr("Ticket annulé, points rendus."));
+    const msg = r.no_refund ? tr("Commande annulée, sans remboursement.")
+      : r.refunded > 0 ? (en ? `${fcfa(r.refunded)} refunded to your balance.` : `${fcfa(r.refunded)} remboursés sur votre solde.`) : tr("Ticket annulé, points rendus.");
     refresh();
-    router.replace("/app/tickets");
+    // Le chef annonce l'annulation au centre de l'écran, puis retour à la liste
+    sfx.cancel();
+    setCancelled(msg);
+    setTimeout(() => router.replace("/app/tickets"), 2200);
   }
 
   return (
@@ -123,6 +142,7 @@ export default function TicketPage({ params }: { params: Promise<{ id: string }>
       </header>
 
       {/* Hors ligne : bandeau commun en haut de l'appli (« vos QR marchent ») */}
+
 
       {/* Talon */}
       <section className="relative mt-4 drop-shadow-[0_10px_30px_rgba(22,24,29,0.10)]">
@@ -245,27 +265,36 @@ export default function TicketPage({ params }: { params: Promise<{ id: string }>
         </>
       )}
 
+      {/* La cuisine te parle : une cuisinière différente à chaque étape, au centre, avec une bulle */}
+      {pop && !justScanned && !cancelled && <ChefPopup scene={pop} autoClose={pop === "ready" ? 6000 : 3500} onClose={() => setPop(null)}
+        sub={pop === "ready" ? (en ? `Order no. ${t.order_no} · ${dish?.name ?? ""}` : `Commande n° ${t.order_no} · ${dish?.name ?? ""}`) : undefined} />}
+
+      {cancelled && <ChefPopup scene="cancelled" message={order ? tr("Commande annulée") : tr("Ticket annulé")} sub={cancelled} />}
+
       {justScanned && <ScannedOverlay ticket={t} avatar={profile?.avatar} seed={profile?.id} onClose={() => setJustScanned(false)} />}
     </main>
   );
 }
 
-function ScannedOverlay({ ticket, onClose, avatar, seed }: { ticket: Ticket; onClose: () => void; avatar?: string | null; seed?: string }) {
+function ScannedOverlay({ ticket, onClose }: { ticket: Ticket; onClose: () => void; avatar?: string | null; seed?: string }) {
   const tr = useT();
   const lang = useLang();
+  const dish = orderDish(ticket);
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-ok px-8 text-center text-white">
-      <span className="relative">
-        <Bitmoji avatar={avatar} seed={seed} mood="yum" bounce className="size-36 ring-[6px] ring-white" />
-        <span className="animate-pop absolute -bottom-1 -right-1 grid size-12 place-items-center rounded-full bg-white text-ok" style={{ animationDelay: "0.25s" }}><Check className="size-7" strokeWidth={3} /></span>
-      </span>
-      <h2 className="mt-6 text-3xl font-extrabold">{tr("Bon appétit !")}</h2>
-      <p className="mt-2 text-lg font-semibold opacity-90">{orderDish(ticket) ? orderDish(ticket)!.name : (lang === "en" ? `${SERVICE_LABEL[ticket.service]} ticket validated` : `Ticket ${SERVICE_LABEL[ticket.service]} validé`)}</p>
-      {!orderDish(ticket) && <p className="mt-8 text-sm font-semibold opacity-80">{tr("L'agent enregistre votre plat…")}</p>}
-      <p className="mt-8 rounded-2xl bg-white/15 px-4 py-3 text-sm font-semibold">{tr("On te demandera ton avis dans 15 min, après le repas.")}</p>
-      <button onClick={onClose} className="mt-8 text-sm font-bold underline underline-offset-4 opacity-90">{tr("Fermer")}</button>
-    </div>
+    <ChefPopup scene="done" onClose={onClose} backdrop="bg-ok/80 backdrop-blur-[3px]" message={tr("Bon appétit !")}
+      sub={<>
+        <p className="font-extrabold text-ink">{dish ? dish.name : (lang === "en" ? `${SERVICE_LABEL[ticket.service]} ticket validated` : `Ticket ${SERVICE_LABEL[ticket.service]} validé`)}</p>
+        <p className="mt-1 text-xs">{tr("On te demandera ton avis dans 15 min, après le repas.")}</p>
+      </>} />
   );
+}
+
+/** Étape de la commande → personnage à afficher */
+function chefScene(st: string, prep: Ticket["prep_status"]): ChefScene {
+  if (st === "used") return "done";
+  if (st === "cancelled") return "cancelled";
+  if (st === "expired") return "expired";
+  return prep === "ready" ? "ready" : prep === "preparing" ? "preparing" : "received";
 }
 
 /** Heure à la seconde sous le QR : prouve à l'agent que l'écran est vivant (pas une capture) */

@@ -2,13 +2,16 @@
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Camera, MessageCircleReply, Star, X } from "lucide-react";
+import { Camera, MessageCircleReply, X } from "lucide-react";
 import { edge, rpc, supabase, myId } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/app/page-header";
 import { DishImage } from "@/components/app/dish-image";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { COMPLAINTS, complaintLabel, compressPhoto, reviewPhotoUrl } from "@/lib/reviews";
+import { COMPLAINTS, MOODS, complaintLabel, compressPhoto, moodEmoji, reviewPhotoUrl } from "@/lib/reviews";
+import { ChefPopup } from "@/components/chef";
+import { sfx } from "@/lib/sfx";
+import { confetti } from "@/lib/confetti";
 import { dateTime, SERVICE_LABEL, TZ } from "@/lib/format";
 import { useLang, useT } from "@/lib/i18n";
 import type { ServiceKind } from "@/lib/types";
@@ -16,9 +19,8 @@ import type { ServiceKind } from "@/lib/types";
 type T = { id: string; service: ServiceKind; used_at: string | null; status: string; dish: { name: string; photo_url: string | null } | null };
 type Review = { id: string; stars: number; comment: string | null; complaints: string[]; photo_path: string | null; reply: string | null; replied_at: string | null; created_at: string };
 
-const HINT = ["", "Pas bon du tout", "Bof", "Correct", "Bon", "Excellent !"];
 
-/** Avis sur un repas : note, plainte en un clic, commentaire, photo facultative. */
+/** Avis sur un repas : note en émotions (😡 → 😍), plainte en un clic, commentaire, photo facultative. */
 export default function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -37,10 +39,12 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const [photo, setPhoto] = useState<Blob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pops, setPops] = useState(0); // relance les petits emojis qui s'envolent à chaque choix
+  const [done, setDone] = useState<{ stars: number; msg: string } | null>(null); // écran de réaction après l'envoi
 
   useEffect(() => {
     const q = Number(new URLSearchParams(window.location.search).get("stars"));
-    if (q >= 1 && q <= 5) setStars(q);
+    if (q >= 1 && q <= 5) { setStars(q); setPops(1); }
     const sb = supabase();
     sb.from("tickets").select("id, service, used_at, status, dish:dishes(name, photo_url)").eq("id", id).maybeSingle()
       .then(({ data }) => setT(data as unknown as T | null));
@@ -73,9 +77,11 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
     if (!r.ok) return toast("err", r.message);
     // Photo de l'assiette : l'IA mesure ce qui n'a pas été mangé (en arrière-plan, l'élève n'attend pas)
     if (path) edge("plate-scan", { ticket_id: id, photo_path: path }).catch(() => {});
-    toast("ok", tr(r.alert ? "Merci. La cuisine est prévenue tout de suite." : path ? "Merci ! Ta photo aide la cuisine à ajuster les portions 🌱" : "Merci pour ton avis !"));
-    navigator.vibrate?.(60);
-    router.replace("/app/tickets");
+    // Réaction plein écran : pluie d'emojis contents, ou chef qui prend note si c'était raté
+    setDone({ stars, msg: tr(r.alert ? "Merci. La cuisine est prévenue tout de suite." : path ? "Merci ! Ta photo aide la cuisine à ajuster les portions 🌱" : "Merci pour ton avis !") });
+    sfx.mood(stars);
+    if (stars >= 4) setTimeout(() => { sfx.success(); if (stars === 5) confetti(); }, 250);
+    setTimeout(() => router.replace("/app/tickets"), 2300);
   }
 
   async function skip() {
@@ -102,7 +108,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
           // Avis déjà donné : récapitulatif + réponse de la cuisine
           <div className="mt-4 space-y-3">
             <div className="rounded-[22px] bg-card p-4 shadow-[var(--shadow-card)]">
-              <div className="flex">{[1, 2, 3, 4, 5].map((n) => <Star key={n} className={clsx("size-6", n <= review.stars ? "fill-warn text-warn" : "text-line")} />)}</div>
+              <p className="flex items-center gap-2 text-sm font-bold text-ink-2"><span className="text-4xl">{moodEmoji(review.stars)}</span>{tr(MOODS[review.stars - 1]?.label ?? "")}</p>
               {review.complaints.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">{review.complaints.map((c) => <span key={c} className="rounded-full bg-err-soft px-2.5 py-1 text-xs font-bold text-err">{tr(complaintLabel(c))}</span>)}</div>
               )}
@@ -125,16 +131,27 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
           </div>
         ) : (
           <>
-            <div className="mt-4 rounded-[22px] bg-card p-5 text-center shadow-[var(--shadow-card)]">
+            <div className={clsx("mt-4 rounded-[22px] p-5 text-center shadow-[var(--shadow-card)] transition-colors duration-300",
+              stars === 0 ? "bg-card" : stars <= 2 ? "bg-err-soft" : stars === 3 ? "bg-warn-soft" : "bg-lime-soft")}>
               <p className="font-bold">{tr("Comment c'était ?")}</p>
-              <div className="mt-3 flex justify-center gap-1.5">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button key={n} onClick={() => setStars(n)} aria-label={lang === "en" ? `${n} star${n > 1 ? "s" : ""}` : `${n} étoile${n > 1 ? "s" : ""}`} className="p-1 transition active:scale-90">
-                    <Star className={clsx("size-10 transition", n <= stars ? "fill-warn text-warn" : "text-line")} />
-                  </button>
-                ))}
+              <div className="mt-3 flex justify-center gap-1" role="radiogroup" aria-label={tr("Comment c'était ?")}>
+                {MOODS.map((m) => {
+                  const on = stars === m.n;
+                  return (
+                    <button key={m.n} role="radio" aria-checked={on} aria-label={tr(m.label)}
+                      onClick={() => { setStars(m.n); setPops((k) => k + 1); sfx.mood(m.n); }}
+                      className={clsx("relative grid size-14 place-items-center rounded-full text-[34px] leading-none transition", on ? "bg-white shadow-md" : stars ? "opacity-45 grayscale-[60%]" : "active:scale-90")}>
+                      <span key={on ? pops : 0} className={clsx("block", on && "mood-pick")}>{m.emoji}</span>
+                      {/* petits emojis qui s'envolent quand on choisit */}
+                      {on && pops > 0 && [-26, 4, 30].map((dx, i) => (
+                        <span key={`${pops}-${i}`} aria-hidden className="mood-float pointer-events-none absolute left-1/2 top-0 -ml-3 text-2xl"
+                          style={{ "--dx": `${dx}px`, "--rot": `${dx}deg`, animationDelay: `${i * 0.08}s` } as React.CSSProperties}>{m.emoji}</span>
+                      ))}
+                    </button>
+                  );
+                })}
               </div>
-              <p className="mt-1 h-5 text-sm font-semibold text-muted">{tr(HINT[stars])}</p>
+              <p key={stars} className="animate-pop mt-2 h-6 text-base font-extrabold">{stars ? tr(MOODS[stars - 1].label) : ""}</p>
             </div>
 
             <div className="mt-3 rounded-[22px] bg-card p-4 shadow-[var(--shadow-card)]">
@@ -170,11 +187,28 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
                 : <>Facultatif · une photo de ton assiette <b>à la fin du repas</b> aide la cuisine à mesurer ce qui n&apos;est pas mangé et à ajuster les portions 🌱</>}</p>
             </div>
 
-            <Button block size="lg" variant="dark" className="mt-4" loading={busy} disabled={!stars} onClick={send}>{tr("Envoyer mon avis")}</Button>
+            <Button block size="lg" variant="dark" className="mt-4" loading={busy} disabled={!stars} onClick={send}>{stars ? `${tr("Envoyer mon avis")} ${MOODS[stars - 1].emoji}` : tr("Envoyer mon avis")}</Button>
             <button onClick={skip} className="mt-3 w-full text-center text-sm font-bold text-muted">{tr("Ne pas noter ce repas")}</button>
           </>
         )}
       </div>
+      {done && <Reaction stars={done.stars} msg={done.msg} />}
     </main>
+  );
+}
+
+/** Après l'envoi : la mascotte au centre réagit dans sa bulle (pluie de 😍 si c'était bon, 😡 qui fulmine sinon) */
+function Reaction({ stars, msg }: { stars: number; msg: string }) {
+  const happy = stars >= 4, angry = stars <= 2;
+  const e = MOODS[stars - 1].emoji;
+  const rain = happy ? [e, "🤤", "💚", e, "✨", "😋", e, "👏🏾", e, "💚", "🍽️", e] : [];
+  return (
+    <ChefPopup scene={happy ? "thanks" : "sorry"} backdrop={happy ? "bg-lime/60 backdrop-blur-[3px]" : angry ? "bg-err/30 backdrop-blur-[3px]" : "bg-warn/30 backdrop-blur-[3px]"}
+      message={<><span className={clsx("mood-big mb-1 block text-6xl leading-none", angry && "mood-fume")}>{e}</span>{msg}</>}>
+      {rain.map((x, i) => (
+        <span key={i} aria-hidden className="mood-rain pointer-events-none absolute top-0 text-3xl"
+          style={{ left: `${(i * 83) % 100}%`, "--delay": `${(i % 6) * 0.12}s`, "--d": `${1.5 + (i % 4) * 0.25}s`, "--rot": `${i % 2 ? 200 : -160}deg` } as React.CSSProperties}>{x}</span>
+      ))}
+    </ChefPopup>
   );
 }

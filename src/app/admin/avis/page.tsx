@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { MessageCircleReply, Star, TrendingDown, TrendingUp } from "lucide-react";
 import { rpc, supabase } from "@/lib/supabase/client";
 import { useToast } from "@/components/ui/toast";
-import { reviewPhotoUrl } from "@/lib/reviews";
+import { moodEmoji, reviewPhotoUrl } from "@/lib/reviews";
 import { Card, PageTitle, Badge } from "@/components/admin/ui";
 import { DishImage } from "@/components/app/dish-image";
 import { DishLeaderboard } from "@/components/admin/dish-leaderboard";
@@ -64,7 +64,7 @@ export default function RatingsPage() {
                   <DishImage name={d.name} src={d.photo_url} className="size-12" rounded="rounded-xl" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold">{d.name}</p>
-                    <div className="mt-1 flex items-center gap-2"><Stars n={d.avg_stars ?? 0} /><span className="text-xs text-muted">{d.n} avis</span></div>
+                    <div className="mt-1 flex items-center gap-2"><span className="text-base leading-none">{moodEmoji(d.avg_stars ?? 3)}</span><Stars n={d.avg_stars ?? 0} /><span className="text-xs text-muted">{d.n} avis</span></div>
                   </div>
                   <div className="hidden w-32 sm:block">
                     {[5, 4, 3, 2, 1].map((k) => (
@@ -91,7 +91,7 @@ export default function RatingsPage() {
           <div className="space-y-3">
             {r?.recent.map((c) => (
               <div key={c.id} className={clsx("rounded-2xl p-3.5", c.complaints?.includes("corps_etranger") ? "bg-err-soft ring-2 ring-err/40" : "bg-canvas")}>
-                <div className="flex items-center justify-between gap-2"><Badge>{c.dish}</Badge><Stars n={c.stars} /></div>
+                <div className="flex items-center justify-between gap-2"><Badge>{c.dish}</Badge><span className="flex items-center gap-1.5"><span className="text-lg leading-none" title={`${c.stars}/5`}>{moodEmoji(c.stars)}</span><Stars n={c.stars} /></span></div>
                 {c.complaint_labels && c.complaint_labels.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">{c.complaint_labels.map((l) => <span key={l} className="rounded-full bg-err px-2 py-0.5 text-[11px] font-bold text-white">{l}</span>)}</div>
                 )}

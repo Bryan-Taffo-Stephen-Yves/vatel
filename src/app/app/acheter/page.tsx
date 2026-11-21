@@ -1,6 +1,6 @@
 "use client";
 import { Bitmoji } from "@/components/bitmoji";
-import { buzz } from "@/lib/confetti";
+import { sfx } from "@/lib/sfx";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
@@ -114,7 +114,7 @@ function Buy() {
     const n = r.ticket_ids.length;
     // Le ticket « sort de l'imprimante », petite vibration, puis on ouvre le QR
     setPrinted({ n, label: t(cfg?.label ?? ""), service, to: gift?.full_name.split(" ")[0] });
-    buzz([20, 60, 40]);
+    sfx.success();
     const wait = new Promise((ok) => setTimeout(ok, 1700));
     if (gift) { await wait; router.replace("/app"); return; }
     await Promise.all([syncTokens(), wait]);

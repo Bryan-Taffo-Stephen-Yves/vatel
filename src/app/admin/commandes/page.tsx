@@ -9,6 +9,8 @@ import { DishImage } from "@/components/app/dish-image";
 import { useToast } from "@/components/ui/toast";
 import { addDays, dayLong, time, todayISO } from "@/lib/format";
 import { say, soundOk } from "@/lib/scan-sounds";
+import { sfx } from "@/lib/sfx";
+import { ChefArt } from "@/components/chef";
 import { SERVICES, type Extra, type ServiceKind } from "@/lib/types";
 import { fetchServices, type Services } from "@/lib/menu";
 
@@ -19,9 +21,9 @@ type Order = {
 };
 
 const COLS = [
-  { key: "received", title: "Reçues", tone: "bg-canvas", next: "preparing", action: "Je prépare" },
-  { key: "preparing", title: "En préparation", tone: "bg-warn-soft", next: "ready", action: "Prête" },
-  { key: "ready", title: "Prêtes · à récupérer", tone: "bg-lime-soft", next: null, action: null },
+  { key: "received", title: "Reçues", tone: "bg-canvas", next: "preparing", action: "Je prépare", chef: "louche" },
+  { key: "preparing", title: "En préparation", tone: "bg-warn-soft", next: "ready", action: "Prête", chef: "fouet" },
+  { key: "ready", title: "Prêtes · à récupérer", tone: "bg-lime-soft", next: null, action: null, chef: "cupcakes" },
 ] as const;
 
 /** Écran cuisine : les commandes arrivent en direct (son + voix), le chef les fait avancer. Le client est prévenu quand c'est prêt. */
@@ -62,6 +64,7 @@ export default function KitchenOrders() {
     const r = await rpc("set_order_status", { p_ticket_id: o.id, p_status: status });
     setBusy(null);
     if (!r.ok) return toast("err", r.message);
+    if (status === "ready") sfx.ready(); else if (status === "preparing") sfx.preparing();
     if (status === "ready") toast("ok", `n° ${o.no} prête : ${o.client.split(" ")[0]} est prévenu.`);
     load();
   }
@@ -115,7 +118,7 @@ export default function KitchenOrders() {
             return (
               <section key={c.key} className={clsx("rounded-3xl p-3", c.tone)}>
                 <h2 className="mb-3 flex items-center justify-between px-1 font-extrabold">
-                  {c.title}<span className="grid min-w-7 place-items-center rounded-full bg-ink px-2 py-0.5 text-sm text-lime">{list.length}</span>
+                  <span className="flex items-end gap-2"><span className="-my-2 h-12"><ChefArt who={c.chef} anim={false} /></span>{c.title}</span><span className="grid min-w-7 place-items-center rounded-full bg-ink px-2 py-0.5 text-sm text-lime">{list.length}</span>
                 </h2>
                 <div className="space-y-2.5">
                   {list.length === 0 && <p className="px-1 py-6 text-center text-sm font-semibold text-muted">—</p>}

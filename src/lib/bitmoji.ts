@@ -87,7 +87,7 @@ function hairFront(d: BitmojiDef, pat: string) {
   }
 }
 
-function eyes(m: Mood) {
+export function eyes(m: Mood) {
   const open = (x: number, r = 5) => `<ellipse cx="${x}" cy="54" rx="${r}" ry="${r + 0.6}" fill="#fff"/><circle cx="${x + 0.6}" cy="54.6" r="${r * 0.62}" fill="${H}"/><circle cx="${x + 1.8}" cy="53" r="1.1" fill="#fff"/>`;
   const closed = (x: number) => `<path d="M${x - 5} 55 Q${x} 49 ${x + 5} 55" stroke="${H}" stroke-width="2.6" stroke-linecap="round" fill="none"/>`;
   const sleepy = (x: number) => `<path d="M${x - 5} 54 Q${x} 58 ${x + 5} 54" stroke="${H}" stroke-width="2.4" stroke-linecap="round" fill="none"/>`;
@@ -100,13 +100,13 @@ function eyes(m: Mood) {
   }
 }
 
-function brows(m: Mood, c: string) {
+export function brows(m: Mood, c: string) {
   if (m === "sad") return `<path d="M44 46 L55 43 M65 43 L76 46" stroke="${c}" stroke-width="2.6" stroke-linecap="round"/>`;
   if (m === "wow") return `<path d="M44 42 Q50 38 56 42 M64 42 Q70 38 76 42" stroke="${c}" stroke-width="2.6" stroke-linecap="round" fill="none"/>`;
   return `<path d="M44 45 Q50 42 56 45 M64 45 Q70 42 76 45" stroke="${c}" stroke-width="2.6" stroke-linecap="round" fill="none"/>`;
 }
 
-function mouth(m: Mood) {
+export function mouth(m: Mood) {
   const dark = "#4a1414";
   switch (m) {
     case "laugh": return `<path d="M48 66 Q60 86 72 66 Z" fill="${dark}"/><path d="M50 67 L70 67 L69 70 L51 70 Z" fill="#fff"/><ellipse cx="60" cy="77" rx="6" ry="3.6" fill="#f87171"/>`;

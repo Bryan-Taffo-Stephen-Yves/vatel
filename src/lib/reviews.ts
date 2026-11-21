@@ -10,6 +10,16 @@ export const COMPLAINTS: { code: string; label: string; emoji: string }[] = [
   { code: "corps_etranger", label: "Corps étranger", emoji: "⚠️" },
   { code: "autre", label: "Autre", emoji: "💬" },
 ];
+/** Note d'un plat en émotions (1 → 5) : plus parlant que des étoiles, et la base garde une note de 1 à 5. */
+export const MOODS = [
+  { n: 1, emoji: "😡", label: "Pas bon du tout" },
+  { n: 2, emoji: "😕", label: "Bof" },
+  { n: 3, emoji: "😐", label: "Correct" },
+  { n: 4, emoji: "😋", label: "Bon" },
+  { n: 5, emoji: "😍", label: "Excellent !" },
+] as const;
+export const moodEmoji = (stars: number) => MOODS[Math.min(4, Math.max(0, Math.round(stars) - 1))].emoji;
+
 export const complaintLabel = (c: string) => COMPLAINTS.find((x) => x.code === c)?.label ?? c;
 
 export type PendingReview = { ticket_id: string; dish: string; photo_url: string | null; service: string; used_at: string };

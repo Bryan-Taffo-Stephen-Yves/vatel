@@ -1,4 +1,5 @@
 "use client";
+import { sfx } from "@/lib/sfx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -84,7 +85,7 @@ export default function RechargePage() {
     const r = await edge<{ status: Wait["state"]; amount: number; reason: string | null; for_child: boolean }>("jeko-pay", { action: "status", reference });
     if (!r.ok) return;
     setWait((w) => (w && w.reference === reference ? { ...w, state: r.status, amount: r.amount, reason: r.reason } : w));
-    if (r.status === "success") await refresh();
+    if (r.status === "success") { await refresh(); sfx.coin(); }
   }, [refresh]);
   useEffect(() => {
     if (!wait || wait.state !== "pending") return;
@@ -123,6 +124,7 @@ export default function RechargePage() {
     setBusy(false);
     if (!r.ok) return toast("err", r.message);
     await refresh();
+    sfx.coin();
     toast("ok", en ? `${fcfa(value)} added (demo mode, no real debit).` : `${fcfa(value)} ajoutés (mode démo, aucun débit réel).`);
     router.replace(child ? "/app/famille" : "/app");
   }
