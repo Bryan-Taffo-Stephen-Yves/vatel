@@ -76,9 +76,11 @@ export default function OccupancyPage() {
       {(me?.role === "admin" || me?.role === "chef") && <div className="mt-4"><CameraZonesEditor /></div>}
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        <Card title="Plan de salle" subtitle={live ? "Mis à jour toutes les 10 s par le module vision" : "En attente du module vision"}>
+        <Card title="Plan de salle" subtitle={live ? `Tables tracées sur la caméra · relevé à ${time(a!.last!.created_at)} (toutes les 10 s)` : "En attente de la caméra (téléphone démarré sur /scan/camera)"}>
           <div className="grid grid-cols-5 gap-2.5">
-            {a?.room.layout.map((t) => {
+            {(live && Object.keys(states).length
+              ? Object.keys(states).sort((x, y) => parseInt(x.slice(1), 10) - parseInt(y.slice(1), 10)).map((id) => ({ id }))
+              : a?.room.layout ?? []).map((t) => {
               const busy = states[t.id];
               return (
                 <div key={t.id} className={clsx("flex aspect-square flex-col items-center justify-center rounded-2xl text-sm font-extrabold transition-colors",

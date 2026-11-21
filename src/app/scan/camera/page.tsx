@@ -23,6 +23,11 @@ const FREE_AFTER = 15_000;  // libérée après 15 s sans personne
 const PER_MIN = 3;          // rythme du comptoir par défaut (personnes servies / min)
 
 const inside = (z: Zone, px: number, py: number) => px >= z.x && px <= z.x + z.w && py >= z.y && py <= z.y + z.h;
+// Part du cadre de la personne qui recouvre la zone (0..1)
+const overlap = (z: Zone, b: Box) => {
+  const w = Math.max(0, Math.min(z.x + z.w, b.x + b.w) - Math.max(z.x, b.x)), h = Math.max(0, Math.min(z.y + z.h, b.y + b.h) - Math.max(z.y, b.y));
+  return b.w * b.h > 0 ? (w * h) / (b.w * b.h) : 0;
+};
 const median = (a: number[]) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };
 
 export default function CameraPage() {
@@ -127,7 +132,7 @@ export default function CameraPage() {
       const files = await withTimeout(FilesetResolver.forVisionTasks("/mediapipe"), 30_000);
       const make = (delegate: "GPU" | "CPU") => ObjectDetector.createFromOptions(files, {
         baseOptions: { modelAssetBuffer: buffer, delegate },
-        runningMode: "IMAGE", scoreThreshold: 0.3, maxResults: 40, categoryAllowlist: ["person"],
+        runningMode: "IMAGE", scoreThreshold: 0.25, maxResults: 40, categoryAllowlist: ["person"],
       });
       // Test de la carte graphique sur une image de référence (3 personnes), 8 s au plus : si elle ne voit rien ou bloque
       // (certains téléphones), on prend le processeur, plus lent mais fiable. Le GPU écarté est fermé APRÈS (sinon blocage).
@@ -193,7 +198,10 @@ export default function CameraPage() {
       let queue = 0; const perTable: Record<string, number> = {};
       for (const box of b) {
         const fx = box.x + box.w / 2, fy = Math.min(box.y + box.h, 1), cy = box.y + box.h / 2; // pieds, puis centre (assis : pieds cachés)
-        const t = zones.find((z) => z.kind === "table" && (inside(z, fx, fy) || inside(z, fx, cy)));
+        // Table : pieds ou centre dans la zone, sinon la table que le cadre de la personne recouvre le plus
+        // (personne assise dont le buste dépasse sur la table, chaise hors du rectangle tracé)
+        const t = zones.find((z) => z.kind === "table" && (inside(z, fx, fy) || inside(z, fx, cy)))
+          ?? zones.filter((z) => z.kind === "table").map((z) => ({ z, o: overlap(z, box) })).filter((x) => x.o >= 0.2).sort((p, q) => q.o - p.o)[0]?.z;
         if (t) { perTable[t.id] = (perTable[t.id] ?? 0) + 1; continue; }
         if (zones.some((z) => z.kind === "queue" && (inside(z, fx, fy) || inside(z, fx, cy)))) queue++;
       }
