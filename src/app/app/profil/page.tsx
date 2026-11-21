@@ -20,6 +20,7 @@ import { useAppData } from "@/components/app/app-data";
 import { WhatsAppLink } from "@/components/app/whatsapp-link";
 import { DietSection } from "@/components/app/diet-section";
 import { LangSwitch, useLang, useT } from "@/lib/i18n";
+import { setSfx, sfx, sfxOn } from "@/lib/sfx";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -156,6 +157,7 @@ export default function ProfilePage() {
               <span key={i} style={{ animationDelay: `${i * 40}ms` }} className={clsx("animate-pop aspect-square rounded-full", i < points % 10 || (points > 0 && points % 10 === 0) ? "bg-ink" : "bg-white/60")} />
             ))}
           </div>
+
           <p className="mt-3 text-sm font-bold">
             {points >= 10
               ? <span className="flex items-center gap-1.5"><Gift className="size-4 shrink-0" />{en
@@ -169,6 +171,8 @@ export default function ProfilePage() {
           <p className="font-bold">🌍 {t("Langue")} <span className="block text-xs font-semibold text-muted">Français · English</span></p>
           <LangSwitch />
         </section>
+
+        <SfxSwitch parent={!!profile?.is_parent} />
 
         {!profile?.is_parent && <DietSection />}
 
@@ -244,6 +248,22 @@ export default function ProfilePage() {
             </button>}
       </Sheet>
     </main>
+  );
+}
+
+/** Sons et petites animations de l'appli (bip, cloche « commande prête », réactions des avis) */
+function SfxSwitch({ parent }: { parent: boolean }) {
+  const t = useT();
+  const [on, setOn] = useState(true);
+  useEffect(() => setOn(sfxOn()), []);
+  const flip = () => { const n = !on; setSfx(n); setOn(n); if (n) sfx.tap(); };
+  return (
+    <button onClick={flip} role="switch" aria-checked={on} className="mt-4 flex w-full items-center justify-between rounded-[24px] bg-card p-4 text-left shadow-[var(--shadow-card)]">
+      <span className="font-bold">{on ? "🔊" : "🔇"} {t("Sons de l'appli")}
+        <span className="block text-xs font-semibold text-muted">{t(parent ? "Petits sons quand une recharge passe" : "Cloche quand ta commande est prête, réactions des avis")}</span></span>
+      <span className={clsx("h-7 w-12 shrink-0 rounded-full p-1 transition", on ? "bg-ink" : "bg-line")}>
+        <span className={clsx("block size-5 rounded-full transition", on ? "translate-x-5 bg-lime" : "bg-white")} /></span>
+    </button>
   );
 }
 

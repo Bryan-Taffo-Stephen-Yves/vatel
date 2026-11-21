@@ -13,6 +13,7 @@ import { SERVICES, type MenuItem, type ServiceKind } from "@/lib/types";
 import { useAppData } from "@/components/app/app-data";
 import { dietConflicts, hasDietPrefs, warnEn } from "@/lib/diet";
 import { useT, useLang, type Lang } from "@/lib/i18n";
+import { MenuDownload } from "@/components/app/menu-download";
 
 // Mots de dietConflicts (français) rendus en anglais ; les noms d'allergènes restent tels quels (données)
 const shortDay = (d: string, lang: Lang) => lang === "en"
@@ -108,6 +109,7 @@ function Menu() {
       </header>
 
       <section className="space-y-4 px-4 pt-3">
+        {items !== null && available.length > 0 && <MenuDownload day={day} days={available} items={items} services={services} />}
         {prefs ? (
           <label className="flex items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3 text-sm font-bold shadow-[var(--shadow-card)]">
             <span>{t("Seulement ce qui me convient")}<span className="block text-xs font-semibold text-muted">{onlyMine && hidden > 0 ? (lang === "en" ? `${hidden} dish(es) hidden based on your allergies and diet` : `${hidden} plat(s) masqué(s) selon tes allergies et ton régime`) : t("Selon tes allergies et ton régime")}</span></span>

@@ -1,12 +1,11 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import clsx from "clsx";
-import { Star } from "lucide-react";
 import { rpc, supabase, myId } from "@/lib/supabase/client";
 import { Sheet } from "@/components/ui/sheet";
 import { DishImage } from "@/components/app/dish-image";
-import type { PendingReview } from "@/lib/reviews";
+import { MOODS, type PendingReview } from "@/lib/reviews";
+import { sfx } from "@/lib/sfx";
 import { useLang, useT } from "@/lib/i18n";
 
 const SEEN = "dabali:review-later";
@@ -64,10 +63,10 @@ export function ReviewPrompt() {
         <h2 className="mt-3 text-xl font-extrabold">{lang === "en" ? <>How was your {p.dish.split(" ")[0].toLowerCase()}?</> : <>Comment était ton {p.dish.split(" ")[0].toLowerCase()} ?</>}</h2>
         <p className="text-sm text-muted">{t("Ton avis aide la cuisine à s'améliorer.")}</p>
         <div className="mt-4 flex justify-center gap-1.5">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button key={n} onClick={() => { setP(null); router.push(`/app/avis/${p.ticket_id}?stars=${n}`); }}
-              aria-label={lang === "en" ? `${n} star${n > 1 ? "s" : ""}` : `${n} étoile${n > 1 ? "s" : ""}`} className="p-1 transition active:scale-90">
-              <Star className={clsx("size-10 text-warn")} />
+          {MOODS.map((m) => (
+            <button key={m.n} onClick={() => { sfx.mood(m.n); setP(null); router.push(`/app/avis/${p.ticket_id}?stars=${m.n}`); }}
+              aria-label={t(m.label)} className="grid size-14 place-items-center rounded-full text-[34px] leading-none transition hover:scale-110 active:scale-125">
+              {m.emoji}
             </button>
           ))}
         </div>

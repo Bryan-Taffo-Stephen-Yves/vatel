@@ -2,7 +2,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
-import { Clock, ChefHat, Info, Minus, Plus, WifiOff } from "lucide-react";
+import { Clock, Info, Minus, Plus, WifiOff } from "lucide-react";
 import { rpc, supabase } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/app/page-header";
 import { ServiceIcon } from "@/components/app/service-icon";
@@ -12,7 +12,8 @@ import { Sheet } from "@/components/ui/sheet";
 import { BiometricConfirm } from "@/components/app/biometric-confirm";
 import { useToast } from "@/components/ui/toast";
 import { useAppData } from "@/components/app/app-data";
-import { buzz } from "@/lib/confetti";
+import { sfx } from "@/lib/sfx";
+import { ChefPopup } from "@/components/chef";
 import { fetchMenu, fetchServices, serviceEnded, soldOut, type Services } from "@/lib/menu";
 import { syncTokens } from "@/lib/tickets";
 import { addDays, dayNum, dayShort, fcfa, time, todayISO } from "@/lib/format";
@@ -224,7 +225,7 @@ function Order() {
     setBusy(false);
     setPinOpen(false);
     if (!r.ok) return toast("err", r.message);
-    buzz([20, 60, 40]);
+    sfx.success();
     setQueued({ summary, at: slot });
     setTimeout(() => router.replace("/app"), 3200);
   }, [item, day, summary, total, slot, lines, chosenExtras, toast, router, t]);
@@ -252,7 +253,8 @@ function Order() {
     }
     setPinOpen(false);
     refresh();
-    buzz([20, 60, 40]);
+    sfx.success();
+    try { localStorage.setItem(`dabali:chef:${r.ticket_id}`, "received"); } catch {} // la mascotte « reçue » vient d'être vue ici
     setDone({ no: r.order_no, dish: r.dish, at: r.pickup_at });
     await Promise.all([syncTokens(), new Promise((ok) => setTimeout(ok, 2200))]);
     router.replace(`/app/tickets/${r.ticket_id}`);
@@ -421,13 +423,12 @@ function Order() {
         </div>
       )}
       {done && (
-        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-ink px-8 text-center text-white" role="status">
-          <span className="animate-pop grid size-24 place-items-center rounded-full bg-lime text-ink"><ChefHat className="size-12" /></span>
-          <p className="mt-6 text-sm font-bold uppercase tracking-wider text-lime">{en ? `Order #${done.no}` : `Commande n° ${done.no}`}</p>
-          <p className="mt-1 text-3xl font-extrabold">{t("Envoyée en cuisine")}</p>
-          <p className="mt-3 text-lg font-semibold text-white/80">{done.dish}<br />{en ? `ready for pickup at ${hm(done.at)}` : `à récupérer à ${time(done.at)}`}</p>
-          <p className="mt-6 text-sm text-white/60">{t("On te prévient dès qu'elle est prête.")}</p>
-        </div>
+        <ChefPopup scene="received" message={t("Envoyée en cuisine !")}
+          sub={<>
+            <p className="font-extrabold text-ink">{en ? `Order #${done.no}` : `Commande n° ${done.no}`} · {done.dish}</p>
+            <p>{en ? `ready for pickup at ${hm(done.at)}` : `à récupérer à ${time(done.at)}`}</p>
+            <p className="mt-1 text-xs text-muted">{t("On te prévient dès qu'elle est prête.")}</p>
+          </>} />
       )}
     </main>
   );
