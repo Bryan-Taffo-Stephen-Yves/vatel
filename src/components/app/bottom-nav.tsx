@@ -29,6 +29,8 @@ export function BottomNav() {
   const tabs: { href: string; label: string; icon: typeof Home; exact?: boolean; center?: boolean }[] = profile?.is_parent ? PARENT_TABS : TABS;
   // Écrans avec leur propre bouton d'action en bas : pas de barre d'onglets
   if (/^\/app\/(menu\/.+|recharger|transferer|acheter)/.test(path)) return null;
+  // Profil pas encore connu (première ouverture) : pas d'onglets élève affichés à un parent, même un instant
+  if (!profile) return null;
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
       <div className="flex items-end justify-between rounded-[26px] border border-line bg-card/95 px-2 pb-2 pt-1.5 shadow-[var(--shadow-float)] backdrop-blur">
