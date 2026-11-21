@@ -23,7 +23,7 @@ select coalesce(-sum(amount), 0) as spent from public.transactions where user_id
 select tests.login('bob');
 select public.family_child_stats(tests.uid('alice'), 'week') as s \gset
 select tests.ok((:'s'::jsonb ->> 'ok')::boolean, 'parent lié : statistiques lisibles');
-select tests.eq(jsonb_array_length(:'s'::jsonb -> 'days'), 5, 'ligne de 5 jours (lundi → vendredi)');
+select tests.eq(jsonb_array_length(:'s'::jsonb -> 'days'), 6, 'ligne de 6 jours (lundi → samedi)');
 select tests.eq((:'s'::jsonb ->> 'meals')::int, 1, '1 repas pris');
 select tests.eq((:'s'::jsonb ->> 'spent')::int, :spent, 'montant dépensé = achats (dont le repas offert)');
 select tests.eq((:'s'::jsonb -> 'last_recharge' ->> 'amount')::int, 20000, 'dernière recharge : 20 000 F');

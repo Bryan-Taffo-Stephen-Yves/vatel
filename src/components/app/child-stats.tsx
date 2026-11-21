@@ -39,7 +39,7 @@ export function ChildStats({ childId, firstName }: { childId: string; firstName:
   const PERIODS: [Period, string][] = en
     ? [["week", "This week"], ["month", "This month"], ["since_recharge", "Since last top-up"]]
     : [["week", "Cette semaine"], ["month", "Ce mois"], ["since_recharge", "Depuis la recharge"]];
-  const LETTERS = en ? ["M", "T", "W", "T", "F"] : ["L", "M", "M", "J", "V"];
+  const LETTERS = en ? ["M", "T", "W", "T", "F", "S"] : ["L", "M", "M", "J", "V", "S"];
 
   return (
     <div className="border-t border-line px-4 py-3">
