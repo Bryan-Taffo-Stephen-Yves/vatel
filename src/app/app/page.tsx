@@ -3,7 +3,7 @@ import { Bitmoji } from "@/components/bitmoji";
 import { InstallApp } from "@/components/install-app";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, Plus, Send, UtensilsCrossed, Sparkles, ChevronRight, Eye, EyeOff, Copy, Gift, ChefHat } from "lucide-react";
+import { Bell, Plus, Send, UtensilsCrossed, ChevronRight, Eye, EyeOff, Copy, Gift, ChefHat } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { useAppData } from "@/components/app/app-data";
 import { OccupancyCard } from "@/components/app/occupancy-card";
@@ -65,8 +65,6 @@ function StudentHome() {
     const best = [...n.entries()].sort((a, b) => b[1] - a[1])[0];
     return best && best[1] >= 2 ? best[0] : null;
   })();
-  const points = profile?.points ?? 0;
-  const rewardReady = points >= 10;
 
   return (
     <main>
@@ -81,7 +79,7 @@ function StudentHome() {
 
         <header className="relative flex items-center gap-3 py-2">
           <Link href="/app/profil" aria-label={t("Mon profil")} className="transition active:scale-95">
-            <Bitmoji avatar={profile?.avatar} seed={profile?.id} mood={rewardReady ? "laugh" : "happy"} className="size-12 ring-[3px] ring-white" />
+            <Bitmoji avatar={profile?.avatar} seed={profile?.id} mood="happy" className="size-12 ring-[3px] ring-white" />
           </Link>
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[20px] font-extrabold leading-tight tracking-tight">{t("Bonjour")} {firstName(profile?.full_name) || "👋"}</h1>
@@ -127,18 +125,6 @@ function StudentHome() {
       <div className="relative -mt-7 rounded-t-[32px] bg-canvas px-4 pt-5">
       <InstallApp />
 
-      {/* Fidélité */}
-      <Link href="/app/profil#fidelite" className="mt-3 flex items-center gap-3 rounded-[22px] bg-card p-3.5 shadow-[var(--shadow-card)]">
-        <span className="grid size-10 place-items-center rounded-xl bg-lime-soft"><Sparkles className="size-5 text-lime-deep" /></span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold">{rewardReady ? `${t("Petit-déjeuner offert disponible")}${points >= 20 ? ` × ${Math.floor(points / 10)}` : ""} 🎉` : `${points} / 10 points`}</p>
-          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-canvas">
-            <div className="h-full rounded-full bg-lime-deep transition-all duration-700" style={{ width: `${rewardReady ? 100 : points * 10}%` }} />
-          </div>
-          {rewardReady && points % 10 > 0 && <p className="mt-1 text-xs font-semibold text-muted">+ {points % 10} / 10 {t("vers le suivant")}</p>}
-        </div>
-        <ChevronRight className="size-5 text-off" />
-      </Link>
 
       {/* Famille : mes enfants (parent) ou demande d'un parent à accepter (élève) */}
       <FamilyPeek />

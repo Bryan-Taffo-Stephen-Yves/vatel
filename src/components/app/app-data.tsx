@@ -2,7 +2,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { myId, supabase } from "@/lib/supabase/client";
 import { PROFILE_COLUMNS, type Profile } from "@/lib/types";
-import { buzz, confetti } from "@/lib/confetti";
 import { warmOffline, writeCache } from "@/lib/offline";
 import { fetchMenu } from "@/lib/menu";
 import { addDays, todayISO } from "@/lib/format";
@@ -89,17 +88,6 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     return () => { clearTimeout(id); window.removeEventListener("online", warm); };
   }, []);
 
-  // 10 points atteints : confettis une fois par petit-déjeuner gagné (pas au premier affichage d'un appareil)
-  useEffect(() => {
-    if (!profile) return;
-    const key = `dabali:rewards:${profile.id}`;
-    const won = Math.floor(profile.points / 10);
-    try {
-      const seen = localStorage.getItem(key);
-      if (seen !== null && won > Number(seen)) { confetti(); buzz([30, 50, 30, 50, 60]); }
-      localStorage.setItem(key, String(won));
-    } catch {}
-  }, [profile]);
 
   return <Ctx.Provider value={{ profile, balance, unread, refresh }}>{children}</Ctx.Provider>;
 }

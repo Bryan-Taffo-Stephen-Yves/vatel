@@ -149,7 +149,7 @@ const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\u202f/g, " ")
 
 // ═════════════ Outils de Jean (toujours pour le client lié uniquement) ═════════════
 const TOOLS = [
-  { name: "voir_solde", description: "Solde du compte Vatel du client et ses points de fidélité.", strict: true,
+  { name: "voir_solde", description: "Solde du compte Vatel du client.", strict: true,
     input_schema: { type: "object", additionalProperties: false, properties: {}, required: [] } },
   { name: "voir_menu", description: "Plats du jour au menu (menu_item_id, prix, disponibilité), suppléments (supplement_id, entrées/desserts, prix) et horaires. On ne commande que les plats du jour.", strict: true,
     input_schema: { type: "object", additionalProperties: false, required: ["repas"], properties: {
@@ -538,7 +538,7 @@ async function handleIncoming(body: any, dry = false) {
   }
   if (/^(1 )?(mon )?solde$/.test(plain) || plain === "mon solde") {
     const s0 = (await runTool({ userId: link.user_id, name: p.full_name }, "voir_solde", {})) as { solde_texte: string; points: number };
-    await sendWhatsApp(cfg, phone, `Tu as *${s0.solde_texte}* sur ton compte et *${s0.points} points* de fidélité 💰\nPour recharger : ${APP}/app/recharger`, link.user_id, ["🍽️ Menu du jour", "🛒 Commander"]);
+    await sendWhatsApp(cfg, phone, `Tu as *${s0.solde_texte}* sur ton compte 💰\nPour recharger : ${APP}/app/recharger`, link.user_id, ["🍽️ Menu du jour", "🛒 Commander"]);
     return;
   }
   // Parcours guidé (boutons) : instantané, sans IA
