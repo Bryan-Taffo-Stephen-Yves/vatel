@@ -1,4 +1,4 @@
-// Préparation d'une commande du jour (panier : plats en quantité + suppléments) par Jean (WhatsApp ou téléphone).
+// Préparation d'une commande (aujourd'hui ou jusqu'à 7 jours) (panier : plats en quantité + suppléments) par Jean (WhatsApp ou téléphone).
 // Crée une order_request valable 15 min ; le client confirme dans l'appli (Face ID ou PIN) → place_order_cart revérifie tout.
 import { adminClient } from "./http.ts";
 import { severeHits } from "./diet.ts";
@@ -18,7 +18,9 @@ export async function prepareOrder(userId: string, plats: { menu_item_id: string
   const { data: mis } = await db.from("menu_items").select("id, service_date, service, price, planned_qty, sold_qty, is_sold_out, is_full, dish:dishes(name, allergens, traces), menu:menus!inner(status)")
     .in("id", [...lines.keys()]).eq("menu.status", "published");
   if ((mis ?? []).length !== lines.size) return { erreur: "Un des plats n'est pas au menu (utilise les menu_item_id de voir_menu)." };
-  if ((mis ?? []).some((m: any) => m.service_date !== todayISO())) return { erreur: "On ne commande que les plats du jour." };
+  const day = (mis as any[])[0].service_date as string;
+  if ((mis ?? []).some((m: any) => m.service_date !== day)) return { erreur: "Une commande = un seul jour. Fais une commande par jour." };
+  if (day < todayISO() || day > new Date(Date.now() + 7 * 86400e3).toISOString().slice(0, 10)) return { erreur: "On réserve de aujourd'hui à 7 jours à l'avance." };
   if (new Set((mis ?? []).map((m: any) => m.service)).size > 1) return { erreur: "Une commande = un seul repas. Fais une commande par repas." };
   for (const m of mis as any[]) {
     const q = lines.get(m.id)!;
@@ -32,8 +34,8 @@ export async function prepareOrder(userId: string, plats: { menu_item_id: string
   }
   const service = (mis as any[])[0].service as string;
   if (!/^\d{2}:\d{2}$/.test(heure ?? "")) return { erreur: "Heure invalide (HH:MM)." };
-  const pickup = `${todayISO()}T${heure}:00Z`;
-  const { data: slots } = await db.rpc("order_slots", { p_date: todayISO(), p_service: service });
+  const pickup = `${day}T${heure}:00Z`;
+  const { data: slots } = await db.rpc("order_slots", { p_date: day, p_service: service });
   const slot = ((slots ?? []) as { at: string; left: number }[]).find((s) => new Date(s.at).getTime() === new Date(pickup).getTime());
   if (!slot || slot.left < n) return { erreur: "Cette heure n'est pas libre pour autant de plats. Utilise voir_creneaux.", creneaux_libres: ((slots ?? []) as any[]).filter((s) => s.left >= n).map((s) => s.at.slice(11, 16)) };
   const ex = new Map<string, number>();

@@ -151,15 +151,17 @@ const fcfa = (n: number) => `${n.toLocaleString("fr-FR").replace(/\u202f/g, " ")
 const TOOLS = [
   { name: "voir_solde", description: "Solde du compte Vatel du client.", strict: true,
     input_schema: { type: "object", additionalProperties: false, properties: {}, required: [] } },
-  { name: "voir_menu", description: "Plats du jour au menu (menu_item_id, prix, disponibilité), suppléments (supplement_id, entrées/desserts, prix) et horaires. On ne commande que les plats du jour.", strict: true,
-    input_schema: { type: "object", additionalProperties: false, required: ["repas"], properties: {
+  { name: "voir_menu", description: "Plats au menu d'un jour (menu_item_id, prix, disponibilité), suppléments (supplement_id, entrées/desserts, prix) et horaires. On peut réserver d'aujourd'hui à 7 jours à l'avance.", strict: true,
+    input_schema: { type: "object", additionalProperties: false, required: ["repas", "jour"], properties: {
+      jour: { type: ["string", "null"], description: "Date AAAA-MM-JJ (aujourd'hui à +7 jours) ; null = aujourd'hui" },
       repas: { type: ["string", "null"], description: "breakfast, lunch, snack ou dinner ; null pour tous" } } } },
-  { name: "voir_creneaux", description: "Heures de retrait encore libres aujourd'hui pour un repas.", strict: true,
-    input_schema: { type: "object", additionalProperties: false, required: ["repas"], properties: {
+  { name: "voir_creneaux", description: "Heures de retrait encore libres pour un repas, un jour donné.", strict: true,
+    input_schema: { type: "object", additionalProperties: false, required: ["repas", "jour"], properties: {
+      jour: { type: ["string", "null"], description: "Date AAAA-MM-JJ ; null = aujourd'hui" },
       repas: { type: "string", enum: ["breakfast", "lunch", "snack", "dinner"] } } } },
   { name: "mes_commandes", description: "Commandes en cours du client (numéro, plats, heure de retrait, état en cuisine).", strict: true,
     input_schema: { type: "object", additionalProperties: false, properties: {}, required: [] } },
-  { name: "preparer_commande", description: "Prépare UNE commande (plusieurs plats possibles, en quantité, + suppléments) pour aujourd'hui et renvoie le LIEN que le client ouvre pour confirmer (Face ID ou code PIN). Seul moyen de commander. Tous les plats doivent être du même repas.", strict: true,
+  { name: "preparer_commande", description: "Prépare UNE commande (plusieurs plats possibles, en quantité, + suppléments) pour un jour (celui des plats choisis) et renvoie le LIEN que le client ouvre pour confirmer (Face ID ou code PIN). Seul moyen de commander. Tous les plats doivent être du même repas et du même jour.", strict: true,
     input_schema: { type: "object", additionalProperties: false, required: ["plats", "supplements", "heure_retrait"], properties: {
       plats: { type: "array", description: "Plats et quantités", items: { type: "object", additionalProperties: false, required: ["menu_item_id", "quantite"],
         properties: { menu_item_id: { type: "string", description: "menu_item_id donné par voir_menu" }, quantite: { type: "integer", description: "1 à 10" } } } },
@@ -179,7 +181,7 @@ async function runTool(ctx: Ctx, name: string, input: any): Promise<unknown> {
     return { solde: w?.balance ?? 0, solde_texte: fcfa(w?.balance ?? 0), points: p?.points ?? 0 };
   }
   if (name === "voir_menu") {
-    const today = todayISO();
+    const today = /^\d{4}-\d{2}-\d{2}$/.test(input.jour ?? "") ? input.jour : todayISO();
     let q = db.from("menu_items").select("id, service_date, service, price, is_sold_out, is_full, dish:dishes(name, composition, allergens, traces, diet_tags), menu:menus!inner(status)")
       .eq("menu.status", "published").eq("service_date", today);
     const { data: me } = await db.from("profiles").select("allergies, diets, severe_allergies").eq("id", ctx.userId).single();
@@ -191,7 +193,7 @@ async function runTool(ctx: Ctx, name: string, input: any): Promise<unknown> {
     ]);
     const svc = (s?.value ?? {}) as Record<string, { extras?: boolean }>;
     return {
-      date: today, heure: new Date().toISOString().slice(11, 16),
+      date: today, jour: dayWord(today), heure: new Date().toISOString().slice(11, 16),
       client_allergies_regime: { allergies: me?.allergies ?? [], regime: me?.diets ?? [] },
       plats: (items ?? []).map((i: any) => {
         const att = dietConflicts(me, i.dish);
@@ -203,7 +205,7 @@ async function runTool(ctx: Ctx, name: string, input: any): Promise<unknown> {
     };
   }
   if (name === "voir_creneaux") {
-    const { data } = await db.rpc("order_slots", { p_date: todayISO(), p_service: input.repas });
+    const { data } = await db.rpc("order_slots", { p_date: /^\d{4}-\d{2}-\d{2}$/.test(input.jour ?? "") ? input.jour : todayISO(), p_service: input.repas });
     return { creneaux: ((data ?? []) as { at: string; left: number }[]).filter((s) => s.left > 0).map((s) => s.at.slice(11, 16)) };
   }
   if (name === "mes_commandes") {
@@ -273,7 +275,7 @@ async function services() {
   return { svc: (s?.value ?? {}) as Record<string, { label: string; start: string; end: string }>, win: ((o?.value as any)?.windows ?? {}) as Record<string, { open?: string; close?: string; paused?: boolean }> };
 }
 
-/** Repas commandables : service pas fini ; aujourd'hui seulement dans la plage de la cuisine ; pas en pause */
+/** Repas commandables (aujourd'hui à +6 j) : service pas fini ; aujourd'hui dans la plage de la cuisine ; pas en pause */
 async function orderableMeals(): Promise<{ date: string; service: string; label: string; btn: string }[]> {
   const { svc, win } = await services();
   const now = new Date(); const today = todayISO(); const hm = now.toISOString().slice(11, 16);
@@ -283,7 +285,7 @@ async function orderableMeals(): Promise<{ date: string; service: string; label:
   for (const r of (data ?? []).sort((a: any, b: any) => (a.service_date + (svc[a.service]?.start ?? "")).localeCompare(b.service_date + (svc[b.service]?.start ?? "")))) {
     const k = `${r.service_date}|${r.service}`; if (seen.has(k)) continue; seen.add(k);
     const w = win[r.service] ?? {}; const s = svc[r.service];
-    if (!s || w.paused || r.service_date !== today) continue; // commandes du jour uniquement
+    if (!s || w.paused) continue;
     if (r.service_date === today && (hm >= s.end || (w.open && w.close && (hm < w.open || hm >= w.close)))) continue;
     out.push({ date: r.service_date, service: r.service, label: `${SVC_ICON[r.service] ?? "🍽️"} ${s.label} ${dayWord(r.service_date)}`,
       btn: `${SVC_ICON[r.service] ?? "🍽️"} ${SVC_SHORT[r.service] ?? s.label} ${dayShortWord(r.service_date)}` });
@@ -331,7 +333,7 @@ const grid = (opts: Opt[]) => opts.map((o, i) => `*${i + 1}.* ${o.label.replace(
 async function startOrder(phone: string, userId?: string): Promise<Fast> {
   const { data: me } = userId ? await db.from("profiles").select("allergies, diets, severe_allergies").eq("id", userId).single() : { data: null };
   const meals = (await orderableMeals()).slice(0, 4);
-  if (!meals.length) { await clearState(phone); return { text: "On ne peut pas commander pour le moment 🙏 Les commandes se font le jour même, pendant les heures fixées par la cuisine.", buttons: ["🍽️ Menu du jour"] }; }
+  if (!meals.length) { await clearState(phone); return { text: "On ne peut pas commander pour le moment 🙏 Aucun menu publié à réserver pour l'instant.", buttons: ["🍽️ Menu du jour"] }; }
   const { data } = await db.from("menu_items").select("id, service_date, service, price, is_sold_out, is_full, dish:dishes(name, allergens, traces, diet_tags), menu:menus!inner(status)")
     .eq("menu.status", "published").in("service_date", [...new Set(meals.map((m) => m.date))]).order("price", { ascending: false });
   const opts: Opt[] = []; const blocks: string[] = [];
@@ -395,10 +397,10 @@ async function continueOrder(ctx: Ctx, phone: string, text: string, st: { step: 
 
 const SYSTEM = `Tu es Jean, l'assistant WhatsApp de la cantine Vatel (école hôtelière, Abidjan). Tu parles comme un humain chaleureux et efficace, en français simple (tu comprends aussi le nouchi et les fautes), avec des messages COURTS adaptés à WhatsApp (2 à 6 lignes, *gras* WhatsApp avec des astérisques si utile, pas de tableaux).
 
-Ce que tu fais, uniquement avec tes outils : donner le solde, le menu du jour, les heures de retrait libres, l'état des commandes, et préparer une commande.
+Ce que tu fais, uniquement avec tes outils : donner le solde, le menu (aujourd'hui et les jours suivants), les heures de retrait libres, l'état des commandes, et préparer une commande.
 Règles strictes :
 - N'invente jamais un plat, un prix, une heure ou un solde : appelle l'outil. Les prix sont en FCFA.
-- On ne commande QUE les plats du jour (aujourd'hui), pendant la plage fixée par la cuisine. Pas de commande pour demain : dis-le simplement.
+- On peut réserver pour aujourd'hui (pendant la plage fixée par la cuisine) ou pour un jour suivant, jusqu'à 7 jours à l'avance. Pour un autre jour, passe la date (AAAA-MM-JJ) à voir_menu et voir_creneaux.
 - Une commande peut contenir plusieurs plats en quantité (10 au plus) du même repas, + des suppléments (au plus 1 entrée et 1 dessert par plat, seulement aux repas qui en ont). Ex. « 4 frites et 1 riz » = plats [{frites, 4}, {riz, 1}].
 - Va VITE : dès que tu connais les plats, les quantités et l'heure, appelle preparer_commande sans redemander de confirmation (le client confirme lui-même avec Face ID ou son code PIN via le lien). S'il manque seulement l'heure, propose 3 heures libres proches en boutons. Si le client dit « choisis pour moi » (ex. suppléments conseillés), choisis toi-même parmi ceux de voir_menu (variés, populaires) et dis lesquels.
 - Après preparer_commande : récapitule en 2-4 lignes (plats, suppléments, heure, total) puis donne le lien tel quel, valable 15 min. Rien n'est commandé avant cette confirmation.
