@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
-import { RefreshCw, Plus, Send, Trash2, Zap, ShoppingCart, CheckCircle2, XCircle, Bot, Sparkles, Package } from "lucide-react";
+import { RefreshCw, Plus, Send, Trash2, Zap, ShoppingCart, CheckCircle2, XCircle, Bot, Sparkles, Package, Bell, Printer, TrendingUp } from "lucide-react";
 import { rpc, supabase } from "@/lib/supabase/client";
 import { Card, PageTitle, Badge, Empty, Kpi, input } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { fcfa, dateTime } from "@/lib/format";
+import { escapeHtml } from "@/lib/html";
 import { LIST_COLUMNS, STATUS_LABEL, byAisle, fetchItems, listCode, organize, qtyLabel, type ShoppingItem, type ShoppingList } from "@/lib/shopping";
 
 type Staff = { id: string; full_name: string; role: string };
@@ -105,11 +106,25 @@ export default function ShoppingAdmin() {
 
   return (
     <>
-      <PageTitle title="Courses" subtitle="La fiche se remplit toute seule quand un stock baisse ; une seule sortie pour tout acheter">
+      <PageTitle title="Courses" subtitle="Le point des achats à faire, calculé par l'appli ; le chef ou l'admin fait les courses lui-même">
         <Button size="sm" variant="outline" loading={busy === "refresh"} onClick={() => call("refresh", "shopping_refresh", {}, "Fiche recalculée.")}>
           <RefreshCw className="size-4" />Recalculer
         </Button>
+        <Button size="sm" variant="outline" disabled={!openItems.length} onClick={() => printList(open ? listCode(open.num) : "", openItems, openTotal)}>
+          <Printer className="size-4" />Imprimer
+        </Button>
+        <Button size="sm" loading={busy === "brief"} disabled={!openItems.length}
+          onClick={() => call("brief", "shopping_brief_send", {}, "Point des achats envoyé au chef et à l'admin (notification).")}>
+          <Bell className="size-4" />Envoyer le point
+        </Button>
       </PageTitle>
+
+      <p className="mb-4 flex gap-2 rounded-2xl bg-lime-soft px-4 py-3 text-[13px] font-semibold text-ink-2">
+        <TrendingUp className="mt-0.5 size-4 shrink-0" />
+        <span>Quantités calculées d&apos;après les <b className="text-ink">prévisions des 3 prochains jours</b> (fréquentation habituelle, tickets vendus, popularité des plats, restes des services passés) moins le stock.
+          Les produits frais ne sont achetés que pour leurs jours de conservation (réglables dans Stock) : rien ne se perd.
+          Le point est envoyé chaque jour à 15h00 au chef et à l&apos;admin.</span>
+      </p>
       <datalist id="ings">{ings.map((i) => <option key={i.id} value={i.name} />)}</datalist>
 
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -126,7 +141,7 @@ export default function ShoppingAdmin() {
               <Sparkles className={clsx("size-3.5", busy === "sort" && "animate-pulse")} />{busy === "sort" ? "Rangement…" : "Ranger par rayon (IA)"}
             </button>
           )}
-          subtitle="Lignes auto : stock sous le seuil ou menus des 2 prochains jours. Modifiez une quantité : elle ne sera plus recalculée.">
+          subtitle="Lignes auto : prévisions des 3 prochains jours et stock sous le seuil. Modifiez une quantité : elle ne sera plus recalculée.">
           <div className="divide-y divide-line">
             {lists === null && <div className="m-5 h-40 animate-pulse rounded-xl bg-canvas" />}
             {lists && openItems.length === 0 && <div className="p-5"><Empty>Rien à acheter pour l&apos;instant 👌</Empty></div>}
@@ -206,4 +221,18 @@ export default function ShoppingAdmin() {
       </div>
     </>
   );
+}
+
+/** Liste imprimable (ou à enregistrer en PDF) pour faire les courses */
+function printList(code: string, items: ShoppingItem[], total: number) {
+  const w = window.open("", "_blank", "width=720,height=900");
+  if (!w) return;
+  const groups = byAisle(items);
+  const rows = (groups.length ? groups : [["", items] as [string, ShoppingItem[]]]).map(([aisle, list]) =>
+    (aisle ? `<tr><th colspan="4" style="text-align:left;padding-top:10px">${escapeHtml(aisle)}</th></tr>` : "")
+    + list.map((i) => `<tr><td style="width:18px">☐</td><td>${escapeHtml(i.label)}</td><td style="text-align:right;white-space:nowrap">${escapeHtml(qtyLabel(i.qty, i.unit))}</td><td style="text-align:right;color:#666;white-space:nowrap">${i.est_cost ? fcfa(i.est_cost) : ""}</td></tr>`).join("")).join("");
+  w.document.write(`<html><head><title>Courses ${escapeHtml(code)}</title><style>body{font-family:system-ui,sans-serif;padding:24px;color:#16181d}h1{margin:0;font-size:22px}p{color:#555;margin:4px 0 16px}table{width:100%;border-collapse:collapse;font-size:14px}td{padding:6px 4px;border-bottom:1px solid #eee}</style></head><body>
+  <h1>Vatel Cantine · courses ${escapeHtml(code)}</h1><p>${new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Abidjan" })} · ${items.length} articles · budget estimé ${fcfa(total)} · calculé d'après les prévisions des 3 prochains jours</p>
+  <table>${rows}</table><script>window.print()</script></body></html>`);
+  w.document.close();
 }
