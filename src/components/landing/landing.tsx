@@ -263,11 +263,11 @@ export function Landing() {
           <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-8 sm:px-6 md:flex-row md:justify-between">
             <h2 id="paiement" className="text-center text-sm font-extrabold tracking-wide md:text-left">{c.payTitle}<br /><span className="font-semibold text-[#5d6673]">{c.paySub}</span></h2>
             <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4" aria-label={c.payAria}>
-              <li className="rounded-lg bg-[#1dc8ff1a] px-2 py-1"><img src="/landing/pay/wave.png" width={117} height={38} alt="Wave" className="h-8 w-auto" /></li>
+              <li className="rounded-lg bg-[#1dc8ff1a] px-2 py-1"><img src="/landing/pay/wave.webp" width={117} height={38} alt="Wave" className="h-8 w-auto" /></li>
               <li className="flex items-center gap-2 font-extrabold"><img src="/landing/pay/orange.svg" width={36} height={36} alt="" className="size-9" /><span>Orange Money</span></li>
               <li className="flex items-center gap-1 font-extrabold"><img src="/landing/pay/mtn.svg" width={68} height={38} alt="MTN" className="h-8 w-auto" /><span>MoMo</span></li>
-              <li><img src="/landing/pay/moov-money.png" width={48} height={48} alt="Moov Money" className="size-12" /></li>
-              <li><img src="/landing/pay/djamo.png" width={48} height={48} alt="Djamo" className="size-12 rounded-xl" /></li>
+              <li><img src="/landing/pay/moov-money.webp" width={48} height={48} alt="Moov Money" className="size-12" /></li>
+              <li><img src="/landing/pay/djamo.webp" width={48} height={48} alt="Djamo" className="size-12 rounded-xl" /></li>
             </ul>
           </div>
         </section>
