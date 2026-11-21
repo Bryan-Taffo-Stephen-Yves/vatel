@@ -110,7 +110,7 @@ export default function FamilyPage() {
         {/* Côté parent */}
         <section className="rounded-[24px] bg-card p-4 shadow-[var(--shadow-card)]">
           <p className="flex items-center gap-2 font-bold"><UserPlus className="size-[18px]" />{t("Suivre le compte de mon enfant")}</p>
-          <p className="mt-0.5 text-sm text-muted">{t("Entrez son code Dabali (dans son profil, ex. DB-2026). Votre enfant accepte dans son appli.")}</p>
+          <p className="mt-0.5 text-sm text-muted">{t("Entrez son code Vatel (dans son profil, ex. DB-2026). Votre enfant accepte dans son appli.")}</p>
           <form onSubmit={(e) => { e.preventDefault(); add(); }} className="mt-3 flex gap-2">
             <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="DB-0000" maxLength={10}
               className="h-11 min-w-0 flex-1 rounded-full border border-line bg-canvas px-4 font-bold tracking-wider outline-none focus:border-ink" aria-label={t("Code de l'enfant")} />

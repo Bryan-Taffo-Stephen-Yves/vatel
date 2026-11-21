@@ -16,7 +16,7 @@ function detect(): Mode {
 }
 
 /**
- * Garder Dabali sur l'écran d'accueil (téléphone) ou comme appli du navigateur (ordinateur).
+ * Garder Vatel sur l'écran d'accueil (téléphone) ou comme appli du navigateur (ordinateur).
  * variant « card » : carte refermable sur l'accueil ; « row » : ligne permanente dans le profil / le menu.
  */
 export function InstallApp({ variant = "card", dark = false }: { variant?: "card" | "row" | "compact"; dark?: boolean }) {
@@ -61,10 +61,10 @@ export function InstallApp({ variant = "card", dark = false }: { variant?: "card
   const steps = en
     ? (mode === "ios"
       ? <>In Safari, tap <Share className="inline size-4" /> <b>Share</b>, then <SquarePlus className="inline size-4" /> <b>Add to Home Screen</b>.</>
-      : <>In the browser menu (⋮ or ⋯), choose <b>Install Dabali</b> or <b>Add to Home screen</b>. On a computer: the <Download className="inline size-4" /> icon at the end of the address bar.</>)
+      : <>In the browser menu (⋮ or ⋯), choose <b>Install Vatel</b> or <b>Add to Home screen</b>. On a computer: the <Download className="inline size-4" /> icon at the end of the address bar.</>)
     : mode === "ios"
     ? <>Dans Safari, touchez <Share className="inline size-4" /> <b>Partager</b>, puis <SquarePlus className="inline size-4" /> <b>Sur l&apos;écran d&apos;accueil</b>.</>
-    : <>Dans le menu du navigateur (⋮ ou ⋯), choisissez <b>Installer Dabali</b> ou <b>Ajouter à l&apos;écran d&apos;accueil</b>. Sur ordinateur : l&apos;icône <Download className="inline size-4" /> au bout de la barre d&apos;adresse.</>;
+    : <>Dans le menu du navigateur (⋮ ou ⋯), choisissez <b>Installer Vatel</b> ou <b>Ajouter à l&apos;écran d&apos;accueil</b>. Sur ordinateur : l&apos;icône <Download className="inline size-4" /> au bout de la barre d&apos;adresse.</>;
 
   return (
     <div className={clsx("rounded-[20px] p-3.5", dark ? "bg-white/10 text-white" : variant === "card" ? "bg-ink text-white" : "bg-card shadow-[var(--shadow-card)]")}>
@@ -72,7 +72,7 @@ export function InstallApp({ variant = "card", dark = false }: { variant?: "card
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/icons/icon-192.png" alt="" className="size-11 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold">{t("Installer l'appli Dabali")}</p>
+          <p className="text-sm font-bold">{t("Installer l'appli Vatel")}</p>
           <p className={clsx("text-xs", variant === "card" || dark ? "text-white/60" : "text-muted")}>{t("Une icône sur l'écran d'accueil, plein écran, QR même hors ligne.")}</p>
         </div>
         <button onClick={install} className="shrink-0 rounded-full bg-lime px-3.5 py-2 text-xs font-extrabold text-ink">

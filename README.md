@@ -1,4 +1,4 @@
-# Dabali — la cantine connectée de Vatel
+# Vatel — la cantine connectée
 
 Application complète de gestion de cantine pour l'école hôtelière **Vatel Abidjan** : porte-monnaie prépayé,
 réservation et commande de plats, tickets QR, suivi parent, cuisine pilotée par les données et agents IA

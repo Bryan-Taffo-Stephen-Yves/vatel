@@ -33,7 +33,7 @@ const SCHEMA = {
   },
 } as const;
 
-const SYSTEM = `Tu es le chef adjoint de Dabali, la cantine d'une école hôtelière à Abidjan. Tu proposes le menu de la semaine.
+const SYSTEM = `Tu es le chef adjoint de Vatel, la cantine d'une école hôtelière à Abidjan. Tu proposes le menu de la semaine.
 Règles impératives :
 - N'utilise que les plats fournis, chacun seulement dans ses services_possibles, et seulement les jours/services listés dans « jours ».
 - Par jour : petit-déjeuner 3 plats ; déjeuner 5 ou 6 plats ; snack 3 plats ; dîner 4 ou 5 plats.

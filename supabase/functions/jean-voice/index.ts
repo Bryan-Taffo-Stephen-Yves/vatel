@@ -58,7 +58,7 @@ async function run(name: string, args: any, call: any): Promise<unknown> {
       } else {
         await db.from("voice_calls").upsert({ call_id: callId, codes_sent: (vc?.codes_sent ?? 0) + 1 });
       }
-      return { envoye: true, message: "Si ce code client existe, un code à 4 chiffres vient d'arriver dans l'appli Dabali et sur WhatsApp." };
+      return { envoye: true, message: "Si ce code client existe, un code à 4 chiffres vient d'arriver dans l'appli Vatel et sur WhatsApp." };
     }
 
     case "verifier_code": {
@@ -121,7 +121,7 @@ async function run(name: string, args: any, call: any): Promise<unknown> {
         body: `${[...r.plats, ...r.supplements].join(" + ")} · retrait à ${hm.replace(":", "h")} · ${r.total}. Touche pour confirmer (Face ID ou code PIN). Valable 15 minutes.`,
         data: { href: `/app/confirmer/${r.token}` } });
       return { lien_envoye: true, plats: r.plats, supplements: r.supplements, retrait: hm, total: r.total,
-        consigne: "Le lien de confirmation est arrivé dans l'appli Dabali et sur WhatsApp. La commande n'est passée qu'une fois confirmée par le client (Face ID ou code PIN)." };
+        consigne: "Le lien de confirmation est arrivé dans l'appli Vatel et sur WhatsApp. La commande n'est passée qu'une fois confirmée par le client (Face ID ou code PIN)." };
     }
   }
   return { erreur: "Fonction inconnue." };

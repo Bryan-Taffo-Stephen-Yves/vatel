@@ -1,5 +1,5 @@
 // POST /functions/v1/webauthn  { action, response?, device_name? }
-// Face ID / empreinte (WebAuthn, clé de l'appareil) pour Dabali.
+// Face ID / empreinte (WebAuthn, clé de l'appareil) pour Vatel.
 //   register-options / register-verify : enregistre la clé de ce téléphone et active Face ID sur le compte
 //   auth-options / auth-verify         : vérifie Face ID → autorisation de 2 min à usage unique (profiles.biometric_ok_until)
 //   disable                            : supprime les clés et désactive (exige une vérification Face ID récente)
@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
   try {
     if (action === "register-options") {
       const options = await generateRegistrationOptions({
-        rpName: "Dabali", rpID, userName: me.short_code, userDisplayName: me.full_name,
+        rpName: "Vatel", rpID, userName: me.short_code, userDisplayName: me.full_name,
         userID: new TextEncoder().encode(user.id), attestationType: "none",
         excludeCredentials: (creds ?? []).map((c) => ({ id: c.credential_id, transports: c.transports })),
         authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required", residentKey: "preferred" },

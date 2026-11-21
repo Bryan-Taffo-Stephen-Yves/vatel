@@ -11,7 +11,7 @@ import type { ServiceKind } from "@/lib/types";
 type Hit = { id: string; short_code: string; full_name: string; avatar: string | null; has_pin: boolean; locked: boolean; tickets: number };
 
 /**
- * Client sans téléphone (éteint, perdu, oublié) : l'agent le retrouve par son nom ou son code Dabali,
+ * Client sans téléphone (éteint, perdu, oublié) : l'agent le retrouve par son nom ou son code Vatel,
  * puis le CLIENT tape son code PIN sur ce téléphone. Le ticket est validé comme un scan.
  */
 export function NoPhoneSheet({ service, date, onClose, onSuccess }: {
@@ -60,7 +60,7 @@ export function NoPhoneSheet({ service, date, onClose, onSuccess }: {
 
         {!who ? (
           <>
-            <p className="mt-1 text-sm text-muted">Demandez son nom ou son code Dabali (DB-…). Ticket <b>{label}</b>.</p>
+            <p className="mt-1 text-sm text-muted">Demandez son nom ou son code Vatel (DB-…). Ticket <b>{label}</b>.</p>
             <label className="mt-4 flex h-12 items-center gap-2 rounded-2xl border border-line bg-canvas px-3 focus-within:border-ink">
               <Search className="size-4 text-muted" />
               <input value={q} onChange={(e) => setQ(e.target.value)} autoFocus placeholder="Nom ou code (ex. 4821)"

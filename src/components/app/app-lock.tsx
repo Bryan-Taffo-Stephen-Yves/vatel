@@ -66,13 +66,13 @@ export function AppLock() {
 
   if (!locked) return null;
   return (
-    <div className="fixed inset-0 z-[95] flex flex-col items-center justify-center bg-lime px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] text-center" role="dialog" aria-label={t("Dabali est verrouillée")}>
+    <div className="fixed inset-0 z-[95] flex flex-col items-center justify-center bg-lime px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] text-center" role="dialog" aria-label={t("Vatel est verrouillée")}>
       <svg className="pointer-events-none absolute -right-16 -top-10 size-72 text-white/30" viewBox="0 0 200 200" aria-hidden><circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" strokeWidth="26" /></svg>
       <div className="relative">
         <Bitmoji avatar={profile?.avatar} seed={profile?.id} mood="wink" className="size-24 ring-4 ring-white" />
         <span className="absolute -bottom-1 -right-1 grid size-10 place-items-center rounded-full bg-ink"><Lock className="size-5 text-lime" /></span>
       </div>
-      <h1 className="mt-5 text-[26px] font-extrabold">{t("Dabali est verrouillée")}</h1>
+      <h1 className="mt-5 text-[26px] font-extrabold">{t("Vatel est verrouillée")}</h1>
       <p className="mt-1 text-sm font-semibold text-ink/70">{lang === "en" ? `Hello ${profile?.full_name?.split(" ")[0] ?? ""}, please confirm it's really you.` : `Bonjour ${profile?.full_name?.split(" ")[0] ?? ""}, confirmez que c'est bien vous.`}</p>
       {!usePin ? (
         <>

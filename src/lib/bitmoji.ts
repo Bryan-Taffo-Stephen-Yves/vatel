@@ -1,4 +1,4 @@
-// Bitmojis Dabali : personnages africains originaux, dessinés en SVG (aucune image externe).
+// Bitmojis Vatel : personnages africains originaux, dessinés en SVG (aucune image externe).
 // Chaque client choisit le sien (Profil) ; il apparaît à l'accueil, au scanner de l'agent et dans les moments clés.
 
 export type Mood = "happy" | "laugh" | "yum" | "wow" | "wink" | "sad" | "sleep";

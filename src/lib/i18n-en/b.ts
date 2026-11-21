@@ -87,8 +87,8 @@ export const EN_B: Record<string, string> = {
   // Destinataire
   "C'est le QR d'un ticket repas, pas un QR de profil. Demande à ton ami d'ouvrir son Profil (le QR est en haut), ou saisis son identifiant DB-….":
     "This is a meal ticket QR, not a profile QR. Ask your friend to open their Profile (the QR is at the top), or type their DB-… ID.",
-  "Ce QR n'est pas un QR de profil Dabali. Scanne le QR affiché dans Profil, ou saisis l'identifiant DB-….":
-    "This QR isn't a Dabali profile QR. Scan the QR shown in Profile, or type the DB-… ID.",
+  "Ce QR n'est pas un QR de profil Vatel. Scanne le QR affiché dans Profil, ou saisis l'identifiant DB-….":
+    "This QR isn't a Vatel profile QR. Scan the QR shown in Profile, or type the DB-… ID.",
   "Téléphone ou identifiant": "Phone or ID",
   "07 07 07 07 07 ou DB-2026": "07 07 07 07 07 or DB-2026",
   "Rechercher": "Search",
@@ -101,7 +101,7 @@ export const EN_B: Record<string, string> = {
   "Utiliser mon code PIN": "Use my PIN",
   "Confirmation annulée.": "Confirmation cancelled.",
   "Face ID indisponible. Utilisez votre code PIN.": "Face ID unavailable. Use your PIN.",
-  "Dabali est verrouillée": "Dabali is locked",
+  "Vatel est verrouillée": "Vatel is locked",
   "Votre code PIN": "Your PIN",
   "Se déconnecter": "Log out",
   "Entrez votre code PIN": "Enter your PIN",

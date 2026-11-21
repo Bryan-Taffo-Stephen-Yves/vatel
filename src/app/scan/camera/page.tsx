@@ -1,7 +1,7 @@
 "use client";
 // Caméra d'affluence sur téléphone : le téléphone filme la salle, repère les personnes LUI-MÊME (modèle de détection
 // embarqué, rien n'est envoyé ailleurs), compte la file d'attente et les places libres par table, et n'envoie que des
-// NOMBRES à Dabali toutes les 10 s. Aucune image n'est enregistrée ni transmise, pas de reconnaissance de visage.
+// NOMBRES à Vatel toutes les 10 s. Aucune image n'est enregistrée ni transmise, pas de reconnaissance de visage.
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
@@ -169,7 +169,7 @@ export default function CameraPage() {
     return () => { alive = false; clearTimeout(timer); };
   }, [running, zones]);
 
-  // Envoi des chiffres à Dabali (l'appli des élèves affiche alors l'affluence « en direct »)
+  // Envoi des chiffres à Vatel (l'appli des élèves affiche alors l'affluence « en direct »)
   const statsRef = useRef(stats); statsRef.current = stats;
   useEffect(() => {
     if (!running || !zones.length) return;
@@ -331,7 +331,7 @@ export default function CameraPage() {
 
       <p className="mx-4 mt-5 flex gap-2 text-xs font-semibold text-white/60">
         <ShieldCheck className="size-4 shrink-0 text-lime" />
-        L&apos;analyse se fait sur ce téléphone. Aucune image n&apos;est enregistrée ni envoyée, pas de reconnaissance de visage : seuls les nombres (file, places libres) partent vers Dabali.
+        L&apos;analyse se fait sur ce téléphone. Aucune image n&apos;est enregistrée ni envoyée, pas de reconnaissance de visage : seuls les nombres (file, places libres) partent vers Vatel.
       </p>
     </main>
   );

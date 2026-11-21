@@ -44,7 +44,7 @@ export default function MfaPage() {
     const sb = supabase();
     const { data: factors } = await sb.auth.mfa.listFactors();
     for (const f of factors?.all ?? []) if (f.status !== "verified") await sb.auth.mfa.unenroll({ factorId: f.id });
-    const { data, error } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: `Dabali ${new Date().toISOString().slice(0, 10)}` });
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: `Vatel ${new Date().toISOString().slice(0, 10)}` });
     if (error || !data) { toast("err", t("Activation impossible pour le moment.")); return; }
     setStep({ kind: "enroll", factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret });
   }, [toast, t]);
@@ -118,7 +118,7 @@ export default function MfaPage() {
 
       {step.kind === "verify" && (
         <>
-          <p className="mt-2 text-ink-2">{t("Ouvrez votre application d'authentification et entrez le code à 6 chiffres pour")} <b>Dabali</b>.</p>
+          <p className="mt-2 text-ink-2">{t("Ouvrez votre application d'authentification et entrez le code à 6 chiffres pour")} <b>Vatel</b>.</p>
           <div className="mt-5 rounded-[22px] bg-card p-4 shadow-[var(--shadow-card)]"><CodeInput value={code} onChange={setCode} onEnter={verify} /></div>
           <Button block size="lg" variant="dark" className="mt-5" loading={busy} disabled={code.length !== 6} onClick={verify}>{t("Valider")}</Button>
           <button onClick={async () => { await supabase().auth.signOut(); router.replace("/connexion"); }} className="mt-4 w-full text-center text-sm font-bold text-muted">{t("Se déconnecter")}</button>

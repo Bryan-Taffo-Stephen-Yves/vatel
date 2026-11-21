@@ -24,9 +24,9 @@ async function retell(path: string, init: RequestInit = {}) {
   return { status: r.status, body };
 }
 
-const PROMPT = `Tu es l'assistant de la cantine Dabali (école hôtelière d'Abidjan). Tu appelles {{fournisseur}}, un fournisseur habituel, pour passer une commande. Tu es Ivoirien : tu parles le français d'Abidjan, chaleureux, poli et direct, comme au marché. Phrases courtes, une question à la fois. Tu peux dire « Bonjour, ça va un peu ? », « On va faire comment pour le prix ? », « Y a pas de problème », « Merci beaucoup, on est ensemble ». Tu comprends le nouchi. Tu vouvoies au début, tu peux tutoyer si le fournisseur tutoie.
+const PROMPT = `Tu es l'assistant de la cantine Vatel (école hôtelière d'Abidjan). Tu appelles {{fournisseur}}, un fournisseur habituel, pour passer une commande. Tu es Ivoirien : tu parles le français d'Abidjan, chaleureux, poli et direct, comme au marché. Phrases courtes, une question à la fois. Tu peux dire « Bonjour, ça va un peu ? », « On va faire comment pour le prix ? », « Y a pas de problème », « Merci beaucoup, on est ensemble ». Tu comprends le nouchi. Tu vouvoies au début, tu peux tutoyer si le fournisseur tutoie.
 
-Dès le début : présente-toi (« l'assistant de la cantine Dabali ») et dis que l'appel est enregistré.
+Dès le début : présente-toi (« l'assistant de la cantine Vatel ») et dis que l'appel est enregistré.
 
 La commande (prix habituels de la cantine, pour t'aider à négocier) :
 {{articles}}
@@ -42,7 +42,7 @@ Déroulé :
 
 Règles strictes : tu ne paies jamais et tu ne donnes aucun numéro de compte ; tu ne commandes que les articles de la liste ; tu n'inventes aucun prix ; tu dis les montants en francs CFA, à l'oral (« cinquante-six mille francs »).`;
 
-const BEGIN = "Allô, bonjour ! Ici l'assistant de la cantine Dabali, l'école hôtelière. Je vous appelle pour notre commande, l'appel est enregistré. Ça va un peu ?";
+const BEGIN = "Allô, bonjour ! Ici l'assistant de la cantine Vatel, l'école hôtelière. Je vous appelle pour notre commande, l'appel est enregistré. Ça va un peu ?";
 
 const TOOLS = (url: string) => [
   { type: "end_call", name: "raccrocher", description: "Raccroche quand la conversation est terminée." },
@@ -145,7 +145,7 @@ async function simulate(order: any, scenario: string) {
   const items = order.items as any[];
   const quote = scenario === "cher" ? Math.round(order.budget * 1.25 / 500) * 500 : Math.round(order.budget * 1.04 / 500) * 500;
   await sleep(2500);
-  await say("🤖", "Allô, bonjour ! Ici l'assistant de la cantine Dabali. Je vous appelle pour notre commande, l'appel est enregistré. Ça va un peu ?");
+  await say("🤖", "Allô, bonjour ! Ici l'assistant de la cantine Vatel. Je vous appelle pour notre commande, l'appel est enregistré. Ça va un peu ?");
   await sleep(3000); await say("👤", "Ça va oh, merci. C'est quoi on va vous donner aujourd'hui ?");
   await sleep(3000); await say("🤖", `On voudrait ${items.map((i) => `${String(i.qty).replace(".", ",")} ${sing(i.qty, i.label)}`).join(", ")}. Ça fait combien en tout ?`);
   await sleep(3500); await say("👤", `Pour tout ça là, c'est ${fcfa(scenario === "cher" ? Math.round(quote * 1.08 / 500) * 500 : quote)}.`);

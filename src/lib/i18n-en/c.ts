@@ -92,7 +92,7 @@ export const EN_C: Record<string, string> = {
   "Avis, tickets offerts, courses, alertes…": "Reviews, gifted tickets, errands, alerts…",
 
   // Installer l'appli
-  "Installer l'appli": "Install the app", "Installer l'appli Dabali": "Install the Dabali app",
+  "Installer l'appli": "Install the app", "Installer l'appli Vatel": "Install the Vatel app",
   "Une icône sur l'écran d'accueil, plein écran, QR même hors ligne.": "An icon on your home screen, full screen, QR even offline.",
   "Installer": "Install", "Comment ?": "How?", "Masquer": "Hide",
 };

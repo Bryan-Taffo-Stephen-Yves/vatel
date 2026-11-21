@@ -53,8 +53,8 @@ export function PushToggle({ dark = false, compact = false }: { dark?: boolean; 
           <b>{t("Notifications indisponibles sur cet appareil.")}</b>{" "}
           {ios
             ? (en
-              ? <>You need iOS 16.4 or later{v ? <> (you have iOS {v[1]}.{v[2]})</> : null}: Settings → General → Software Update, then reopen Dabali from its icon.</>
-              : <>Il faut iOS 16.4 ou plus récent{v ? <> (vous avez iOS {v[1]}.{v[2]})</> : null} : Réglages → Général → Mise à jour logicielle, puis rouvrez Dabali depuis l&apos;icône.</>)
+              ? <>You need iOS 16.4 or later{v ? <> (you have iOS {v[1]}.{v[2]})</> : null}: Settings → General → Software Update, then reopen Vatel from its icon.</>
+              : <>Il faut iOS 16.4 ou plus récent{v ? <> (vous avez iOS {v[1]}.{v[2]})</> : null} : Réglages → Général → Mise à jour logicielle, puis rouvrez Vatel depuis l&apos;icône.</>)
             : <>{t("Utilisez Chrome, Edge, Firefox ou Safari récent.")}</>}
         </p>
       </div>
@@ -64,8 +64,8 @@ export function PushToggle({ dark = false, compact = false }: { dark?: boolean; 
     <div className={box}>
       <Share className="size-5 shrink-0" />
       <p className="text-sm">{en
-        ? <><b>iPhone:</b> to get notifications, tap Share then “Add to Home Screen”, and open Dabali from its icon.</>
-        : <><b>iPhone :</b> pour recevoir les notifications, touchez Partager puis « Sur l&apos;écran d&apos;accueil », et ouvrez Dabali depuis l&apos;icône.</>}</p>
+        ? <><b>iPhone:</b> to get notifications, tap Share then “Add to Home Screen”, and open Vatel from its icon.</>
+        : <><b>iPhone :</b> pour recevoir les notifications, touchez Partager puis « Sur l&apos;écran d&apos;accueil », et ouvrez Vatel depuis l&apos;icône.</>}</p>
     </div>
   );
   return (

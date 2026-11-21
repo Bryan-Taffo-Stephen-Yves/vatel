@@ -1,5 +1,5 @@
 // POST /functions/v1/group-post  { supply_event_id }  (en-tête x-jean-secret)
-// Relaie une étape des appels fournisseurs dans le groupe WhatsApp de l'équipe (si « #dabali » a été envoyé dans un groupe).
+// Relaie une étape des appels fournisseurs dans le groupe WhatsApp de l'équipe (si « #vatel » a été envoyé dans un groupe).
 import { adminClient, json } from "../_shared/http.ts";
 
 const db = adminClient();

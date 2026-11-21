@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/app",
-    name: "Dabali — Cantine connectée",
-    short_name: "Dabali",
+    name: "Vatel — Cantine connectée",
+    short_name: "Vatel",
     description: "Rechargez, réservez votre plat, présentez votre QR.",
     lang: "fr",
     start_url: "/app",

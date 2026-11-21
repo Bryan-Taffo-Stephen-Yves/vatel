@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Dabali — jetons de design (§9) */
+/* Vatel — jetons de design (§9) */
 @theme {
   --color-lime: #c8f135;
   --color-lime-soft: #eefbc4;

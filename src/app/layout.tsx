@@ -5,10 +5,10 @@ import { ToastProvider } from "@/components/ui/toast";
 import { RegisterSW } from "@/components/register-sw";
 
 export const metadata: Metadata = {
-  title: { default: "Dabali", template: "%s · Dabali" },
+  title: { default: "Vatel", template: "%s · Vatel" },
   description: "Votre cantine dans la poche : rechargez, réservez, scannez.",
-  applicationName: "Dabali",
-  appleWebApp: { capable: true, title: "Dabali", statusBarStyle: "default" },
+  applicationName: "Vatel",
+  appleWebApp: { capable: true, title: "Vatel", statusBarStyle: "default" },
   icons: { apple: "/icons/apple-touch-icon.png" },
 };
 

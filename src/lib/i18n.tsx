@@ -60,7 +60,7 @@ const EN: Record<string, string> = {
   "Se déconnecter": "Log out", "Changer mon code PIN": "Change my PIN",
   // Famille
   "Suivre le compte de mon enfant": "Follow my child's account",
-  "Entrez son code Dabali (dans son profil, ex. DB-2026). Votre enfant accepte dans son appli.": "Enter their Dabali code (in their profile, e.g. DB-2026). Your child accepts in their app.",
+  "Entrez son code Vatel (dans son profil, ex. DB-2026). Votre enfant accepte dans son appli.": "Enter their Vatel code (in their profile, e.g. DB-2026). Your child accepts in their app.",
   "Ajouter": "Add", "Recharger son compte": "Top up their account", "Ce qu'il a mangé (14 jours)": "What they ate (14 days)",
   "Aucun repas servi récemment.": "No meals served recently.", "Solde bas : pensez à recharger.": "Low balance: please top up.",
   "Retirer ce lien": "Remove this link", "Mes parents liés": "My linked parents", "Accepter": "Accept", "Refuser": "Decline",

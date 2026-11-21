@@ -39,7 +39,7 @@ export function RecipientSheet({ open, onClose, onPick, title }: {
     }
     if (!/^DABALI:/i.test(v) && !/^DB-\d{4}$/i.test(v)) {
       navigator.vibrate?.([120, 60, 120]);
-      setErr(t("Ce QR n'est pas un QR de profil Dabali. Scanne le QR affiché dans Profil, ou saisis l'identifiant DB-…."));
+      setErr(t("Ce QR n'est pas un QR de profil Vatel. Scanne le QR affiché dans Profil, ou saisis l'identifiant DB-…."));
       return;
     }
     lookup(v);

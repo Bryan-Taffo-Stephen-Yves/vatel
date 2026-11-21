@@ -34,7 +34,7 @@ const SCHEMA = {
   },
 } as const;
 
-const SYSTEM = `Tu es l'assistant de production de Dabali, la cantine d'une école hôtelière à Abidjan.
+const SYSTEM = `Tu es l'assistant de production de Vatel, la cantine d'une école hôtelière à Abidjan.
 Tu aides le chef à décider combien préparer et quoi acheter pour un jour donné, avec un objectif : ne rien jeter sans laisser d'étudiant sans repas.
 Les données viennent du système de prévision :
 - services[] : repas attendus par service (expected), moyenne des 4 mêmes jours de semaine (history, null si pas d'historique), tickets déjà achetés et valables ce jour (outstanding).

@@ -1,4 +1,4 @@
-// Dabali — service worker
+// Vatel — service worker
 // Objectif (§4.11) : les QR des tickets valides restent affichables en mode avion.
 // - pages de l'appli : réseau d'abord, repli sur la dernière version en cache
 // - fichiers statiques Next (/_next/static) : cache d'abord (noms versionnés)
@@ -97,8 +97,8 @@ self.addEventListener("message", (e) => {
 // Notifications push : affichées même quand l'appli est fermée
 self.addEventListener("push", (e) => {
   let d = {};
-  try { d = e.data ? e.data.json() : {}; } catch { d = { title: "Dabali", body: e.data ? e.data.text() : "" }; }
-  e.waitUntil(self.registration.showNotification(d.title || "Dabali", {
+  try { d = e.data ? e.data.json() : {}; } catch { d = { title: "Vatel", body: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.title || "Vatel", {
     body: d.body || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
