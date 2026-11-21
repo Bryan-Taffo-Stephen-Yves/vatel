@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { useStaff } from "@/components/admin/admin-shell";
 import { CameraZonesEditor } from "@/components/admin/camera-zones-editor";
+import { ScanRhythmCard } from "@/components/admin/scan-rhythm";
 import { AreaLine, Heatmap } from "@/components/admin/charts";
 import { addDays, dayShort, dayNum, time, todayISO, SERVICE_LABEL } from "@/lib/format";
 import type { Occupancy } from "@/lib/types";
@@ -71,6 +72,9 @@ export default function OccupancyPage() {
           hint={now?.status === "open" ? (now.wait_source === "queue" ? "caméra (couloir) ÷ rythme du comptoir"
             : now.wait_source === "trays" ? "retour du premier plateau" : "estimation sans caméra de file") : undefined} />
       </div>
+
+      {/* Affluence par le rythme des scans au comptoir : marche même sans caméra */}
+      <ScanRhythmCard className="mt-4" />
 
       {/* Réglage de la caméra à la souris (cuisine, admin) */}
       {(me?.role === "admin" || me?.role === "chef") && <div className="mt-4"><CameraZonesEditor /></div>}

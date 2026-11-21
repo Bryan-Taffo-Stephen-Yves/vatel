@@ -14,6 +14,7 @@ import { useToast } from "@/components/ui/toast";
 import { useStaff } from "@/components/admin/admin-shell";
 import { sfx } from "@/lib/sfx";
 import { SERVICE_LABEL, time } from "@/lib/format";
+import { ScanRhythmView, type Rhythm } from "@/components/admin/scan-rhythm";
 
 type Item = { id: string; name: string; photo_url: string | null; planned: number | null; sold: number; remaining: number | null;
   sold_out: boolean; served: number; served_15: number; rate: number; runout_min: number | null; need: number; left_pct: number | null; scans: number };
@@ -23,6 +24,7 @@ type State = {
   service?: string; ends_at?: string; minutes_left?: number; served?: number; served_15?: number;
   queue_count?: number | null; wait_min?: number | null; level?: string; ready_waiting?: number;
   items?: Item[]; suggestions?: Sugg[]; recent?: { kind: string; qty: number | null; done: number | null; at: string }[];
+  rhythm?: Rhythm;
 };
 
 const KIND = {
@@ -92,7 +94,9 @@ export default function ServicePilot() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi tone="dark" label="Repas servis" value={String(s.served ?? 0)} hint={`${s.served_15 ?? 0} ces 15 dernières minutes`} />
-        <Kpi tone="lime" label="File d'attente" value={s.queue_count != null ? String(s.queue_count) : "—"} hint={s.wait_min != null ? `~${s.wait_min} min d'attente` : "caméra éteinte"} />
+        <Kpi tone="lime" label="File d'attente"
+          value={s.queue_count != null ? String(s.queue_count) : s.rhythm?.interval_s != null ? `1 / ${s.rhythm.interval_s < 90 ? `${s.rhythm.interval_s} s` : `${Math.round(s.rhythm.interval_s / 60)} min`}` : "—"}
+          hint={s.queue_count != null ? (s.wait_min != null ? `~${s.wait_min} min d'attente` : "vue par la caméra") : s.rhythm?.interval_s != null ? "passages au comptoir (rythme des scans)" : "caméra éteinte"} />
         <Kpi label="Commandes prêtes en attente" value={String(s.ready_waiting ?? 0)} hint="depuis plus de 10 min" />
         <Kpi label="Plats qui vont manquer" value={String(items.filter((i) => i.runout_min != null && i.runout_min < (s.minutes_left ?? 0) - 10).length)} hint="avant la fin du service" />
       </div>
@@ -144,7 +148,14 @@ export default function ServicePilot() {
           )}
         </Card>
 
-        <AskPilot />
+        <div className="flex min-w-0 flex-col gap-4">
+          <AskPilot />
+          {s.rhythm && (
+            <Card title="Rythme du comptoir" subtitle="L'écart entre deux scans de l'agent : écarts courts = beaucoup de monde, écarts qui s'allongent = la file diminue.">
+              <ScanRhythmView r={s.rhythm} />
+            </Card>
+          )}
+        </div>
       </div>
 
       {/* Plats du service */}

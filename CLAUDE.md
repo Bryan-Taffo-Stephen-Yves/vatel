@@ -1,4 +1,4 @@
-# Dabali — consignes pour Claude
+# Vatel Cantine — consignes pour Claude
 
 ## Façon de travailler avec Bryan (propriétaire du projet)
 
