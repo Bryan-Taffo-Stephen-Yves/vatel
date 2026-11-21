@@ -5,7 +5,7 @@ import Link from "next/link";
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { ArrowLeftRight, Check, ChevronLeft, Sun, Star, XCircle } from "lucide-react";
+import { Check, ChevronLeft, Sun, Star, XCircle } from "lucide-react";
 import { rpc, supabase } from "@/lib/supabase/client";
 import { Qr } from "@/components/qr";
 import { Button } from "@/components/ui/button";
@@ -232,17 +232,10 @@ export default function TicketPage({ params }: { params: Promise<{ id: string }>
         </div>
       </section>
 
-      {/* Solde ⇄ Points */}
-      <section className="mt-4 flex items-center rounded-[24px] bg-card p-4 shadow-[var(--shadow-card)]">
-        <div className="flex-1 text-center">
-          <p className="text-xs font-bold text-muted">{tr("Solde")}</p>
-          <p className="text-xl font-extrabold">{balance === null ? "—" : fcfa(balance)}</p>
-        </div>
-        <span className="grid size-11 place-items-center rounded-full bg-lime ring-4 ring-lime-soft"><ArrowLeftRight className="size-5" /></span>
-        <div className="flex-1 text-center">
-          <p className="text-xs font-bold text-muted">Points</p>
-          <p className="text-xl font-extrabold">{profile?.points ?? "—"}<span className="text-sm text-muted"> pts</span></p>
-        </div>
+      {/* Solde (points de fidélité retirés) */}
+      <section className="mt-4 flex items-center justify-between rounded-[24px] bg-card p-4 shadow-[var(--shadow-card)]">
+        <p className="text-sm font-bold text-muted">{tr("Solde")}</p>
+        <p className="text-xl font-extrabold">{balance === null ? "—" : fcfa(balance)}</p>
       </section>
 
       {st === "valid" && (

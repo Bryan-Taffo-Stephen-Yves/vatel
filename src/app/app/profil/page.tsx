@@ -174,7 +174,7 @@ export default function ProfilePage() {
           </div>
         </section>}
 
-        {/* Onglet « Moi » : l'argent et l'historique, rangés ici (la barre du bas garde Aujourd'hui · Menu · QR · Moi) */}
+        {/* Raccourcis argent : recharger, historique, envoyer (aussi dans la barre du bas pour l'historique) */}
         {!profile?.is_parent && (
           <div className="mt-4 divide-y divide-line overflow-hidden rounded-[24px] bg-card shadow-[var(--shadow-card)]">
             <Row icon={Wallet} label={t("Recharger")} hint={t("Wave, Orange Money, MTN, Moov")} onClick={() => router.push("/app/recharger")} />

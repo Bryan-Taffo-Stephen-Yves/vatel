@@ -1,17 +1,18 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Sun, UtensilsCrossed, QrCode, ReceiptText, UserRound, Users, Bell } from "lucide-react";
+import { Home, UtensilsCrossed, QrCode, ReceiptText, UserRound, Users, Bell } from "lucide-react";
 import { useAppData } from "@/components/app/app-data";
 import clsx from "clsx";
 import { useT } from "@/lib/i18n";
 
-// Élève : 4 onglets centrés sur « manger » ; l'argent et l'historique sont dans « Moi »
+// Élève : 5 onglets, le gros bouton « Mon QR » au milieu
 const TABS = [
-  { href: "/app", label: "Aujourd'hui", icon: Sun, exact: true },
+  { href: "/app", label: "Accueil", icon: Home, exact: true },
   { href: "/app/menu", label: "Menu", icon: UtensilsCrossed },
   { href: "/app/tickets", label: "Mon QR", icon: QrCode, center: true },
-  { href: "/app/profil", label: "Moi", icon: UserRound, also: ["/app/historique", "/app/recharger", "/app/transferer", "/app/famille", "/app/notifications"] },
+  { href: "/app/historique", label: "Historique", icon: ReceiptText },
+  { href: "/app/profil", label: "Profil", icon: UserRound, also: ["/app/recharger", "/app/transferer", "/app/famille", "/app/notifications"] },
 ];
 // Compte parent : pas de menu ni de QR (il ne mange pas à la cantine) ; ses enfants, ses alertes, son profil
 const PARENT_TABS = [
@@ -39,7 +40,7 @@ export function BottomNav() {
           const Icon = tab.icon;
           if (tab.center) {
             return (
-              <Link key={tab.href} href={tab.href} aria-label={t(tab.label)}
+              <Link key={tab.href} href={tab.href} prefetch aria-label={t(tab.label)}
                 className="-mt-7 flex flex-1 flex-col items-center gap-1">
                 <span className={clsx(
                   "grid size-[60px] place-items-center rounded-[22px] ring-[5px] ring-canvas transition active:scale-95",
@@ -52,7 +53,7 @@ export function BottomNav() {
             );
           }
           return (
-            <Link key={tab.href} href={tab.href} className="flex min-h-12 flex-1 flex-col items-center justify-end gap-1 pt-1.5">
+            <Link key={tab.href} href={tab.href} prefetch className="flex min-h-12 flex-1 flex-col items-center justify-end gap-1 pt-1.5">
               <Icon key={String(active)} className={clsx("size-[22px] transition", active ? "animate-nav text-ink" : "text-off")} strokeWidth={active ? 2.4 : 2} />
               <span className={clsx("text-[11px] font-bold", active ? "text-ink" : "text-muted")}>{t(tab.label)}</span>
               <span className={clsx("h-1 w-1 rounded-full", active ? "bg-lime-deep" : "bg-transparent")} />
