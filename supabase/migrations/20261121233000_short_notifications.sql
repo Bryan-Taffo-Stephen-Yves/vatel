@@ -12,7 +12,10 @@ declare
   b text := coalesce(new.body, '');
   m text[]; m2 text[];
   dish text;
+  t0 text := new.title; b0 text := new.body;
 begin
+ -- Filet de sécurité : ce trigger tourne aussi pendant un crédit de paiement ; en cas d'erreur, texte d'origine, rien n'est bloqué
+ begin
   case new.type
     -- Élève
     when 'parent_recharge' then
@@ -104,6 +107,9 @@ begin
       if m is not null then new.body := m[1] || ' · ' || m[2] || ' · ' || m[3]; end if;
     else null;
   end case;
+ exception when others then
+  new.title := t0; new.body := b0;
+ end;
   return new;
 end $$;
 
