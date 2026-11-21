@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import {
   LayoutDashboard, Wallet, CalendarDays, UtensilsCrossed, TrendingUp, Boxes, BarChart3, Trash2, Star,
-  ChefHat, ClipboardList, Bike, PhoneCall, Bot, FileText, Users, Settings, LogOut, ScanLine, Smartphone, UserCog, ShoppingCart, ShieldCheck, MoreHorizontal, ClipboardCheck,
+  ChefHat, ClipboardList, Bike, FileText, Users, Settings, LogOut, ScanLine, Smartphone, UserCog, ShoppingCart, ShieldCheck, MoreHorizontal,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { Logo } from "@/components/logo";
@@ -24,9 +24,9 @@ const NAV: { href: string; label: string; icon: typeof Wallet; roles: Role[] }[]
   { href: "/admin/previsions", label: "Prévisions", icon: TrendingUp, roles: ["chef", "admin"] },
   { href: "/admin/stock", label: "Stock", icon: Boxes, roles: ["chef", "admin"] },
   { href: "/admin/courses", label: "Courses", icon: ShoppingCart, roles: ["chef", "admin"] },
-  { href: "/admin/fournisseurs", label: "Point achats", icon: ClipboardCheck, roles: ["chef", "admin"] },
-  { href: "/admin/approvisionnement", label: "Agent d'achats", icon: Bot, roles: ["chef", "admin"] },
-  { href: "/admin/appels", label: "Appels fournisseurs", icon: PhoneCall, roles: ["chef", "admin"] },
+  // Appels aux fournisseurs par l'IA mis de côté (21/11) : Retell n'appelle pas la Côte d'Ivoire ; le chef et l'admin
+  // reçoivent le point des achats (Courses) et font les courses eux-mêmes. Pages gardées : /admin/approvisionnement,
+  // /admin/appels, /admin/fournisseurs (pour les rebrancher : remettre leurs lignes ici).
   { href: "/admin/livraisons", label: "Livraisons", icon: Bike, roles: ["chef", "admin"] },
   { href: "/admin/rapports", label: "Rapports", icon: FileText, roles: ["chef", "admin"] },
   { href: "/admin/ventes", label: "Ventes", icon: BarChart3, roles: ["caissier", "chef", "admin"] },
