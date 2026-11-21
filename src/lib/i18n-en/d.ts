@@ -128,5 +128,8 @@ export const EN_D: Record<string, string> = {
   "Réussie": "Successful", "En attente": "Pending", "Échouée": "Failed",
   "Donnez cette référence à la caisse en cas de question.": "Give this reference to the cashier if you have a question.",
   "Recharge pour": "Top-up for", "Compte cantine de": "Canteen account of", "moi": "me", "mon enfant": "my child",
-  "Rechargé ce mois-ci": "Topped up this month", "recharges réussies": "successful top-ups", "Aucune recharge pour l'instant.": "No top-ups yet.",
+  "Rechargé ce mois-ci": "Topped up this month",
+  "Moi": "Me", "Réserver ce plat": "Book this dish", "Wave, Orange Money, MTN, Moov": "Wave, Orange Money, MTN, Moov",
+  "Repas et argent, détail de chaque opération": "Meals and money, details of every transaction",
+  "Envoyer de l'argent": "Send money", "À un camarade, avec son code": "To a friend, with their code", "recharges réussies": "successful top-ups", "Aucune recharge pour l'instant.": "No top-ups yet.",
 };

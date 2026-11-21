@@ -2,10 +2,10 @@
 
 /* Vatel — jetons de design (§9) */
 @theme {
-  --color-lime: #c8f135;
-  --color-lime-soft: #eefbc4;
-  --color-lime-deep: #66850a; /* texte vert lisible sur blanc (contraste ≈ 4,5:1) */
-  --color-ink: #16181d;
+  --color-lime: #53b5fd; /* bleu Vatel */
+  --color-lime-soft: #e3f2fe;
+  --color-lime-deep: #1269a8; /* bleu Vatel foncé : texte lisible sur blanc (contraste > 4,5:1) */
+  --color-ink: #0d0d0c; /* noir Vatel */
   --color-ink-2: #3a3f4b;
   --color-muted: #5b6270; /* textes secondaires : lisibles au soleil */
   --color-line: #e7e9ee;
@@ -86,7 +86,7 @@ body {
 @property --qr-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
 @keyframes qr-spin { to { --qr-angle: 360deg; } }
 .qr-live {
-  background: conic-gradient(from var(--qr-angle), #c8f135, #16181d 25%, #c8f135 50%, #16181d 75%, #c8f135);
+  background: conic-gradient(from var(--qr-angle), #53b5fd, #0d0d0c 25%, #53b5fd 50%, #0d0d0c 75%, #53b5fd);
   animation: qr-spin 3.5s linear infinite;
 }
 

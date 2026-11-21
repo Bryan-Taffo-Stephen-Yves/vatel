@@ -108,7 +108,7 @@ export function DeliveryTracker({ token, runId, teamBox = false, onData }: { tok
     <div className="space-y-4">
       <style>{`
         .dl-pin{display:grid;place-items:center;width:34px;height:34px;border-radius:999px;font-weight:800;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,.25);border:2px solid #fff}
-        .dl-courier{background:#c8f135;font-size:18px}.dl-home{background:#16181d;font-size:16px}
+        .dl-courier{background:#53b5fd;font-size:18px}.dl-home{background:#16181d;font-size:16px}
         .dl-stop{background:#fff;color:#16181d}.dl-en_cours{background:#f59e0b;color:#fff}.dl-fait{background:#22c55e;color:#fff}.dl-annule{background:#e7e9ee;color:#858b97;text-decoration:line-through}
       `}</style>
 

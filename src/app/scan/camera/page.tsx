@@ -255,7 +255,7 @@ export default function CameraPage() {
       g.fillText(label, z.x * W + 6, z.y * H + 16);
       void i;
     });
-    g.strokeStyle = "#C8F135"; g.lineWidth = 3;
+    g.strokeStyle = "#53B5FD"; g.lineWidth = 3;
     boxes.forEach((b) => { g.strokeRect(b.x * W, b.y * H, b.w * W, b.h * H); });
     if (draft.current) {
       const d = draft.current; g.setLineDash([6, 4]); g.strokeStyle = "#fff";

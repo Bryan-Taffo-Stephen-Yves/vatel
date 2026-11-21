@@ -126,23 +126,20 @@ function Menu() {
             <p className="font-bold">{lang === "en" ? `No ${cfg ? t(cfg.label).toLowerCase() : "service"} that day` : `Pas de ${cfg?.label.toLowerCase() ?? "service"} ce jour-là`}</p>
           </div>
         )}
-        {list.map((i) => <DishCard key={i.id} item={i} stat={stats[i.dish.id]} warn={dietConflicts(profile, i.dish)} />)}
+        {list.map((i) => <DishCard key={i.id} item={i} stat={stats[i.dish.id]} warn={dietConflicts(profile, i.dish)} canBook={!ended} />)}
+        {/* Sans choisir le plat à l'avance : un ticket du repas, plat choisi au comptoir */}
+        {cfg && !ended && list.length > 0 && (
+          <Link href={`/app/acheter?service=${service}`} className="block pt-1 text-center text-sm font-bold text-muted underline underline-offset-2">
+            {lang === "en" ? `or buy a ${t(cfg.label)} ticket (${fcfa(cfg.price)}) and choose at the counter` : `ou acheter un ticket ${cfg.label} (${fcfa(cfg.price)}) et choisir au comptoir`}
+          </Link>
+        )}
       </section>
 
-      {cfg && (
-        <div className="fixed inset-x-0 bottom-[calc(5.6rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-md px-4">
-          <Link href={`/app/acheter?service=${service}`}
-            className="flex h-14 items-center justify-between rounded-full bg-ink pl-6 pr-2 text-white shadow-[var(--shadow-float)] active:scale-[0.99]">
-            <span className="font-bold">{lang === "en" ? `${t(cfg.label)} ticket` : `Ticket ${cfg.label}`} <span className="text-lime">·</span> {fcfa(cfg.price)}</span>
-            <span className="flex h-10 items-center gap-1 rounded-full bg-lime px-4 text-sm font-extrabold text-ink">{t("Acheter")} <ChevronRight className="size-4" /></span>
-          </Link>
-        </div>
-      )}
     </main>
   );
 }
 
-function DishCard({ item, stat, warn = [] }: { item: MenuItem; stat?: DishStat; warn?: string[] }) {
+function DishCard({ item, stat, warn = [], canBook = true }: { item: MenuItem; stat?: DishStat; warn?: string[]; canBook?: boolean }) {
   const t = useT();
   const lang = useLang();
   const out = soldOut(item);
@@ -150,8 +147,8 @@ function DishCard({ item, stat, warn = [] }: { item: MenuItem; stat?: DishStat; 
   // Étiquettes de lib/menu : « Bientôt épuisé · N » porte un nombre
   const tagLabel = (l: string) => (l.startsWith("Bientôt épuisé · ") && lang === "en" ? `Almost gone · ${l.slice("Bientôt épuisé · ".length)}` : t(l));
   return (
-    <Link href={`/app/menu/${item.id}`} className="block">
-      <article className={clsx("overflow-hidden rounded-[24px] bg-card shadow-[var(--shadow-card)] transition active:scale-[0.99]", out && "opacity-60")}>
+    <article className={clsx("overflow-hidden rounded-[24px] bg-card shadow-[var(--shadow-card)]", out && "opacity-60")}>
+      <Link href={`/app/menu/${item.id}`} className="block transition active:scale-[0.99]">
         <div className="relative">
           <DishImage name={item.dish.name} src={item.dish.photo_url} rounded="rounded-none" className={clsx("h-44 w-full", out && "grayscale")} />
           <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
@@ -172,7 +169,16 @@ function DishCard({ item, stat, warn = [] }: { item: MenuItem; stat?: DishStat; 
           </div>
           <ChevronRight className="size-5 shrink-0 text-off" />
         </div>
-      </article>
-    </Link>
+      </Link>
+      {/* Réserver ce plat : heure de retrait puis paiement (écran Commander, plat déjà choisi) */}
+      {canBook && !out && (
+        <div className="px-4 pb-4">
+          <Link href={`/app/commander?item=${item.id}`}
+            className="flex h-12 items-center justify-center gap-2 rounded-full bg-ink text-[15px] font-extrabold text-white active:scale-[0.99]">
+            {t("Réserver ce plat")} <span className="text-lime">·</span> {fcfa(item.price)}
+          </Link>
+        </div>
+      )}
+    </article>
   );
 }

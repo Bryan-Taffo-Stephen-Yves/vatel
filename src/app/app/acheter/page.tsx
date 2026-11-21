@@ -61,7 +61,7 @@ function Buy() {
   const chosen = withExtras ? extras.filter((e) => (counts[e.id] ?? 0) > 0) : [];
   const extrasTotal = chosen.reduce((s, e) => s + e.price * (counts[e.id] ?? 0), 0);
   const usedOf = (kind: Extra["kind"]) => extras.filter((e) => e.kind === kind).reduce((n, e) => n + (counts[e.id] ?? 0), 0);
-  const canReward = service === "breakfast" && (profile?.points ?? 0) >= 10;
+  const canReward = false; // points de fidélité retirés
   const total = (cfg?.price ?? 0) * qty + extrasTotal - (useReward && canReward ? (cfg?.price ?? 0) : 0);
   const extrasCount = chosen.reduce((n, e) => n + (counts[e.id] ?? 0), 0);
   const needsPin = total > 5000 || !!gift;

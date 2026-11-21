@@ -109,9 +109,8 @@ export default function CashierPage() {
                   {sel.is_blocked ? <><Unlock className="size-4" />Débloquer</> : <><Lock className="size-4" />Bloquer</>}
                 </Button>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-4 grid gap-3">
                 <div className="rounded-2xl bg-ink p-4 text-white"><p className="text-xs font-bold text-white/60">Solde</p><p className="text-2xl font-extrabold">{fcfa(sel.balance)}</p></div>
-                <div className="rounded-2xl bg-canvas p-4"><p className="text-xs font-bold text-muted">Points fidélité</p><p className="text-2xl font-extrabold">{sel.points}</p></div>
               </div>
 
               <div className="mt-5">

@@ -133,15 +133,6 @@ export default function SettingsPage() {
           ))}
           <p className="pt-2 text-xs text-muted">Appliqué aussi par la base : sans le code, ces comptes perdent leurs droits. Chacun peut l&apos;activer pour lui-même depuis le menu.</p>
         </Card>
-        <Card title="Fidélité">
-          <Row label="Points par repas servi"><N value={s.loyalty.points_per_ticket} onChange={(v) => set({ loyalty: { ...s.loyalty, points_per_ticket: v } })} /></Row>
-          <Row label="Points pour un ticket offert"><N value={s.loyalty.reward_points} onChange={(v) => set({ loyalty: { ...s.loyalty, reward_points: v } })} /></Row>
-          <Row label="Ticket offert">
-            <select value={s.loyalty.reward_service ?? "breakfast"} onChange={(e) => set({ loyalty: { ...s.loyalty, reward_service: e.target.value as ServiceKind } })} className={input}>
-              {SERVICES.map((k) => <option key={k} value={k}>{s.services[k]?.label ?? k}</option>)}
-            </select>
-          </Row>
-        </Card>
         <Card title="Suppléments (entrées, desserts)">
           {extras.map((e, i) => (
             <Row key={e.id} label="">
