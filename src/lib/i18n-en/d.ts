@@ -62,4 +62,18 @@ export const EN_D: Record<string, string> = {
   "Réessayer": "Try again",
   // Composants communs
   "Fermer": "Close",
+  // Paiement Jèko
+  "Valide le paiement sur ton téléphone": "Approve the payment on your phone",
+  "Paiement en cours de vérification…": "Checking your payment…",
+  "Recharge réussie": "Top-up successful",
+  "Le paiement n'a pas abouti": "The payment did not go through",
+  "Un message de ton opérateur va s'afficher : entre ton code secret pour confirmer.": "A message from your operator will appear: enter your PIN to confirm.",
+  "Ton solde sera crédité dès que l'opérateur confirme.": "Your balance will be credited as soon as the operator confirms.",
+  "Aucun montant n'a été crédité. Tu peux réessayer.": "Nothing was charged to your balance. You can try again.",
+  "Vérifier maintenant": "Check now",
+  "Terminé": "Done",
+  "Numéro qui paie": "Paying phone number",
+  "Numéro mobile à 10 chiffres (01, 05 ou 07…).": "10-digit mobile number (01, 05 or 07…).",
+  "Paiement sécurisé par Jèko : tu confirmes sur ton téléphone, le solde est crédité dès la confirmation.": "Secured by Jèko: you confirm on your phone, and your balance is credited as soon as it's confirmed.",
+  "Paiement Mobile Money (Wave, Orange Money, MTN, Moov, Djamo) sécurisé par Jèko.": "Mobile Money payment (Wave, Orange Money, MTN, Moov, Djamo) secured by Jèko.",
 };

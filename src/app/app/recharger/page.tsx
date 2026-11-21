@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Smartphone, Banknote, Info } from "lucide-react";
-import { rpc } from "@/lib/supabase/client";
+import { Smartphone, Banknote, Info, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { edge, rpc } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -15,44 +15,137 @@ import { useLang, useT } from "@/lib/i18n";
 
 const AMOUNTS = [2000, 5000, 10000, 25000, 50000, 100000];
 const OPERATORS = [
-  { id: "wave", name: "Wave", color: "#1DC3FF" },
-  { id: "orange", name: "Orange Money", color: "#FF7900" },
-  { id: "mtn", name: "MTN MoMo", color: "#FFCB05" },
-  { id: "moov", name: "Moov Money", color: "#0066B3" },
-];
+  { id: "wave", name: "Wave", color: "#1DC3FF", prefix: null },
+  { id: "orange", name: "Orange Money", color: "#FF7900", prefix: "07" },
+  { id: "mtn", name: "MTN MoMo", color: "#FFCB05", prefix: "05" },
+  { id: "moov", name: "Moov Money", color: "#0066B3", prefix: "01" },
+  { id: "djamo", name: "Djamo", color: "#111827", prefix: null },
+] as const;
 
+type Wait = { reference: string; ussd: boolean; state: "pending" | "success" | "error"; amount?: number; reason?: string | null };
+const digits10 = (p?: string | null) => (p ?? "").replace(/\D/g, "").replace(/^225(?=\d{10}$)/, "").slice(0, 10);
+
+/**
+ * Recharge par Mobile Money (paiement réel via Jèko), pour soi ou pour son enfant (?pour=<id>&nom=<prénom>).
+ * Wave / Orange / Djamo : on part vers l'appli de l'opérateur, puis retour ici (?ref=…) ;
+ * MTN / Moov : code USSD sur le téléphone, la page attend. Le solde n'est crédité qu'une fois le paiement confirmé.
+ */
 export default function RechargePage() {
   const router = useRouter();
   const toast = useToast();
   const t = useT();
   const lang = useLang();
+  const en = lang === "en";
   const { balance, profile, refresh } = useAppData();
   const [amount, setAmount] = useState(5000);
   const [custom, setCustom] = useState("");
-  const [op, setOp] = useState("wave");
+  const [op, setOp] = useState<(typeof OPERATORS)[number]["id"]>("wave");
+  const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
+  const [child, setChild] = useState<{ id: string; name: string } | null>(null);
+  const [wait, setWait] = useState<Wait | null>(null);
   const value = custom ? parseInt(custom.replace(/\D/g, ""), 10) || 0 : amount;
+  const operator = OPERATORS.find((o) => o.id === op)!;
+  const phoneOk = /^(01|05|07)\d{8}$/.test(phone) && (!operator.prefix || phone.startsWith(operator.prefix));
 
-  // Face ID activé : confirmation avant la recharge (la base refuse sinon)
+  // Paramètres d'arrivée : recharge d'un enfant, ou retour de l'appli de paiement
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const pour = q.get("pour");
+    if (pour) setChild({ id: pour, name: q.get("nom") ?? "" });
+    const m = parseInt(q.get("montant") ?? "", 10);
+    if (m > 0) { setAmount(m); }
+    const ref = q.get("ref");
+    if (ref) setWait({ reference: ref, ussd: false, state: "pending" });
+  }, []);
+  useEffect(() => { if (profile?.phone && !phone) setPhone(digits10(profile.phone)); }, [profile?.phone, phone]);
+
+  // Attente de la confirmation : interrogation toutes les 4 s (3 min au plus)
+  const tries = useRef(0);
+  const check = useCallback(async (reference: string) => {
+    const r = await edge<{ status: Wait["state"]; amount: number; reason: string | null; for_child: boolean }>("jeko-pay", { action: "status", reference });
+    if (!r.ok) return;
+    setWait((w) => (w && w.reference === reference ? { ...w, state: r.status, amount: r.amount, reason: r.reason } : w));
+    if (r.status === "success") await refresh();
+  }, [refresh]);
+  useEffect(() => {
+    if (!wait || wait.state !== "pending") return;
+    tries.current = 0;
+    check(wait.reference);
+    const id = setInterval(() => {
+      tries.current += 1;
+      if (tries.current > 45) return clearInterval(id);
+      check(wait.reference);
+    }, 4000);
+    return () => clearInterval(id);
+  }, [wait?.reference, wait?.state, check]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [confirmOpen, setConfirmOpen] = useState(false);
   const start = () => (profile?.biometric_enabled ? setConfirmOpen(true) : pay());
 
   async function pay() {
     setConfirmOpen(false);
     setBusy(true);
-    const r = await rpc<{ balance: number }>("simulate_recharge", { p_amount: value });
+    const r = await edge<{ reference: string; mode: "redirect" | "ussd"; redirect_url: string | null }>("jeko-pay", {
+      action: "create", amount: value, method: op, phone, child_id: child?.id ?? null,
+    });
+    // Paiement en ligne pas encore activé (clés absentes) ou fonction pas encore déployée : mode démo
+    if (!r.ok && (r.code === "NOT_CONFIGURED" || r.code === "NOT_FOUND")) return demo();
+    setBusy(false);
+    if (!r.ok) return toast("err", r.message);
+    if (r.mode === "redirect" && r.redirect_url) { window.location.href = r.redirect_url; return; }
+    setWait({ reference: r.reference, ussd: true, state: "pending" });
+  }
+
+  // Paiement en ligne pas encore activé : la démo reste utilisable (aucun débit réel)
+  async function demo() {
+    const r = child
+      ? await rpc<{ balance: number }>("parent_recharge_child", { p_child: child.id, p_amount: value })
+      : await rpc<{ balance: number }>("simulate_recharge", { p_amount: value });
     setBusy(false);
     if (!r.ok) return toast("err", r.message);
     await refresh();
-    toast("ok", lang === "en" ? `${fcfa(value)} added. New balance: ${fcfa(r.balance)}` : `${fcfa(value)} ajoutés. Nouveau solde : ${fcfa(r.balance)}`);
-    router.replace("/app");
+    toast("ok", en ? `${fcfa(value)} added (demo mode, no real debit).` : `${fcfa(value)} ajoutés (mode démo, aucun débit réel).`);
+    router.replace(child ? "/app/famille" : "/app");
+  }
+
+  if (wait) {
+    const done = wait.state !== "pending";
+    return (
+      <main>
+        <PageHeader title={t("Recharger")} />
+        <div className="px-4">
+          <div className="mt-4 rounded-[26px] bg-card p-6 text-center shadow-[var(--shadow-card)]">
+            {wait.state === "pending" && <Loader2 className="mx-auto size-12 animate-spin text-ink" />}
+            {wait.state === "success" && <CheckCircle2 className="mx-auto size-14 text-lime-deep" />}
+            {wait.state === "error" && <XCircle className="mx-auto size-14 text-err" />}
+            <p className="mt-3 text-lg font-extrabold">
+              {wait.state === "pending" && (wait.ussd ? t("Valide le paiement sur ton téléphone") : t("Paiement en cours de vérification…"))}
+              {wait.state === "success" && t("Recharge réussie")}
+              {wait.state === "error" && t("Le paiement n'a pas abouti")}
+            </p>
+            <p className="mt-1 text-sm font-semibold text-muted">
+              {wait.state === "pending" && (wait.ussd
+                ? t("Un message de ton opérateur va s'afficher : entre ton code secret pour confirmer.")
+                : t("Ton solde sera crédité dès que l'opérateur confirme."))}
+              {wait.state === "success" && (en ? `${fcfa(wait.amount ?? 0)} added. Balance: ${fcfa(balance ?? 0)}` : `${fcfa(wait.amount ?? 0)} ajoutés. Solde : ${fcfa(balance ?? 0)}`)}
+              {wait.state === "error" && t("Aucun montant n'a été crédité. Tu peux réessayer.")}
+            </p>
+          </div>
+          {!done && <Button block variant="outline" className="mt-4" onClick={() => check(wait.reference)}>{t("Vérifier maintenant")}</Button>}
+          <Button block className="mt-3" onClick={() => { setWait(null); window.history.replaceState(null, "", "/app/recharger"); if (wait.state === "success") router.replace("/app"); }}>
+            {wait.state === "success" ? t("Terminé") : done ? t("Réessayer") : t("Fermer")}
+          </Button>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main>
-      <PageHeader title={t("Recharger")} />
+      <PageHeader title={child?.name ? `${t("Recharger")} ${child.name}` : t("Recharger")} />
       <div className="px-4">
-        <p className="text-sm font-semibold text-muted">{t("Solde actuel")} · <b className="text-ink">{fcfa(balance ?? 0)}</b></p>
+        {!child && <p className="text-sm font-semibold text-muted">{t("Solde actuel")} · <b className="text-ink">{fcfa(balance ?? 0)}</b></p>}
 
         <div className="mt-5 rounded-[26px] bg-card p-5 text-center shadow-[var(--shadow-card)]">
           <p className="text-sm font-bold text-muted">{t("Montant")}</p>
@@ -83,17 +176,34 @@ export default function RechargePage() {
           ))}
         </div>
 
-        <p className="mt-4 flex gap-2 rounded-2xl bg-warn-soft p-3 text-[13px] font-semibold text-[#92400e]">
-          <Info className="mt-0.5 size-4 shrink-0" />
-          {t("Mobile Money (simulation) : aucun débit réel pendant la démo.")}
-        </p>
-        <p className="mt-2 flex gap-2 rounded-2xl bg-card p-3 text-[13px] font-semibold text-ink-2 shadow-[var(--shadow-card)]">
-          <Banknote className="mt-0.5 size-4 shrink-0" />
-          <span>{lang === "en" ? <>Cash: show your ID <b className="whitespace-nowrap">{profile?.short_code}</b> at the till.</> : <>En espèces : présentez votre identifiant <b className="whitespace-nowrap">{profile?.short_code}</b> à la caisse.</>}</span>
-        </p>
+        <label className="mt-5 block">
+          <span className="text-[15px] font-extrabold">{t("Numéro qui paie")}</span>
+          <input inputMode="tel" placeholder="07 01 02 03 04" value={phone.replace(/(\d{2})(?=\d)/g, "$1 ")}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+            className={clsx("mt-2 h-12 w-full rounded-2xl border bg-card px-4 text-[16px] font-bold tracking-wide outline-none focus:border-ink",
+              phone.length === 10 && !phoneOk ? "border-err" : "border-line")} />
+          {phone.length === 10 && !phoneOk && (
+            <span className="mt-1 block text-[13px] font-semibold text-err">
+              {operator.prefix
+                ? (en ? `A ${operator.name} number starts with ${operator.prefix}.` : `Un numéro ${operator.name} commence par ${operator.prefix}.`)
+                : t("Numéro mobile à 10 chiffres (01, 05 ou 07…).")}
+            </span>
+          )}
+        </label>
 
-        <Button size="lg" block className="mt-6" loading={busy} disabled={value < 100 || value > 500000} onClick={start}>
-          {t("Recharger")} {fcfa(value)}
+        <p className="mt-4 flex gap-2 rounded-2xl bg-lime-soft p-3 text-[13px] font-semibold text-ink-2">
+          <Info className="mt-0.5 size-4 shrink-0" />
+          {t("Paiement sécurisé par Jèko : tu confirmes sur ton téléphone, le solde est crédité dès la confirmation.")}
+        </p>
+        {!child && (
+          <p className="mt-2 flex gap-2 rounded-2xl bg-card p-3 text-[13px] font-semibold text-ink-2 shadow-[var(--shadow-card)]">
+            <Banknote className="mt-0.5 size-4 shrink-0" />
+            <span>{en ? <>Cash: show your ID <b className="whitespace-nowrap">{profile?.short_code}</b> at the till.</> : <>En espèces : présentez votre identifiant <b className="whitespace-nowrap">{profile?.short_code}</b> à la caisse.</>}</span>
+          </p>
+        )}
+
+        <Button size="lg" block className="mt-6" loading={busy} disabled={value < 100 || value > 500000 || !phoneOk} onClick={start}>
+          {t("Payer")} {fcfa(value)}
         </Button>
       </div>
       <Sheet open={confirmOpen} onClose={() => setConfirmOpen(false)} title={t("Confirmer la recharge")}>

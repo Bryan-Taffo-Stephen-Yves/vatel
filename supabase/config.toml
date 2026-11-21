@@ -6,3 +6,6 @@ verify_jwt = true
 
 [functions.ticket-token]
 verify_jwt = true
+
+[functions.jeko-webhook]
+verify_jwt = false

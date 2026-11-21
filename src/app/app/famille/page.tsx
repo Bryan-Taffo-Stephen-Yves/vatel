@@ -84,13 +84,11 @@ export default function FamilyPage() {
     if (!r.ok) return toast("err", r.message);
     toast("ok", t("Lien retiré.")); load();
   }
-  async function doRecharge() {
+  // Paiement réel (Jèko) sur la page Recharger, pour l'enfant
+  function doRecharge() {
     if (!recharge) return;
-    setBusy(true);
-    const r = await rpc<{ balance: number }>("parent_recharge_child", { p_child: recharge.id, p_amount: amount });
-    setBusy(false);
-    if (!r.ok) return toast("err", r.message);
-    toast("ok", en ? `${fcfa(amount)} added to ${recharge.name.split(" ")[0]}’s account 💚` : `${fcfa(amount)} ajoutés au compte de ${recharge.name.split(" ")[0]} 💚`); setRecharge(null); load();
+    const q = new URLSearchParams({ pour: recharge.id, nom: recharge.name.split(" ")[0], montant: String(amount) });
+    window.location.href = `/app/recharger?${q}`;
   }
 
   return (
@@ -231,7 +229,7 @@ export default function FamilyPage() {
       </Sheet>
 
       <Sheet open={!!recharge} onClose={() => setRecharge(null)} title={`${t("Recharger")} ${recharge?.name.split(" ")[0] ?? ""}`}>
-        <p className="-mt-1 mb-3 text-sm text-muted">{t("Paiement Mobile Money (Wave, Orange Money, MTN, Moov) — simulation pour la démo.")}</p>
+        <p className="-mt-1 mb-3 text-sm text-muted">{t("Paiement Mobile Money (Wave, Orange Money, MTN, Moov, Djamo) sécurisé par Jèko.")}</p>
         <div className="grid grid-cols-2 gap-2">
           {AMOUNTS.map((a) => (
             <button key={a} onClick={() => setAmount(a)} className={clsx("h-14 rounded-2xl text-lg font-extrabold", a === amount ? "bg-ink text-lime" : "bg-canvas")}>{fcfa(a)}</button>
