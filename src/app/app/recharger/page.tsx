@@ -24,7 +24,7 @@ const OPERATORS = [
   { id: "orange", logo: "/landing/pay/orange.svg", name: "Orange Money", color: "#FF7900", prefix: "07" },
   { id: "mtn", logo: "/landing/pay/mtn.svg", name: "MTN MoMo", color: "#FFCB05", prefix: "05" },
   { id: "moov", logo: "/landing/pay/moov.png", name: "Moov Money", color: "#0066B3", prefix: "01" },
-  { id: "djamo", logo: null, name: "Djamo", color: "#111827", prefix: null },
+  { id: "djamo", logo: "/landing/pay/djamo.png", name: "Djamo", color: "#111827", prefix: null },
 ] as const;
 
 type Wait = { reference: string; ussd: boolean; state: "pending" | "success" | "error"; amount?: number; reason?: string | null };
