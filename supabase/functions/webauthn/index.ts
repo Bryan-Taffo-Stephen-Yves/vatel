@@ -57,6 +57,12 @@ Deno.serve(async (req) => {
     }
 
     if (action === "register-verify") {
+      // Ajouter une clé Face ID exige le code PIN juste avant (check_my_pin ouvre 2 min) : une session volée
+      // ne suffit pas pour enregistrer son propre Face ID et contourner le PIN.
+      const { data: g } = await db.from("profiles").select("biometric_ok_until").eq("id", user.id).single();
+      if (!(g?.biometric_ok_until && new Date(g.biometric_ok_until).getTime() > Date.now())) {
+        return fail("PIN_REQUIRED", "Confirmez d'abord avec votre code PIN.", 403);
+      }
       const challenge = await takeChallenge("register");
       if (!challenge) return fail("EXPIRED", "Demande expirée, réessayez.");
       const v = await verifyRegistrationResponse({
@@ -68,7 +74,9 @@ Deno.serve(async (req) => {
         user_id: user.id, credential_id: c.id, public_key: b64url(c.publicKey), counter: c.counter,
         transports: c.transports ?? [], device_name: String(body.device_name ?? "").slice(0, 60) || null,
       });
-      await db.from("profiles").update({ biometric_enabled: true }).eq("id", user.id);
+      await db.from("profiles").update({ biometric_enabled: true, biometric_ok_until: null }).eq("id", user.id);
+      await db.from("notifications").insert({ user_id: user.id, type: "security", title: "Face ID activé",
+        body: "Face ID (ou l'empreinte) vient d'être activé sur un appareil. Si ce n'est pas toi, va dans Profil → « J'ai perdu mon téléphone »." });
       await db.rpc("_audit", { p_action: "biometric_enabled", p_target: user.id, p_payload: {}, p_actor: user.id });
       return json({ ok: true });
     }

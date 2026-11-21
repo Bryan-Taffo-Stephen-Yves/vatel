@@ -32,3 +32,16 @@
   for = "/models/*"
   [headers.values]
     Cache-Control = "public, max-age=2592000"
+
+# En-têtes de sécurité sur toutes les pages : pas d'affichage dans un cadre d'un autre site (anti-clickjacking),
+# pas de devinette de type de fichier, adresse de la page non transmise aux autres sites, caméra/micro/position
+# réservés à l'appli elle-même (scanner, caméra d'affluence, suivi du coursier).
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=(self), payment=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"

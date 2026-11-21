@@ -9,6 +9,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { Qr } from "@/components/qr";
 import { useToast } from "@/components/ui/toast";
 import { fcfa } from "@/lib/format";
+import { escapeHtml } from "@/lib/html";
 
 type Person = { id: string; full_name: string; short_code: string; phone: string | null; job: string; balance: number; meals: number; today: boolean; answer?: boolean | null; whatsapp?: boolean };
 type Overview = {
@@ -25,14 +26,14 @@ async function printCard(p: { full_name: string; short_code: string; job: string
   const emp = Math.max(o.price - o.settings.school_share, 0);
   const w = window.open("", "_blank", "width=420,height=640");
   if (!w) return;
-  w.document.write(`<html><head><title>Carte ${p.short_code}</title><style>
+  w.document.write(`<html><head><title>Carte ${escapeHtml(p.short_code)}</title><style>
     body{font-family:system-ui,sans-serif;margin:0;padding:24px;display:flex;justify-content:center}
     .c{width:320px;border:2px solid #16181D;border-radius:22px;padding:20px;text-align:center}
     h1{font-size:15px;margin:0 0 2px;letter-spacing:.04em}h2{font-size:20px;margin:10px 0 2px}
     .code{font:700 22px ui-monospace,monospace;margin:6px 0}.m{font-size:12px;color:#555;margin:4px 0}
     @media print{body{padding:0}}</style></head><body><div class="c">
-    <h1>VATEL · REPAS DU PERSONNEL</h1>${svg}<h2>${p.full_name.replace(/</g, "")}</h2>
-    <p class="m">${jobLabel(p.job)}</p><p class="code">${p.short_code}</p>
+    <h1>VATEL · REPAS DU PERSONNEL</h1>${svg}<h2>${escapeHtml(p.full_name)}</h2>
+    <p class="m">${escapeHtml(jobLabel(p.job))}</p><p class="code">${escapeHtml(p.short_code)}</p>
     <p class="m">Déjeuner de ${o.settings.start} à ${o.settings.end} · ${fcfa(emp)} (l'école paie ${fcfa(o.settings.school_share)})</p>
     </div><script>setTimeout(()=>print(),300)</script></body></html>`);
   w.document.close();

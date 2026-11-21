@@ -62,8 +62,18 @@ export default function ProfilePage() {
     if (!bioOk || !profile) return;
     void (profile.biometric_enabled ? prepareBiometric() : prepareEnable());
   }, [bioOk, profile]);
+  // Activer Face ID : code PIN d'abord (exigé aussi par le serveur), puis un 2e geste pour lancer Face ID
+  const [bioPin, setBioPin] = useState<"pin" | "ready" | null>(null);
+  const [bioPinErr, setBioPinErr] = useState<string | null>(null);
+  async function confirmBioPin(pin: string) {
+    const r = await rpc("check_my_pin", { p_pin: pin });
+    if (!r.ok) return setBioPinErr(r.message);
+    setBioPinErr(null); setBioPin("ready");
+  }
   async function toggleBiometric() {
     if (!profile || bioBusy) return;
+    if (!profile.biometric_enabled && bioPin !== "ready") { setBioPinErr(null); setBioPin("pin"); return; }
+    setBioPin(null);
     setBioBusy(true);
     const r = profile.biometric_enabled ? await disableBiometric() : await enableBiometric();
     setBioBusy(false);
@@ -221,6 +231,13 @@ export default function ProfilePage() {
 
       <Sheet open={pinStep !== null} onClose={() => setPinStep(null)} title={t("Code PIN")}>
         <PinPad key={pinStep} onComplete={onPin} error={pinErr} label={t(pinStep === "old" ? "Code actuel" : "Nouveau code")} />
+      </Sheet>
+      <Sheet open={bioPin !== null} onClose={() => setBioPin(null)} title={en ? `Turn on ${bioName()}` : `Activer ${biometricLabel()}`}>
+        {bioPin === "pin"
+          ? <PinPad label={t("Confirme avec ton code PIN")} error={bioPinErr} onComplete={confirmBioPin} />
+          : <button onClick={toggleBiometric} className="h-14 w-full rounded-full bg-ink text-lg font-extrabold text-white">
+              {en ? `Turn on ${bioName()} now` : `Activer ${biometricLabel()} maintenant`}
+            </button>}
       </Sheet>
     </main>
   );

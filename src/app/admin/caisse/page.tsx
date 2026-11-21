@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { escapeHtml } from "@/lib/html";
 import clsx from "clsx";
 import { Search, Printer, Lock, Unlock, Banknote, CheckCircle2 } from "lucide-react";
 import { rpc, supabase } from "@/lib/supabase/client";
@@ -163,9 +164,9 @@ function printReceipt(r: Receipt) {
   const w = window.open("", "_blank", "width=380,height=560");
   if (!w) return;
   w.document.write(`<html><head><title>Reçu Vatel</title><style>body{font-family:ui-monospace,monospace;padding:16px;width:300px}h1{font-size:18px;margin:0 0 4px}hr{border:0;border-top:1px dashed #999;margin:10px 0}p{display:flex;justify-content:space-between;margin:4px 0;font-size:13px}</style></head><body>
-  <h1>DABALI · Cantine</h1><div style="font-size:12px">Reçu de recharge (espèces)</div><hr/>
-  <p><span>Client</span><b>${r.client}</b></p><p><span>Montant</span><b>${fcfa(r.amount)}</b></p><p><span>Nouveau solde</span><b>${fcfa(r.balance_after)}</b></p>
-  <hr/><p><span>Caissier</span><span>${r.cashier}</span></p><p><span>Date</span><span>${dateTime(r.at)}</span></p><p><span>Réf.</span><span>${r.transaction_id.slice(0, 8).toUpperCase()}</span></p>
+  <h1>VATEL · Cantine</h1><div style="font-size:12px">Reçu de recharge (espèces)</div><hr/>
+  <p><span>Client</span><b>${escapeHtml(r.client)}</b></p><p><span>Montant</span><b>${fcfa(r.amount)}</b></p><p><span>Nouveau solde</span><b>${fcfa(r.balance_after)}</b></p>
+  <hr/><p><span>Caissier</span><span>${escapeHtml(r.cashier)}</span></p><p><span>Date</span><span>${dateTime(r.at)}</span></p><p><span>Réf.</span><span>${escapeHtml(r.transaction_id.slice(0, 8).toUpperCase())}</span></p>
   <hr/><div style="text-align:center;font-size:12px">Merci et bon appétit !</div><script>window.print()</script></body></html>`);
   w.document.close();
 }

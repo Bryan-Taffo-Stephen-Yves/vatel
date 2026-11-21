@@ -79,4 +79,5 @@ export const EN_D: Record<string, string> = {
   // Annulation
   "Commande annulée, sans remboursement.": "Order cancelled, no refund.",
   "Annuler sans remboursement": "Cancel without refund",
+  "Confirme avec ton code PIN": "Confirm with your PIN",
 };
