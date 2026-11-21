@@ -1,5 +1,5 @@
 // Sons et voix du scanner : générés par le navigateur (aucun fichier à télécharger, marche hors ligne).
-import { tones } from "@/lib/sfx";
+import { kitchen, metal, tones } from "@/lib/sfx";
 
 const PREF = "dabali:scan-audio"; // "on" (sons + voix) · "sound" (sons seuls) · "off"
 export type AudioPref = "on" | "sound" | "off";
@@ -9,10 +9,10 @@ export function audioPref(): AudioPref {
 }
 export function setAudioPref(p: AudioPref) { try { localStorage.setItem(PREF, p); } catch {} }
 
-/** Ticket valide : « bip » de caisse net et court (+ petite note plus aiguë, agréable à entendre 300 fois par service). */
+/** Ticket valide : couverts qui tintent sur une assiette (net, court, agréable à entendre 300 fois par service). */
 export function soundOk() {
   if (audioPref() === "off") return;
-  tones([{ f: 1900, at: 0, dur: 0.11, type: "square", vol: 0.12 }, { f: 2530, at: 0.1, dur: 0.09, type: "sine", vol: 0.16 }]);
+  kitchen.clink(); // couverts qui tintent : ticket bon, on sert
   navigator.vibrate?.(70);
 }
 
@@ -39,7 +39,7 @@ export function soundError(code?: string) {
 /** Plat enregistré : « clic » discret. */
 export function soundServed() {
   if (audioPref() === "off") return;
-  tones([{ f: 1760, at: 0, dur: 0.06, type: "triangle", vol: 0.2 }, { f: 2350, at: 0.06, dur: 0.12, type: "triangle", vol: 0.16 }]);
+  metal(1975, 0, 0.5, 0.14, [1, 2.4]); // petit « ting » : plat posé sur le plateau
   navigator.vibrate?.(30);
 }
 

@@ -116,7 +116,7 @@ function Buy() {
     const n = r.ticket_ids.length;
     // Le ticket « sort de l'imprimante », petite vibration, puis on ouvre le QR
     setPrinted({ n, label: t(cfg?.label ?? ""), service, to: gift?.full_name.split(" ")[0] });
-    sfx.success();
+    sfx.purchase();
     const wait = new Promise((ok) => setTimeout(ok, 1700));
     if (gift) { await wait; router.replace("/app"); return; }
     await Promise.all([syncTokens(), wait]);

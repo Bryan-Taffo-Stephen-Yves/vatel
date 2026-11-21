@@ -239,7 +239,7 @@ function Order() {
     setBusy(false);
     setPinOpen(false);
     if (!r.ok) return toast("err", r.message);
-    sfx.success();
+    sfx.purchase();
     setQueued({ summary, at: slot });
     setTimeout(() => router.replace("/app"), 3200);
   }, [item, day, summary, total, slot, lines, chosenExtras, toast, router, t]);
@@ -267,7 +267,7 @@ function Order() {
     }
     setPinOpen(false);
     refresh();
-    sfx.success();
+    sfx.purchase();
     try { localStorage.setItem(`dabali:chef:${r.ticket_id}`, "received"); } catch {} // la mascotte « reçue » vient d'être vue ici
     setDone({ no: r.order_no, dish: r.dish, at: r.pickup_at });
     await Promise.all([syncTokens(), new Promise((ok) => setTimeout(ok, 2200))]);
