@@ -6,7 +6,8 @@ import { homeFor } from "@/lib/roles";
 
 // Accès par espace (la vraie sécurité reste la RLS ; ceci évite d'afficher un écran inutilisable).
 const AREA_ROLES: Record<string, string[]> = {
-  "/app": ["client", "agent", "caissier", "chef", "admin"],
+  // Interface élève / parent : réservée aux clients. L'équipe (agent, caisse, chef, admin) a ses propres écrans.
+  "/app": ["client"],
   "/scan": ["agent", "admin"],
   "/admin": ["caissier", "chef", "admin"],
   "/courses": ["agent", "caissier", "chef", "admin"],

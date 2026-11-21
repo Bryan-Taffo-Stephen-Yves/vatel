@@ -223,7 +223,7 @@ export default function ScanPage() {
           </Link>
           {role === "agent"
             ? <button onClick={logout} aria-label="Déconnexion" className="grid size-9 place-items-center rounded-full bg-white/10"><LogOut className="size-4" /></button>
-            : <Link href="/app/profil" aria-label="Fermer le scanner" className="grid size-9 place-items-center rounded-full bg-white text-ink"><X className="size-5" /></Link>}
+            : <Link href="/admin" aria-label="Fermer le scanner" className="grid size-9 place-items-center rounded-full bg-white text-ink"><X className="size-5" /></Link>}
         </span>
       </header>
       <div className="flex gap-1.5 overflow-x-auto px-4 pb-3 [scrollbar-width:none]">

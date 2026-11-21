@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import {
   LayoutDashboard, Wallet, CalendarDays, UtensilsCrossed, TrendingUp, Boxes, BarChart3, Trash2, Star,
-  ChefHat, ClipboardList, Bike, FileText, Users, Settings, LogOut, ScanLine, Smartphone, UserCog, ShoppingCart, ShieldCheck, MoreHorizontal,
+  ChefHat, ClipboardList, Bike, FileText, Users, Settings, LogOut, ScanLine, UserCog, ShoppingCart, ShieldCheck, MoreHorizontal,
   Gauge,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
@@ -94,7 +94,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   {me && ["agent", "admin"].includes(me.role) && (
                     <Link href="/scan" className="flex h-9 items-center gap-3 rounded-xl px-3 text-sm font-bold text-ink-2 hover:bg-canvas"><ScanLine className="size-4" />Scanner</Link>
                   )}
-                  <Link href="/app" className="flex h-9 items-center gap-3 rounded-xl px-3 text-sm font-bold text-ink-2 hover:bg-canvas"><Smartphone className="size-4" />Appli client</Link>
                   <InstallApp variant="compact" />
                   <PushToggle compact />
                   <Link href="/double-authentification?next=/admin" className="flex h-9 items-center gap-3 rounded-xl px-3 text-sm font-bold text-ink-2 hover:bg-canvas"><ShieldCheck className="size-4" />Double authentification</Link>
