@@ -13,7 +13,7 @@ type Meal = { at: string; dish: string; stars: number | null };
 type Child = { link_id: string; status: "pending" | "active"; id: string; name: string; balance: number | null; allergies: string[] | null; meals: Meal[] | null };
 type Overview = { low_threshold: number; children: Child[]; parents: { link_id: string; status: "pending" | "active"; name: string }[] };
 
-const APP = "https://dabalix.netlify.app";
+const APP = "https://vatel-cantine.netlify.app";
 const first = (n: string) => n.split(" ")[0];
 const when = (iso: string, lang: Lang) => {
   const d = new Date(iso), today = new Date();

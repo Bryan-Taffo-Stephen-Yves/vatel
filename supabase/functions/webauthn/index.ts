@@ -9,7 +9,7 @@ import {
 } from "npm:@simplewebauthn/server@13.3.3";
 import { adminClient, corsHeaders, fail, json, requestUser } from "../_shared/http.ts";
 
-const ALLOWED_HOSTS = ["dabalix.netlify.app", "localhost"];
+const ALLOWED_HOSTS = ["vatel-cantine.netlify.app", "dabalix.netlify.app", "localhost"];
 const GRANT_SECONDS = 120;
 
 const b64url = (u: Uint8Array) => btoa(String.fromCharCode(...u)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");

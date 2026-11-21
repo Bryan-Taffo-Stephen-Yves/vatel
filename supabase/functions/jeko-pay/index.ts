@@ -13,7 +13,7 @@ const METHODS = ["wave", "orange", "mtn", "moov", "djamo"] as const;
 type Method = (typeof METHODS)[number];
 const PREFIX: Partial<Record<Method, string>> = { orange: "07", mtn: "05", moov: "01" };
 const NAME: Record<Method, string> = { wave: "Wave", orange: "Orange Money", mtn: "MTN MoMo", moov: "Moov Money", djamo: "Djamo" };
-const SITE = (Deno.env.get("SITE_URL") ?? "https://dabalix.netlify.app").replace(/\/$/, "");
+const SITE = (Deno.env.get("SITE_URL") ?? "https://vatel-cantine.netlify.app").replace(/\/$/, "");
 const db = adminClient();
 
 const configured = () => !!(Deno.env.get("JEKO_API_KEY") && Deno.env.get("JEKO_API_KEY_ID") && Deno.env.get("JEKO_STORE_ID"));

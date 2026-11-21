@@ -6,7 +6,7 @@ import { adminClient } from "../_shared/http.ts";
 import { prepareOrder } from "../_shared/order.ts";
 import { dietConflicts } from "../_shared/diet.ts";
 
-const APP = "https://dabalix.netlify.app";
+const APP = "https://vatel-cantine.netlify.app";
 const db = adminClient();
 const todayISO = () => new Date().toISOString().slice(0, 10); // Abidjan = UTC+0
 const fcfa = (n: number) => `${n} francs`;

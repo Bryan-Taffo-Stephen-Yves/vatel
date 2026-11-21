@@ -30,7 +30,7 @@ export default function DeliveriesPage() {
   const run = runs?.find((r) => r.id === sel) ?? null;
   const onData = useCallback((t: Track) => setStatus(t.run.status), []);
   const st = status ?? run?.status;
-  const link = run ? `${typeof window !== "undefined" ? window.location.origin : "https://dabalix.netlify.app"}/suivi/${run.track_token}` : "";
+  const link = run ? `${typeof window !== "undefined" ? window.location.origin : "https://vatel-cantine.netlify.app"}/suivi/${run.track_token}` : "";
 
   async function call(action: "create" | "start") {
     setBusy(action);

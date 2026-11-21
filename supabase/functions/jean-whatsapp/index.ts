@@ -11,7 +11,7 @@ import { activeRun, teamMessage } from "../_shared/run-agent.ts";
 import { dietConflicts } from "../_shared/diet.ts";
 
 const MODEL = "claude-opus-5-5";
-const APP = "https://dabalix.netlify.app";
+const APP = "https://vatel-cantine.netlify.app";
 const db = adminClient();
 
 type Cfg = { whatsapp_phone: string | null; green_api_url: string | null; green_api_id: string | null; group_id?: string | null; dry?: boolean };
