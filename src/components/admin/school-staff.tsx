@@ -61,6 +61,14 @@ export function SchoolStaff() {
     return () => clearTimeout(t);
   }, [q, adding]);
 
+  // Réponse du matin donnée par le chef d'équipe (re-toucher le même bouton efface la réponse)
+  async function answerFor(p: Person, answer: boolean | null) {
+    setO((cur) => cur && { ...cur, staff: cur.staff.map((x) => (x.id === p.id ? { ...x, answer } : x)) });
+    const r = await rpc("staff_meal_answer_for", { p_user: p.id, p_answer: answer });
+    if (!r.ok) toast("err", r.message);
+    load();
+  }
+
   async function create() {
     setBusy(true);
     const r = await edge<{ id: string; full_name: string; short_code: string; job: string }>("staff-create", form);
@@ -98,7 +106,7 @@ export function SchoolStaff() {
       {o?.answers && o.staff.length > 0 && (
         <p className="mb-3 rounded-2xl bg-ink px-4 py-3 text-sm font-bold text-white">
           Pour la cuisine, aujourd&apos;hui : <span className="text-lime">{o.answers.yes} oui</span> · {o.answers.no} non · {o.answers.none} sans réponse
-          <span className="block text-xs font-semibold text-white/60">Question envoyée à 7h30 sur WhatsApp (« Tu manges aujourd&apos;hui ? »)</span>
+          <span className="block text-xs font-semibold text-white/60">Question envoyée à 7h30 sur WhatsApp (« Tu manges aujourd&apos;hui ? ») · sans WhatsApp : répondez pour eux avec Oui / Non</span>
         </p>
       )}
       {o && !o.staff.length && <Empty>Aucun membre du personnel inscrit. Ajoutez les agents d&apos;entretien, vigiles…</Empty>}
@@ -113,6 +121,15 @@ export function SchoolStaff() {
               </p>
               <p className="text-xs text-muted">{jobLabel(p.job)} · {p.short_code} · solde {fcfa(p.balance)} · {p.meals} repas ce mois</p>
             </div>
+            {/* Sans WhatsApp (téléphone à touches) : le chef d'équipe répond pour lui, la cuisine a le bon compte */}
+            {!p.today && p.whatsapp === false && (
+              <div className="flex shrink-0 overflow-hidden rounded-full border border-line text-xs font-bold" role="group" aria-label={`Mange aujourd'hui : ${p.full_name}`}>
+                <button onClick={() => answerFor(p, p.answer === true ? null : true)} aria-pressed={p.answer === true}
+                  className={p.answer === true ? "bg-lime px-2.5 py-1.5" : "px-2.5 py-1.5 hover:bg-canvas"}>Oui</button>
+                <button onClick={() => answerFor(p, p.answer === false ? null : false)} aria-pressed={p.answer === false}
+                  className={p.answer === false ? "bg-ink px-2.5 py-1.5 text-white" : "border-l border-line px-2.5 py-1.5 hover:bg-canvas"}>Non</button>
+              </div>
+            )}
             <button onClick={() => setCard(p)} className="flex items-center gap-1 text-xs font-bold"><IdCard className="size-4" />Carte</button>
             <button onClick={() => remove(p)} className="text-xs font-bold text-muted hover:text-err">Retirer</button>
           </div>
