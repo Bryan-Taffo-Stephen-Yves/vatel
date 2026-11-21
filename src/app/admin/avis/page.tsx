@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui/toast";
 import { reviewPhotoUrl } from "@/lib/reviews";
 import { Card, PageTitle, Badge } from "@/components/admin/ui";
 import { DishImage } from "@/components/app/dish-image";
+import { DishLeaderboard } from "@/components/admin/dish-leaderboard";
 import { dateTime } from "@/lib/format";
 
 type R = {
@@ -40,6 +41,7 @@ export default function RatingsPage() {
   return (
     <>
       <PageTitle title="Avis clients" subtitle="Demandés 15 min après chaque repas · photos et plaintes" />
+      <DishLeaderboard />
       {r && r.complaints.length > 0 && (
         <Card className="mb-4" title="Plaintes des 30 derniers jours" subtitle="Ce qui revient le plus souvent">
           <div className="flex flex-wrap gap-2">

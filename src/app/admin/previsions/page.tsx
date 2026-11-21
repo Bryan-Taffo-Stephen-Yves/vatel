@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { ShoppingCart, Download, Info } from "lucide-react";
+import { ShoppingCart, Download, Info, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { Card, PageTitle, Badge, Empty, Kpi, downloadCsv } from "@/components/admin/ui";
 import { ServiceBadge } from "@/components/app/service-icon";
@@ -12,7 +12,9 @@ import type { ServiceKind } from "@/lib/types";
 type F = {
   services: { service: ServiceKind; label: string; history: number | null; outstanding: number; expected: number; basis: string;
     guests?: number; guest_events?: { name: string; guests: number; dishes: { name: string; qty: number }[] }[] }[];
-  items: { id: string; service: ServiceKind; dish: string; planned: number | null; share: number; expected: number; recommended: number; basis: string; popularity: number; observed: number | null; days: number; prior: number; stars: number | null }[];
+  items: { id: string; service: ServiceKind; dish: string; planned: number | null; share: number; expected: number; recommended: number; basis: string; popularity: number; observed: number | null; days: number; prior: number; stars: number | null;
+    left_pct?: number | null; left_scans?: number; portion_cut?: number }[];
+  waste_advice?: string[];
   ingredients: { id: string; name: string; unit: string; stock: number; need: number; to_buy: number; cost: number }[];
 };
 
@@ -75,22 +77,28 @@ export default function ForecastPage() {
         </div>
       )}
 
+      {f?.waste_advice && f.waste_advice.length > 0 && (
+        <Card className="mb-4" title="Assiettes laissées à moitié" subtitle="Photos d'assiettes rendues, 30 derniers jours : les besoins en ingrédients sont déjà réduits">
+          <ul className="space-y-1.5 text-sm">{f.waste_advice.map((a) => <li key={a} className="flex gap-2"><Trash2 className="mt-0.5 size-4 shrink-0 text-err" />{a}</li>)}</ul>
+        </Card>
+      )}
+
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <Card title="Portions recommandées par plat" pad={false}
-          action={f && <button onClick={() => downloadCsv(`previsions-${date}.csv`, [["Service", "Plat", "Part des choix (%)", "Attendus", "À préparer", "Prévu au menu"], ...f.items.map((i) => [f.services.find((s) => s.service === i.service)?.label ?? i.service, i.dish, i.share, i.expected, i.recommended, i.planned])])}
+          action={f && <button onClick={() => downloadCsv(`previsions-${date}.csv`, [["Service", "Plat", "Part des choix (%)", "Attendus", "À préparer", "Laissé dans l'assiette (%)", "Prévu au menu"], ...f.items.map((i) => [f.services.find((s) => s.service === i.service)?.label ?? i.service, i.dish, i.share, i.expected, i.recommended, i.left_pct ?? "", i.planned])])}
             className="mr-5 flex items-center gap-1.5 text-sm font-bold text-muted hover:text-ink"><Download className="size-4" />CSV</button>}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-y border-line bg-canvas text-left text-xs font-bold uppercase tracking-wider text-muted">
                 <th className="px-5 py-2.5">Plat</th><th className="px-2">Popularité</th><th className="px-2 text-right">Part</th><th className="px-2 text-right">Attendus</th>
-                <th className="px-2 text-right">À préparer</th><th className="px-5 text-right">Prévu au menu</th></tr></thead>
+                <th className="px-2 text-right">À préparer</th><th className="px-2 text-right" title="Part laissée dans l'assiette (30 jours, photos d'assiettes rendues)">Laissé</th><th className="px-5 text-right">Prévu au menu</th></tr></thead>
               <tbody>
-                {f?.items.length === 0 && <tr><td colSpan={6} className="p-5"><Empty>Pas de menu ce jour-là</Empty></td></tr>}
+                {f?.items.length === 0 && <tr><td colSpan={7} className="p-5"><Empty>Pas de menu ce jour-là</Empty></td></tr>}
                 {f?.services.map((s) => {
                   const rows = f.items.filter((i) => i.service === s.service);
                   if (!rows.length) return null;
                   return [
-                    <tr key={s.service}><td colSpan={6} className="px-5 pb-1 pt-4 text-xs font-extrabold uppercase tracking-wider text-muted">{s.label} · {s.expected} repas attendus</td></tr>,
+                    <tr key={s.service}><td colSpan={7} className="px-5 pb-1 pt-4 text-xs font-extrabold uppercase tracking-wider text-muted">{s.label} · {s.expected} repas attendus</td></tr>,
                     ...rows.map((i) => {
                       const over = i.planned != null && i.planned > i.recommended * 1.25;
                       const under = i.planned != null && i.planned < i.expected;
@@ -107,6 +115,9 @@ export default function ForecastPage() {
                           <td className="whitespace-nowrap px-2 text-right text-muted">{i.share} %</td>
                           <td className="px-2 text-right">{i.expected}</td>
                           <td className="px-2 text-right"><span className="rounded-lg bg-lime px-2 py-1 font-extrabold">{i.recommended}</span></td>
+                          <td className="whitespace-nowrap px-2 text-right" title={i.left_pct != null ? `${i.left_scans} assiettes analysées${i.portion_cut ? ` · ingrédients −${i.portion_cut} %` : ""}` : "Moins de 3 assiettes analysées"}>
+                            {i.left_pct != null ? <span className={clsx("text-xs font-bold", i.left_pct >= 25 ? "text-err" : "text-muted")}>{i.left_pct} %</span> : <span className="text-xs text-off">—</span>}
+                          </td>
                           <td className="px-5 text-right">{i.planned ?? "∞"} {over && <Badge tone="warn">trop</Badge>}{under && <Badge tone="err">pas assez</Badge>}</td>
                         </tr>
                       );
