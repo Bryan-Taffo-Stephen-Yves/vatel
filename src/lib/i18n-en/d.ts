@@ -137,6 +137,7 @@ export const EN_D: Record<string, string> = {
   "Un autre compte élève": "Another student account", "Recharger son enfant, suivre ses repas": "Top up your child, follow their meals",
   "Scanner les QR, repas du personnel": "Scan QR codes, staff meals", "Recharges en espèces, bilan, invités": "Cash top-ups, daily report, guests",
   "Menus IA, prévisions, stock, courses": "AI menus, forecasts, stock, shopping", "Tableau de bord, rapports, équipe": "Dashboard, reports, team",
+  "Voir le reçu": "See the receipt",
   "Moi": "Me", "Réserver ce plat": "Book this dish", "Wave, Orange Money, MTN, Moov": "Wave, Orange Money, MTN, Moov",
   "Repas et argent, détail de chaque opération": "Meals and money, details of every transaction",
   "Envoyer de l'argent": "Send money", "À un camarade, avec son code": "To a friend, with their code", "recharges réussies": "successful top-ups", "Aucune recharge pour l'instant.": "No top-ups yet.",

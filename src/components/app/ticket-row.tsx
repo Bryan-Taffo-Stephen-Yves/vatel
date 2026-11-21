@@ -14,7 +14,7 @@ export function TicketRow({ t }: { t: Ticket }) {
   const en = useLang() === "en";
   const st = displayStatus(t);
   const meta = STATUS_META[st];
-  const clickable = st === "valid";
+  const clickable = st === "valid"; // valide : QR à présenter ; passé : reçu (toujours ouvrable, en plus discret)
   const order = isOrder(t);
   const dish = order ? orderDish(t) : null;
   const sub = order
@@ -45,8 +45,8 @@ export function TicketRow({ t }: { t: Ticket }) {
       {clickable && (
         <span className="grid size-10 place-items-center rounded-xl bg-ink text-lime"><QrCode className="size-5" /></span>
       )}
-      {!clickable && <ChevronRight className="size-5 text-transparent" />}
+      {!clickable && <ChevronRight className="size-5 text-off" />}
     </div>
   );
-  return clickable ? <Link href={`/app/tickets/${t.id}`} className="block transition active:scale-[0.98]">{body}</Link> : body;
+  return <Link href={`/app/tickets/${t.id}`} className="block transition active:scale-[0.98]">{body}</Link>;
 }
