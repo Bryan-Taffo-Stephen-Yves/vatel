@@ -33,6 +33,8 @@ select tests.eq((public.occupancy_now() ->> 'source'), 'vision', 'source : camé
 update public.occupancy_snapshots set rate = 20, occupied_tables = 4;
 select tests.eq((public.occupancy_now() ->> 'rate')::numeric, 50::numeric, 'caméra 20 % < plateaux 50 % : 50 %');
 select tests.eq((public.occupancy_now() ->> 'source'), 'vision+trays', 'source : caméra + plateaux');
+update public.occupancy_snapshots set total_tables = 5, occupied_tables = 4;
+select tests.eq((public.occupancy_now() ->> 'total_tables')::int, 5, 'caméra : total = tables suivies (4/5, pas 4/20)');
 delete from public.occupancy_snapshots;
 
 -- Tous les plateaux sortis : attente probable jusqu'au retour du plus ancien

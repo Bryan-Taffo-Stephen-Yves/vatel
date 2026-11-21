@@ -30,6 +30,8 @@ export default function ReportsPage() {
   const [r, setR] = useState<Ratings | null>(null);
   const [low, setLow] = useState<Stock[]>([]);
   const [g, setG] = useState<Guests | null>(null);
+  // Repas du personnel (part école / part employés) sur la période
+  const [st, setSt] = useState<{ meals: number; school: number; employees: number } | null>(null);
 
   useEffect(() => {
     setS(null); setW(null);
@@ -38,6 +40,7 @@ export default function ReportsPage() {
     sb.rpc("admin_waste", { p_from: from, p_to: today }).then(({ data }) => setW(data as Waste));
     sb.rpc("admin_ratings").then(({ data }) => setR(data as Ratings));
     sb.rpc("guest_report", { p_from: from, p_to: today }).then(({ data }) => setG(data?.ok ? (data as Guests) : null));
+    sb.rpc("staff_overview", { p_from: from, p_to: today }).then(({ data }) => setSt(data?.ok ? data.totals : null));
     sb.from("ingredients").select("name, unit, stock_qty, alert_threshold").order("name")
       .then(({ data }) => setLow(((data ?? []) as Stock[]).filter((i) => Number(i.stock_qty) < Number(i.alert_threshold))));
   }, [from, today]);
@@ -54,7 +57,8 @@ export default function ReportsPage() {
       ["Chiffre d'affaires (repas servis)", s.revenue], ["Ventes de tickets", s.sales], ["Recharges", s.recharges],
       ["Tickets vendus", s.tickets], ["Repas servis", s.served], ["Tickets expirés", s.expired], ["Annulations", s.cancelled],
       ["Portions préparées", w.prepared], ["Portions jetées", w.lost], ["Coût du gaspillage (F)", w.cost],
-      ["Réceptions : repas invités servis", g?.served ?? 0], ["Réceptions : payé par l'école (F)", g?.cost ?? 0], [],
+      ["Réceptions : repas invités servis", g?.served ?? 0], ["Réceptions : payé par l'école (F)", g?.cost ?? 0],
+      ["Personnel : repas servis", st?.meals ?? 0], ["Personnel : part de l'école (F)", st?.school ?? 0], ["Personnel : part des employés (F)", st?.employees ?? 0], [],
       ["Jour", "Chiffre d'affaires", "Repas servis"], ...s.daily.map((d) => [d.day, d.revenue, d.tickets]), [],
       ["Plat", "Servis", "Recettes", "Note"], ...s.dishes.map((d) => [d.name, d.sold, d.revenue, d.stars]),
     ]);
@@ -111,6 +115,12 @@ export default function ReportsPage() {
               <Section title="Réceptions (invités payés par l'école)">
                 <p className="text-sm"><b>{g.served}</b> repas servis à des invités lors de <b>{g.events}</b> événement{g.events > 1 ? "s" : ""} ·{" "}
                   <b>{fcfa(g.cost)}</b> pris sur le budget Réceptions{g.returned > 0 && <span className="text-muted"> · {g.returned} bon{g.returned > 1 ? "s" : ""} non utilisé{g.returned > 1 ? "s" : ""} rendu{g.returned > 1 ? "s" : ""} au budget</span>}.</p>
+              </Section>
+            )}
+
+            {st && st.meals > 0 && (
+              <Section title="Repas du personnel (subventionnés)">
+                <p className="text-sm"><b>{st.meals}</b> repas servis au personnel · part de l&apos;école <b>{fcfa(st.school)}</b> · part des employés <b>{fcfa(st.employees)}</b>.</p>
               </Section>
             )}
 

@@ -115,7 +115,7 @@ export function SchoolStaff() {
           <div key={p.id} className="flex items-center gap-3 py-3">
             <span className="grid size-10 shrink-0 place-items-center rounded-full bg-canvas text-sm font-extrabold">{p.full_name.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-bold">{p.full_name}{" "}
+              <p className="flex flex-wrap items-center gap-1 font-bold"><span className="min-w-0 truncate">{p.full_name}</span>
                 {p.today ? <Badge tone="ok">a mangé</Badge> : p.answer === true ? <Badge tone="lime">mange</Badge> : p.answer === false ? <Badge>ne mange pas</Badge> : null}
                 {p.whatsapp === false && <Badge tone="warn">sans WhatsApp</Badge>}
               </p>
