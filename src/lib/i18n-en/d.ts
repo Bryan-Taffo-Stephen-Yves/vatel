@@ -76,4 +76,7 @@ export const EN_D: Record<string, string> = {
   "Numéro mobile à 10 chiffres (01, 05 ou 07…).": "10-digit mobile number (01, 05 or 07…).",
   "Paiement sécurisé par Jèko : tu confirmes sur ton téléphone, le solde est crédité dès la confirmation.": "Secured by Jèko: you confirm on your phone, and your balance is credited as soon as it's confirmed.",
   "Paiement Mobile Money (Wave, Orange Money, MTN, Moov, Djamo) sécurisé par Jèko.": "Mobile Money payment (Wave, Orange Money, MTN, Moov, Djamo) secured by Jèko.",
+  // Annulation
+  "Commande annulée, sans remboursement.": "Order cancelled, no refund.",
+  "Annuler sans remboursement": "Cancel without refund",
 };

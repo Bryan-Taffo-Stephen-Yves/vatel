@@ -28,6 +28,10 @@ export default function TicketPage({ params }: { params: Promise<{ id: string }>
   const [token, setToken] = useState<string | null>(null);
   const [offline, setOffline] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [deadline, setDeadline] = useState<string | null>(null);
+  useEffect(() => {
+    supabase().rpc("ticket_cancel_deadline", { p_ticket_id: id }).then(({ data }) => { if (typeof data === "string") setDeadline(data); }, () => {});
+  }, [id]);
   const [justScanned, setJustScanned] = useState(false);
   const last = useRef<string | undefined>(undefined);
   const lastPrep = useRef<string | null | undefined>(undefined);
@@ -88,15 +92,22 @@ export default function TicketPage({ params }: { params: Promise<{ id: string }>
   const cur = order ? ostep + 1 : step;
   const allDone = order ? ostep === 3 : step === 3;
 
+  // Commande : remboursée avant l'heure limite ; après, annulation possible mais sans remboursement (confirmée)
+  const late = order && deadline ? now > new Date(deadline).getTime() : false;
   async function cancel() {
-    if (!confirm(en
+    if (!late && !confirm(en
       ? (order ? `Cancel order no. ${t!.order_no}? ${fcfa(t!.total)} will be refunded to your balance.`
         : `Cancel this ${label} ticket? ${t!.total > 0 ? fcfa(t!.total) + " will be refunded to your balance." : ""}`)
       : (order ? `Annuler la commande n° ${t!.order_no} ? ${fcfa(t!.total)} seront remboursés sur votre solde.`
         : `Annuler ce ticket ${label} ? ${t!.total > 0 ? fcfa(t!.total) + " seront remboursés sur votre solde." : ""}`))) return;
-    const r = await rpc<{ refunded: number }>("cancel_ticket", { p_ticket_id: id });
+    let r = await rpc<{ refunded: number; no_refund?: boolean }>("cancel_ticket", { p_ticket_id: id });
+    if (!r.ok && r.code === "NO_REFUND_CONFIRM") {
+      if (!confirm(en ? "The cancellation deadline has passed: you can still cancel, but you won't be refunded. Cancel anyway?" : r.message)) return;
+      r = await rpc<{ refunded: number; no_refund?: boolean }>("cancel_ticket", { p_ticket_id: id, p_no_refund: true });
+    }
     if (!r.ok) return toast("err", r.message);
-    toast("ok", r.refunded > 0 ? (en ? `${fcfa(r.refunded)} refunded to your balance.` : `${fcfa(r.refunded)} remboursés sur votre solde.`) : tr("Ticket annulé, points rendus."));
+    toast("ok", r.no_refund ? tr("Commande annulée, sans remboursement.")
+      : r.refunded > 0 ? (en ? `${fcfa(r.refunded)} refunded to your balance.` : `${fcfa(r.refunded)} remboursés sur votre solde.`) : tr("Ticket annulé, points rendus."));
     refresh();
     router.replace("/app/tickets");
   }
@@ -219,8 +230,17 @@ export default function TicketPage({ params }: { params: Promise<{ id: string }>
           <p className="mt-4 flex items-center justify-center gap-2 text-xs font-semibold text-muted">
             <Sun className="size-4" /> {tr("Montez la luminosité pour un scan instantané")}
           </p>
-          {(!order || t.prep_status === "received") && (
-            <Button variant="ghost" block className="mt-2 text-err" onClick={cancel}>{order ? tr("Annuler la commande (remboursée)") : tr("Annuler et me faire rembourser")}</Button>
+          {order && deadline && (
+            <p className={clsx("mt-3 text-center text-[13px] font-semibold", late ? "text-err" : "text-muted")}>
+              {late
+                ? (en ? `Refund deadline passed (${time(deadline)}): cancelling is still possible, without a refund.` : `Heure limite passée (${time(deadline)}) : annulation possible, sans remboursement.`)
+                : (en ? `Refunded if cancelled before ${time(deadline)}.` : `Annulation remboursée jusqu'à ${time(deadline)}.`)}
+            </p>
+          )}
+          {(!order || t.prep_status === "received" || late) && (
+            <Button variant="ghost" block className="mt-2 text-err" onClick={cancel}>
+              {order ? (late ? tr("Annuler sans remboursement") : tr("Annuler la commande (remboursée)")) : tr("Annuler et me faire rembourser")}
+            </Button>
           )}
         </>
       )}
