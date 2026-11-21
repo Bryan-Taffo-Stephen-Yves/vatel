@@ -29,7 +29,7 @@ const SCHEMA = {
         },
       },
     },
-    explications: { type: "array", items: { type: "string" }, description: "4 à 6 choix expliqués, avec les chiffres" },
+    explications: { type: "array", items: { type: "string" }, description: "4 à 6 choix expliqués, avec les chiffres et ce qu'en disent les élèves" },
   },
 } as const;
 
@@ -41,7 +41,12 @@ Règles impératives :
 - Les plats populaires (popularité > 1,2) reviennent 2 à 3 fois dans la semaine ; les plats avec beaucoup de plaintes ou une note < 3,8 au plus une fois ; un plat dont un ingrédient est en rupture : évite-le en début de semaine.
 - Au déjeuner, garde chaque jour au moins une option légère ou végétarienne (catégorie Végétarien ou salade).
 - Portions prévues (planned_qty) : répartis les repas attendus du service ce jour-là entre ses plats selon leur popularité, + 5 % de marge, arrondi ; à défaut d'historique, 20 à 30 portions par plat.
-Les explications sont en français simple, avec les chiffres (popularité, note, plaintes, coût).`;
+Ce que disent les élèves (avis, photos d'assiettes) — à utiliser en priorité :
+- laisse_pct_30j = % laissé dans l'assiette (photos des assiettes rendues). À 30 % ou plus : le plat au plus une fois, portions prévues réduites de la moitié de ce % (au plus −25 %).
+- plaintes_types_30j (froid, pas_cuit, trop_sale, fade, portion, attente, corps_etranger, autre) et avis_recents : un plat « fade » ou « trop salé » peut revenir si la note reste correcte, mais dis-le dans les explications (« revoir l'assaisonnement ») ; « corps_etranger » : ne le propose pas cette semaine.
+- note_7j comparée à « note » : tendance récente (en hausse : le garder ; en baisse : l'espacer).
+- rapport_semaine_passee : conseils du rapport du lundi (« à garder », « à revoir ») ; suis-les sauf contre-indication.
+Les explications sont en français simple, avec les chiffres et ce qu'en disent les élèves, avec l'émotion de la note (😡 < 1,5 ≤ 😕 < 2,5 ≤ 😐 < 3,5 ≤ 😋 < 4,5 ≤ 😍). Exemples : « Garba gardé 3 fois : 😍 4,8, en hausse » ; « Salade composée une seule fois, portions −20 % : 46 % laissé, jugée “fade” ».`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
