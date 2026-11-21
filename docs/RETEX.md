@@ -1,0 +1,138 @@
+# Retour d'expérience : refaire Dabali en 2 à 3 heures le jour du hackathon
+
+Ce projet est une **répétition**. Le jour J, on doit tout reconstruire vite. Ce fichier liste ce qui nous a fait
+perdre du temps et ce qu'il faut préparer **avant** le hackathon. À compléter à chaque répétition.
+
+## 1. Les décisions à figer dès le départ (sinon on refait tout)
+
+| Décision | Choix retenu | Ce que ça nous a coûté de changer en cours de route |
+|---|---|---|
+| Ticket lié à un plat ou générique ? | **Générique par type de repas** (petit-déj 500, déjeuner 2 500, snack 700, dîner 2 500) ; le plat se choisit **au comptoir** | Refonte complète (base, achat, scan, prévisions, tests) |
+| Durée de validité | **48 h** | — |
+| Supplément | en quantité : jusqu'à 1 entrée et 1 dessert **par ticket** (10 tickets → jusqu'à 10 desserts, au choix par article) | Le premier modèle (1 seul supplément pour tout l'achat) ne convenait pas |
+| Fidélité | **10 points = 1 petit-déjeuner offert** | — |
+| Argent d'un ticket | revient au prestataire **au scan** ; ticket non scanné **remboursé automatiquement** à l'expiration, rappel 3 h avant | Recalcul des chiffres + remboursement rétroactif de l'historique |
+| Thème | mobile, **clair**, seul l'écran QR s'inspire des maquettes | Refonte du design |
+
+## 2. Les erreurs à ne pas refaire
+
+1. **Photos des plats** : chercher des photos au fil de l'eau (Wikimedia, puis Pexels…) a pris beaucoup de temps,
+   et des services (petit-déjeuner, snack) se sont retrouvés sans image.
+   → **Toutes les photos sont maintenant dans le dépôt** (`public/dishes/*.jpg`) et le seed les référence.
+   Wikimedia bloque vite les téléchargements en série (erreur 429) : ne pas compter dessus le jour J.
+   **Toujours optimiser** une nouvelle photo : `python scripts/optimize-photos.py public/dishes/xxx.jpg`
+   (4:3, 720×540, < 100 Ko). Les 17 photos sont passées de 2,3 Mo à 0,9 Mo.
+   Pour un nouveau plat : ajouter la photo dans `public/dishes/` **en même temps** que le plat.
+2. **Hébergement Netlify** : le déploiement automatique depuis l'outil a été refusé ; il a fallu passer par l'interface.
+   → Préparer le site Netlify à l'avance (lié au dépôt GitHub, variables d'environnement remplies).
+3. **Secrets Supabase** : le stockage des secrets des fonctions était « en pause ».
+   → La clé QR est dérivée de la clé service_role ; la clé Anthropic est dans **Supabase Vault**. Prévoir les deux
+   solutions dès le début.
+4. **Réglages Supabase oubliés** : désactiver « Confirm email » et mettre l'URL du site (Site URL) dès la création.
+5. **Écraser le dossier `.git`** en copiant le squelette Next.js : créer le squelette **dans un dossier vide à part**.
+6. **Tests après la refonte** : 7 fichiers de tests à réécrire. → Écrire les tests sur le modèle **final** (section 1).
+7. **Numéros de migration** : les fichiers locaux doivent porter le même numéro que dans Supabase (renommage
+   systématique après chaque `apply_migration`).
+8. **Arrondis d'affichage** : `to_char(x, 'FM999990.##')` arrondissait à l'unité (« 10 kg » au lieu de 9,8).
+   → Utiliser la fonction `public._num()`.
+
+9. **Fonctions testées une par une, jamais l'ensemble** : les tests vérifient que tout marche, pas que c'est clair.
+   Des défauts visibles sont passés (tickets expirés sur l'accueil, « 19 points » affichés comme 10, « Ventes −6 000 »,
+   barre qui cache le texte). → Après chaque fonction : captures des écrans touchés, sur téléphone, **avec des données
+   accumulées** (points > 10, remboursements, listes longues), relues comme un utilisateur avant de dire « fini ».
+10. **Animation qui laisse un `transform`** sur un conteneur de page : les éléments `position: fixed` à l'intérieur
+   (barres du bas, feuilles) se décalent. → `animation-fill-mode: backwards` (pas `both`/`forwards`) : finir sur
+   `transform: none` ne suffit pas, Chrome garde `translateY(0)`. Vérifier en ouvrant une feuille en bas d'une page longue.
+
+11. **Hors ligne cassé** : `auth.getUser()` interroge le serveur → sans réseau, « personne de connecté » et pages
+   qui plantent ; le service worker gardait les pages **sans leurs fichiers JS** → boutons inactifs.
+   → `getSession()` (lu sur le téléphone), cache local des listes, service worker qui garde pages + fichiers
+   (message « warm »), écran d'erreur par page. Tester avec `context.setOffline(true)` dans Playwright.
+
+## 3. Ordre de construction le jour J (cible : 2-3 h)
+
+1. Créer le projet Supabase, le site Netlify (lié au dépôt GitHub) et le jeton Supabase (10 min).
+2. Remplir `scripts/install.env` (copie de `scripts/install.env.example`) puis **une seule commande** :
+   ```bash
+   bash scripts/install.sh
+   ```
+   Elle applique les migrations dans l'ordre (une seule fois chacune), charge les données de démo (comptes,
+   plats **avec photos**, menus, historique), range la clé Anthropic dans Vault, déploie les 4 Edge Functions
+   et vérifie que les soldes sont justes. Relançable sans risque.
+   Test sans Supabase : `bash scripts/install.sh --local` (Postgres local).
+3. Les 3 réglages affichés à la fin du script (Confirm email, Site URL, variables Netlify) (5 min).
+4. Lancer `supabase/tests/run.sh` et `scripts/e2e-deployed.js` (10 min).
+5. Répéter la démo (section 4).
+
+## 4. Le scénario de démo (à répéter)
+
+1. Étudiant : achète 2 tickets Déjeuner avec dessert, ouvre le QR (même en mode avion).
+2. Agent : scanne, choisit le plat ; 2ᵉ scan refusé ; QR falsifié refusé ; l'étudiant voit « Bon appétit ! ».
+3. Admin : « Encaissé · repas servis » augmente au scan ; rupture d'un plat → grisé chez l'étudiant en < 3 s.
+4. Chef : Prévisions (popularité des plats + brief de l'assistant IA), Courses (fiche auto, envoi à l'agent,
+   rangement par rayon par l'IA).
+5. Client sans téléphone : Agent → « Sans téléphone » → nom → PIN 2580 → validé (section 4 ter).
+6. (Si lancé) Caméra : la file d'attente et le temps d'attente en direct.
+
+## 4 bis. Double authentification
+
+Désactivée dans les données de démo (seed) pour que les boutons « Admin » et « Caisse » restent utilisables en
+présentation. En production : Admin → Paramètres → cocher Admin et Caisse (une application type Google Authenticator
+est alors demandée à la première connexion).
+
+## 4 ter. Client sans téléphone (éteint, perdu, volé)
+
+- **Pas de réseau** : le QR est gardé dans le téléphone, il s'affiche en mode avion.
+- **Téléphone éteint ou perdu** : au scanner, bouton « Sans téléphone » → nom ou code Dabali → le **client** tape
+  son code PIN sur le téléphone de l'agent (`redeem_with_pin`). Le ticket est validé comme un scan.
+  Sécurité : 3 PIN faux = PIN bloqué 15 min + alerte au client ; 10 PIN faux en 1 h = ce mode bloqué pour l'agent ;
+  le client est prévenu à chaque repas validé sans QR ; marqué « sans QR » dans l'historique des scans.
+- **Téléphone perdu ou volé** : Profil → « J'ai perdu mon téléphone » (ou case à cocher au comptoir) : nouveaux QR
+  (les anciens gardés hors ligne sont refusés), autres sessions fermées, notifications retirées de l'ancien appareil.
+- Démo : compte Agent → « Sans téléphone » → « Aya » (DB-2026) → PIN 2580.
+
+## 4 quater. Le jour du concours : approvisionnement automatique
+
+À construire en ≈ 1 h en simulation : voir `docs/CAHIER_DES_CHARGES.md §20` (fournisseurs, agent vocal qui appelle,
+Google Sheet « Journal des commandes », agent WhatsApp Green API qui publie aussitôt dans le groupe, coursier Yango).
+À préparer avant : liste des vrais fournisseurs, comptes Retell/Twilio, compte entreprise Yango (+ jeton API),
+agent Green API sur un numéro dédié.
+
+## 4 quinquies. Jean (WhatsApp, téléphone) : ce qu'on a appris
+
+- **Secrets** : une Edge Function déjà démarrée garde l'ancienne valeur → redéployer après chaque changement de clé.
+- **Vérifier les droits d'une clé avant de chercher un bug** : ElevenLabs renvoyait 401 « missing the permission
+  speech_to_text » → cocher *Speech to Text* sur la clé.
+- **Un numéro WhatsApp = une seule instance Green API** : prévoir une puce dédiée à Jean dès le départ.
+- **Trop de messages pour commander** (5 allers-retours) → réduit à 2 : plat → heure → lien ; la confirmation
+  Face ID / PIN dans l'appli remplace le « Oui ? ». Laisser écrire l'heure (« 13h45 ») et le raccourci « 9 13h ».
+- **Boutons** : 3 au plus et 20 caractères → libellés courts dédiés, et toujours accepter le numéro en réponse.
+- **Vitesse** : salutation, menu, solde et parcours de commande sans IA (instantané) ; Claude seulement pour le texte libre.
+- **Retell** : l'API a changé (`POST /v2/list-agents`, résultats dans `items`) ; `response_engine` absent de la liste
+  → le relire avec `get-agent`. Configurer l'agent par l'API (`retell-setup`) plutôt qu'à la main.
+- **Ne jamais coller une clé ou un mot de passe dans le chat** : déposer directement dans les secrets Supabase.
+- Les migrations avec DELETE/DROP peuvent bloquer l'outil Supabase (question de confirmation) → les coller dans
+  l'éditeur SQL.
+
+## 4 sexies. Tournée du coursier suivie en direct
+
+- Simulation : pg_cron accepte « 10 seconds » (pg_cron ≥ 1.5) ; la tournée de démo dure ≈ 5 min (`speed` = 12).
+  À 30, elle durait 2 min : trop court pour intervenir dans le groupe.
+- L'heure d'arrivée affichée suit le rythme simulé, sinon « dans 14 min » alors que le coursier arrive en 2 min.
+- `pg_net` n'envoie les requêtes qu'après la fin de la transaction : pour tester une Edge Function depuis SQL,
+  lire la réponse dans une requête suivante.
+- Les tuiles OpenStreetMap et OSRM sont bloquées dans l'environnement de développement (pas sur les téléphones ni
+  sur Supabase) : la carte s'y affiche grise, c'est normal.
+- Après `next build`, relancer proprement `next start` (sinon CSS en 400 et page blanche).
+
+## 5. Ce qui manque encore (à faire avant le jour J)
+
+- [x] Script unique « tout installer » : `scripts/install.sh`.
+- [ ] Désactiver « Confirm email » et régler la Site URL dans Supabase.
+- [x] Changer la clé Anthropic (elle a été collée dans une conversation).
+- [ ] Jean : puce WhatsApp dédiée + remettre le webhook de l'agent Moov.
+- [ ] Jean : test réel Retell (Test Audio), puis numéro de téléphone et appel de rappel 15 min avant la fin.
+- [ ] Jean : validation Meta WhatsApp Cloud (boutons officiels, PIN masqué).
+- [ ] Réinitialiser la double authentification Retell (secret apparu dans une conversation).
+- [ ] Groupe WhatsApp « Dabali – Approvisionnement » avec le numéro de Jean, puis écrire « #dabali » dedans.
+- [ ] Appels fournisseurs réels : acheter un numéro Retell autorisé vers +225, l'enregistrer dans Appels fournisseurs ; voix à accent ivoirien.
