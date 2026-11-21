@@ -57,7 +57,10 @@ export default function ProfilePage() {
   const [bioOk, setBioOk] = useState<boolean | null>(null);
   const [bioBusy, setBioBusy] = useState(false);
   useEffect(() => { biometricSupported().then(setBioOk); }, []);
-  const bioName = () => (en && biometricLabel() === "l'empreinte" ? "fingerprint" : biometricLabel());
+  // Libellé (Face ID / empreinte) calculé sur le téléphone seulement : le même texte au rendu serveur et au premier affichage
+  const [bioLabel, setBioLabel] = useState("Face ID");
+  useEffect(() => setBioLabel(biometricLabel()), []);
+  const bioName = () => (en && bioLabel === "l'empreinte" ? "fingerprint" : bioLabel);
   useEffect(() => {
     if (!bioOk || !profile) return;
     void (profile.biometric_enabled ? prepareBiometric() : prepareEnable());
@@ -81,7 +84,7 @@ export default function ProfilePage() {
     await refresh();
     toast("ok", en
       ? (profile.biometric_enabled ? `${bioName()} turned off.` : `${bioName()} turned on: the app and payments are protected.`)
-      : (profile.biometric_enabled ? `${biometricLabel()} désactivé.` : `${biometricLabel()} activé : l'appli et les paiements sont protégés.`));
+      : (profile.biometric_enabled ? `${bioLabel} désactivé.` : `${bioLabel} activé : l'appli et les paiements sont protégés.`));
   }
   async function pickAvatar(id: string) {
     if (!profile) return;
@@ -117,7 +120,11 @@ export default function ProfilePage() {
 
   async function logout() {
     await supabase().auth.signOut();
-    try { ["dabali:me", "dabali:tickets", "dabali:qr"].forEach((k) => localStorage.removeItem(k)); } catch {}
+    // Données personnelles gardées sur le téléphone : effacées à la déconnexion (le prochain compte n'en voit rien)
+    try {
+      ["dabali:me", "dabali:tickets", "dabali:qr", "dabali:tx"].forEach((k) => localStorage.removeItem(k));
+      Object.keys(localStorage).filter((k) => k.startsWith("vatel:suggest:") || k.startsWith("dabali:family:")).forEach((k) => localStorage.removeItem(k));
+    } catch {}
     router.replace("/connexion");
     router.refresh();
   }
@@ -182,7 +189,7 @@ export default function ProfilePage() {
             right={<span className={clsx("h-7 w-12 rounded-full p-1 transition", profile?.notify_free_seats ? "bg-ink" : "bg-line")}>
               <span className={clsx("block size-5 rounded-full transition", profile?.notify_free_seats ? "translate-x-5 bg-lime" : "bg-white")} /></span>}
             onClick={toggleSeats} />
-          <Row icon={ScanFace} label={en ? `Protect with ${bioName()}` : `Protéger avec ${biometricLabel()}`}
+          <Row icon={ScanFace} label={en ? `Protect with ${bioName()}` : `Protéger avec ${bioLabel}`}
             hint={t(bioOk === false ? "Non disponible sur cet appareil" : "Ouverture de l'appli, recharges, transferts, cadeaux et gros achats")}
             right={<span className={clsx("h-7 w-12 rounded-full p-1 transition", profile?.biometric_enabled ? "bg-ink" : "bg-line", bioBusy && "opacity-50")}>
               <span className={clsx("block size-5 rounded-full transition", profile?.biometric_enabled ? "translate-x-5 bg-lime" : "bg-white")} /></span>}
@@ -230,11 +237,11 @@ export default function ProfilePage() {
       <Sheet open={pinStep !== null} onClose={() => setPinStep(null)} title={t("Code PIN")}>
         <PinPad key={pinStep} onComplete={onPin} error={pinErr} label={t(pinStep === "old" ? "Code actuel" : "Nouveau code")} />
       </Sheet>
-      <Sheet open={bioPin !== null} onClose={() => setBioPin(null)} title={en ? `Turn on ${bioName()}` : `Activer ${biometricLabel()}`}>
+      <Sheet open={bioPin !== null} onClose={() => setBioPin(null)} title={en ? `Turn on ${bioName()}` : `Activer ${bioLabel}`}>
         {bioPin === "pin"
           ? <PinPad label={t("Confirme avec ton code PIN")} error={bioPinErr} onComplete={confirmBioPin} />
           : <button onClick={toggleBiometric} className="h-14 w-full rounded-full bg-ink text-lg font-extrabold text-white">
-              {en ? `Turn on ${bioName()} now` : `Activer ${biometricLabel()} maintenant`}
+              {en ? `Turn on ${bioName()} now` : `Activer ${bioLabel} maintenant`}
             </button>}
       </Sheet>
     </main>

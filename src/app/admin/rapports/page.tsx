@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { Printer, Download } from "lucide-react";
@@ -69,6 +70,7 @@ export default function ReportsPage() {
       <div className="print:hidden">
         <PageTitle title="Rapports d'activité" subtitle="Bilan de la cantine à imprimer, enregistrer en PDF ou télécharger">
           <div className="flex flex-wrap items-center gap-2">
+            <Link href="/admin/rapports/semaine" className="flex h-9 items-center gap-1.5 rounded-full bg-lime px-4 text-sm font-extrabold text-ink">📊 Rapport de la semaine</Link>
             <Segmented value={p} onChange={setP} options={Object.entries(PERIODS) as [P, string][]} />
             <Button variant="outline" size="sm" onClick={csv}><Download className="size-4" />CSV</Button>
             <Button size="sm" onClick={() => window.print()}><Printer className="size-4" />Imprimer / PDF</Button>

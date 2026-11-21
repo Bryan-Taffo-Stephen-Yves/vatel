@@ -98,6 +98,20 @@ export default function MenuPlanner() {
     load();
   }
 
+  // Arrivée depuis le rapport de la semaine (« Proposer le menu avec ces résultats ») : l'assistant démarre tout seul
+  const [autoAi, setAutoAi] = useState(false);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("ia") !== "1") return;
+    window.history.replaceState(null, "", window.location.pathname);
+    setAutoAi(true);
+  }, []);
+  useEffect(() => {
+    if (!autoAi || menu === undefined || ai !== "idle") return;
+    setAutoAi(false);
+    propose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoAi, menu]);
+
   async function propose() {
     setAi("thinking"); setProposal(null);
     const r = await edge<Proposal>("menu-assistant", { week_start: week });

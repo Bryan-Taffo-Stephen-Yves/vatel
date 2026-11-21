@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { ChevronLeft, Flame, Scale, Star, AlertTriangle, Clock, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { DishImage } from "@/components/app/dish-image";
-import { MENU_ITEM_COLUMNS, fetchServices, remaining, soldOut, type Services } from "@/lib/menu";
+import { MENU_ITEM_COLUMNS, cachedServices, fetchServices, remaining, soldOut, type Services } from "@/lib/menu";
 import { fcfa, relativeDay, dateTime } from "@/lib/format";
 import type { MenuItem } from "@/lib/types";
 import { useAppData } from "@/components/app/app-data";
@@ -31,6 +31,7 @@ export default function DishPage({ params }: { params: Promise<{ id: string }> }
 
   useEffect(() => {
     const sb = supabase();
+    setServices((cur) => cur ?? cachedServices());
     fetchServices().then(setServices);
     sb.from("menu_items").select(MENU_ITEM_COLUMNS).eq("id", id).single().then(({ data }) => {
       const it = data as unknown as MenuItem | null;
