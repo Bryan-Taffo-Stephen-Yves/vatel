@@ -10,10 +10,11 @@ import { Qr } from "@/components/qr";
 import { useToast } from "@/components/ui/toast";
 import { fcfa } from "@/lib/format";
 
-type Person = { id: string; full_name: string; short_code: string; phone: string | null; job: string; balance: number; meals: number; today: boolean };
+type Person = { id: string; full_name: string; short_code: string; phone: string | null; job: string; balance: number; meals: number; today: boolean; answer?: boolean | null; whatsapp?: boolean };
 type Overview = {
   settings: { school_share: number; start: string; end: string; per_day: number };
   price: number; totals: { meals: number; school: number; employees: number }; staff: Person[];
+  answers?: { yes: number; no: number; none: number };
 };
 const JOBS: [string, string][] = [["entretien", "Entretien"], ["securite", "Sécurité"], ["administration", "Administration"], ["cuisine", "Cuisine"], ["autre", "Autre"]];
 const jobLabel = (j: string) => JOBS.find(([v]) => v === j)?.[1] ?? j;
@@ -93,13 +94,22 @@ export function SchoolStaff() {
           <div className="rounded-2xl bg-canvas p-3"><p className="text-xl font-extrabold">{fcfa(o.totals.employees)}</p><p className="text-[11px] font-semibold text-muted">payé par les employés</p></div>
         </div>
       )}
+      {o?.answers && o.staff.length > 0 && (
+        <p className="mb-3 rounded-2xl bg-ink px-4 py-3 text-sm font-bold text-white">
+          Pour la cuisine, aujourd&apos;hui : <span className="text-lime">{o.answers.yes} oui</span> · {o.answers.no} non · {o.answers.none} sans réponse
+          <span className="block text-xs font-semibold text-white/60">Question envoyée à 7h30 sur WhatsApp (« Tu manges aujourd&apos;hui ? »)</span>
+        </p>
+      )}
       {o && !o.staff.length && <Empty>Aucun membre du personnel inscrit. Ajoutez les agents d&apos;entretien, vigiles…</Empty>}
       <div className="divide-y divide-line">
         {o?.staff.map((p) => (
           <div key={p.id} className="flex items-center gap-3 py-3">
             <span className="grid size-10 shrink-0 place-items-center rounded-full bg-canvas text-sm font-extrabold">{p.full_name.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-bold">{p.full_name} {p.today && <Badge tone="ok">a mangé</Badge>}</p>
+              <p className="truncate font-bold">{p.full_name}{" "}
+                {p.today ? <Badge tone="ok">a mangé</Badge> : p.answer === true ? <Badge tone="lime">mange</Badge> : p.answer === false ? <Badge>ne mange pas</Badge> : null}
+                {p.whatsapp === false && <Badge tone="warn">sans WhatsApp</Badge>}
+              </p>
               <p className="text-xs text-muted">{jobLabel(p.job)} · {p.short_code} · solde {fcfa(p.balance)} · {p.meals} repas ce mois</p>
             </div>
             <button onClick={() => setCard(p)} className="flex items-center gap-1 text-xs font-bold"><IdCard className="size-4" />Carte</button>

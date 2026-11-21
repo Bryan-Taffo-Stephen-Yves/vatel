@@ -500,6 +500,19 @@ async function handleIncoming(body: any, dry = false) {
   const first = String(p.full_name).split(" ")[0];
   const plain = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 
+  // Personnel : réponse OUI / NON à la question du matin (« Tu manges à la cantine aujourd'hui ? »), sans IA.
+  // Ignoré (l'IA répond normalement) si ce n'est pas un membre du personnel ou si la question n'a pas été posée aujourd'hui.
+  const yesNo = /^(oui|o|yes|ok oui|oui oui)$/.test(plain) ? true : /^(non|n|no|non merci)$/.test(plain) ? false : null;
+  if (yesNo !== null) {
+    const { data: ans } = await db.rpc("_staff_meal_answer", { p_user: link.user_id, p_answer: yesNo });
+    if (ans?.ok) {
+      await sendWhatsApp(cfg, phone, yesNo
+        ? `C'est noté ${first} ✅ La cuisine compte sur toi. Ton repas t'attend de ${ans.start} à ${ans.end} : présente ta carte au comptoir.`
+        : `C'est noté ${first} 👍 Pas de repas pour toi aujourd'hui. Si tu changes d'avis, réponds simplement OUI.`, link.user_id, []);
+      return;
+    }
+  }
+
   // Réponses instantanées (sans IA) : salutation et solde
   if (/^(bonjour|bonsoir|salut|slt|yo|hello|hi|coucou|cc|bjr|bsr|hey|jean|bonjour jean|salut jean|yo jean|on dit quoi|ca dit quoi)( jean)?$/.test(plain)) {
     const h = new Date().getUTCHours(); // Abidjan = UTC+0
@@ -537,7 +550,9 @@ async function handleNotification(id: number | string) {
   const { data: link } = await db.from("whatsapp_links").select("phone").eq("user_id", n.user_id).maybeSingle();
   if (!link) return;
   const href = (n.data as any)?.href as string | undefined;
-  await sendWhatsApp(cfg, link.phone, `*${n.title}*\n${n.body}${href ? `\n${APP}${href}` : ""}`, n.user_id, ["📦 Mes commandes", "🍽️ Menu du jour"]);
+  const buttons = (n.data as any)?.buttons as string[] | undefined; // ex. question du matin au personnel : Oui / Non
+  await sendWhatsApp(cfg, link.phone, `*${n.title}*\n${n.body}${href ? `\n${APP}${href}` : ""}`, n.user_id,
+    Array.isArray(buttons) && buttons.length ? buttons.slice(0, 3) : ["📦 Mes commandes", "🍽️ Menu du jour"]);
 }
 
 Deno.serve(async (req) => {

@@ -44,6 +44,11 @@ Deno.serve(async (req) => {
   const { data: p, error: upErr } = await db.from("profiles").update({ staff_job: job }).eq("id", created.user.id)
     .select("id, full_name, short_code, staff_job").single();
   if (upErr || !p) { console.error("staff-create profile", upErr?.message); return fail("PROFILE", "Compte créé, mais inscription au repas impossible.", 500); }
+  // Téléphone donné : WhatsApp relié à Jean tout de suite (question du matin, sans passer par l'appli)
+  if (phone) {
+    const { data: used } = await db.from("whatsapp_links").select("user_id").eq("phone", phone).maybeSingle();
+    if (!used) await db.from("whatsapp_links").insert({ user_id: p.id, phone });
+  }
   await db.from("audit_log").insert({ actor_id: user.id, action: "staff_create", target: p.id, payload: { job } });
   return json({ ok: true, id: p.id, full_name: p.full_name, short_code: p.short_code, job: p.staff_job });
 });
