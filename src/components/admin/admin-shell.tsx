@@ -6,6 +6,7 @@ import clsx from "clsx";
 import {
   LayoutDashboard, Wallet, CalendarDays, UtensilsCrossed, TrendingUp, Boxes, BarChart3, Trash2, Star,
   ChefHat, ClipboardList, Bike, PhoneCall, Bot, FileText, Users, Settings, LogOut, ScanLine, Smartphone, UserCog, ShoppingCart, ShieldCheck, MoreHorizontal, ClipboardCheck,
+  Gauge,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { Logo } from "@/components/logo";
@@ -18,6 +19,7 @@ const NAV: { href: string; label: string; icon: typeof Wallet; roles: Role[] }[]
   { href: "/admin", label: "Vue d'ensemble", icon: LayoutDashboard, roles: ["caissier", "chef", "admin"] },
   { href: "/admin/caisse", label: "Caisse", icon: Wallet, roles: ["caissier", "admin"] },
   { href: "/admin/commandes", label: "Commandes", icon: ChefHat, roles: ["chef", "admin"] },
+  { href: "/admin/pilote", label: "Pilote du service", icon: Gauge, roles: ["chef", "caissier", "admin"] },
   { href: "/admin/menu", label: "Menu hebdo", icon: CalendarDays, roles: ["chef", "admin"] },
   { href: "/admin/plats", label: "Plats", icon: UtensilsCrossed, roles: ["chef", "admin"] },
   { href: "/admin/production", label: "Production", icon: ClipboardList, roles: ["chef", "admin"] },
