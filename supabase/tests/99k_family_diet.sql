@@ -13,19 +13,22 @@ select tests.eq(cardinality(public._diet_conflicts(array['lait'], array['sans_po
 select tests.eq(public._diet_conflicts('{}', array['sans_piment'], '{}', array['pimente', 'sans_porc']), array['pimenté (demande-le sans piment)'], 'plat pimenté signalé à qui ne mange pas fort');
 select tests.ok((public.set_my_diet('{}', array['sans_piment']) ->> 'ok')::boolean, 'préférence « pas pimenté » enregistrée');
 
--- Parent : bob demande à suivre alice
+-- Parent : bob (compte parent, WhatsApp vérifié, numéro enregistré par l'école) suit alice
 select tests.as_service();
 select short_code as code from public.profiles where id = tests.uid('alice') \gset
 select tests.login('bob');
+select tests.code(public.parent_recharge_child(tests.uid('alice'), 5000), 'FORBIDDEN', 'pas de recharge sans lien');
+select tests.as_service();
+update public.profiles set is_parent = true where id = tests.uid('bob');
+insert into public.whatsapp_links (user_id, phone) values (tests.uid('bob'), '+2250505050505');
+insert into public.guardian_phones (child_id, phone, label) values (tests.uid('alice'), '+2250505050505', 'Père');
+select tests.login('bob');
 select tests.code(public.family_request('DB-0000'), 'NOT_FOUND', 'code inconnu');
 select (public.family_request(lower(:'code')) ->> 'link_id')::uuid as l \gset
-select tests.code(public.parent_recharge_child(tests.uid('alice'), 5000), 'FORBIDDEN', 'pas de recharge avant que l''enfant accepte');
-select tests.ok(public.family_overview() -> 'children' -> 0 ->> 'balance' is null, 'en attente : solde caché');
 
 select tests.as_service();
-select tests.ok(exists (select 1 from public.notifications where user_id = tests.uid('alice') and type = 'family_request'), 'enfant prévenu de la demande');
-select tests.login('alice');
-select tests.ok((public.family_respond(:'l', true) ->> 'ok')::boolean, 'enfant accepte');
+select tests.ok(exists (select 1 from public.notifications where user_id = tests.uid('alice') and type = 'family_request'), 'enfant prévenu');
+select tests.eq((select status from public.family_links where id = :'l'), 'active', 'numéro vérifié par l''école : lien actif tout de suite');
 
 select tests.as_service();
 select balance as before from public.wallets where user_id = tests.uid('alice') \gset

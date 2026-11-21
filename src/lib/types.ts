@@ -11,6 +11,7 @@ export type Profile = {
   biometric_enabled?: boolean;
   allergies?: string[];
   severe_allergies?: string[];
+  is_parent?: boolean; // compte parent (choisi à l'inscription)
   parent_allergies?: string[];
   parent_severe?: string[];
   diets?: string[];
@@ -78,7 +79,7 @@ export type Ticket = {
 export const TICKET_COLUMNS =
   "id, user_id, buyer_id, status, service_date, service, is_reward, gift_from, valid_from, valid_until, used_at, total, extras, created_at, dish:dishes(id, name, photo_url, composition), pickup_at, order_no, prep_status, ready_at, order_item:menu_items(id, dish:dishes(id, name, photo_url, composition))";
 
-export const PROFILE_COLUMNS = "id, full_name, phone, short_code, role, points, is_blocked, notify_free_seats, avatar, biometric_enabled, allergies, diets, severe_allergies, parent_allergies, parent_severe";
+export const PROFILE_COLUMNS = "id, full_name, phone, short_code, role, points, is_blocked, notify_free_seats, avatar, biometric_enabled, allergies, diets, severe_allergies, parent_allergies, parent_severe, is_parent";
 
 export type Occupancy =
   | { status: "unknown" }

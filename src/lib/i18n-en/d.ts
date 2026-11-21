@@ -80,4 +80,12 @@ export const EN_D: Record<string, string> = {
   "Commande annulée, sans remboursement.": "Order cancelled, no refund.",
   "Annuler sans remboursement": "Cancel without refund",
   "Confirme avec ton code PIN": "Confirm with your PIN",
+  // Comptes parents
+  "Type de compte": "Account type",
+  "Je suis élève": "I'm a student",
+  "Je suis parent": "I'm a parent",
+  "Compte parent : vous suivrez et rechargerez le compte de votre enfant. Utilisez le numéro WhatsApp que l'école a dans son dossier.": "Parent account: you'll follow and top up your child's account. Use the WhatsApp number the school has on file.",
+  "Entrez son code Vatel (dans son profil, ex. DB-2026). Votre numéro WhatsApp doit être enregistré par l'école comme parent de cet élève.": "Enter their Vatel code (in their profile, e.g. DB-2026). Your WhatsApp number must be registered by the school as this student's parent.",
+  "Tes parents suivent ton compte": "Your parents follow your account",
+  "Seul un parent dont le numéro est enregistré par l'école peut suivre et recharger ton compte : il crée un compte « parent » avec ce numéro.": "Only a parent whose number is registered by the school can follow and top up your account: they create a \"parent\" account with that number.",
 };

@@ -45,8 +45,8 @@ export function FamilyPeek({ invite = false }: { invite?: boolean }) {
   function share() {
     const code = profile?.short_code ?? "";
     const msg = lang === "en"
-      ? `Hi! To follow my Vatel canteen account (top up, see my meals, get alerted when my balance is low): open this link and create your account. My code: ${code}\n${APP}/app/famille?code=${encodeURIComponent(code)}`
-      : `Salut ! Pour suivre mon compte cantine Vatel (recharger, voir mes repas, être prévenu si mon solde baisse) : ouvre ce lien et crée ton compte. Mon code : ${code}\n${APP}/app/famille?code=${encodeURIComponent(code)}`;
+      ? `Hi! To follow my Vatel canteen account (top up, see my meals, get alerted when my balance is low): create a PARENT account with the WhatsApp number the school has on file, then enter my code ${code}.\n${APP}/inscription?compte=parent&next=${encodeURIComponent(`/app/famille?code=${code}`)}`
+      : `Salut ! Pour suivre mon compte cantine Vatel (recharger, voir mes repas, être prévenu si mon solde baisse) : crée un compte PARENT avec le numéro WhatsApp que l'école a dans mon dossier, puis entre mon code ${code}.\n${APP}/inscription?compte=parent&next=${encodeURIComponent(`/app/famille?code=${code}`)}`;
     if (navigator.share) navigator.share({ text: msg }).catch(() => {});
     else window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   }

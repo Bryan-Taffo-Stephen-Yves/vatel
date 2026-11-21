@@ -17,6 +17,9 @@ export default function InscriptionPage() {
   useEffect(() => setNx(nextFromUrl()), []);
   const [step, setStep] = useState<"infos" | "pin" | "confirm">("infos");
   const [f, setF] = useState({ full_name: "", phone: "", email: "", password: "" });
+  // Élève ou parent : un parent suit et recharge son enfant (numéro enregistré par l'école) ; un élève ne peut suivre personne
+  const [account, setAccount] = useState<"eleve" | "parent">("eleve");
+  useEffect(() => { if (new URLSearchParams(window.location.search).get("compte") === "parent") setAccount("parent"); }, []);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [firstPin, setFirstPin] = useState("");
@@ -36,7 +39,7 @@ export default function InscriptionPage() {
     const { data, error } = await supabase().auth.signUp({
       email: f.email.trim(),
       password: f.password,
-      options: { data: { full_name: f.full_name.trim(), phone: fullPhone } },
+      options: { data: { full_name: f.full_name.trim(), phone: fullPhone, account } },
     });
     if (error) {
       setBusy(false);
@@ -85,6 +88,17 @@ export default function InscriptionPage() {
         <p className="mt-1 text-sm text-muted">{t("30 secondes, et votre prochain repas est réservé.")}</p>
       </section>
       <form onSubmit={register} className="space-y-4">
+        <div className="grid grid-cols-2 gap-2 rounded-full bg-card p-1 shadow-[var(--shadow-card)]" role="radiogroup" aria-label={t("Type de compte")}>
+          {([["eleve", t("Je suis élève")], ["parent", t("Je suis parent")]] as const).map(([v, l]) => (
+            <button key={v} type="button" role="radio" aria-checked={account === v} onClick={() => setAccount(v)}
+              className={`h-11 rounded-full text-sm font-extrabold transition ${account === v ? "bg-ink text-white" : "text-muted"}`}>{l}</button>
+          ))}
+        </div>
+        {account === "parent" && (
+          <p className="rounded-2xl bg-lime-soft p-3 text-[13px] font-semibold text-ink-2">
+            {t("Compte parent : vous suivrez et rechargerez le compte de votre enfant. Utilisez le numéro WhatsApp que l'école a dans son dossier.")}
+          </p>
+        )}
         <Field label={t("Nom complet")} autoComplete="name" required value={f.full_name} onChange={set("full_name")} placeholder="Aya Konan" />
         <Field label={t("Téléphone")} type="tel" inputMode="tel" autoComplete="tel" required value={f.phone} onChange={set("phone")} placeholder="07 07 07 07 07" />
         <Field label={t("E-mail")} type="email" inputMode="email" autoComplete="email" required value={f.email} onChange={set("email")} placeholder={t("vous@exemple.ci")} />

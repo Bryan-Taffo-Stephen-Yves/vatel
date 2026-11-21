@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { dateTime, fcfa } from "@/lib/format";
 import { ALLERGIES, DIETS, allergenLabel } from "@/lib/diet";
 import { useLang, useT } from "@/lib/i18n";
+import { useAppData } from "@/components/app/app-data";
 import { WhatsAppLink } from "@/components/app/whatsapp-link";
 import { PushToggle } from "@/components/push-toggle";
 
@@ -28,6 +29,8 @@ export default function FamilyPage() {
   const [o, setO] = useState<Overview | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const { profile } = useAppData();
+  const isParent = !!profile?.is_parent;
   const [recharge, setRecharge] = useState<Child | null>(null);
   const [amount, setAmount] = useState(5000);
   // Allergies posées par le parent (l'enfant ne peut pas les retirer)
@@ -69,9 +72,7 @@ export default function FamilyPage() {
     const r = await rpc<{ child: string; status: string }>("family_request", { p_child_code: code });
     setBusy(false);
     if (!r.ok) return toast("err", r.message);
-    toast("ok", en
-      ? (r.status === "active" ? `${r.child} is already linked.` : `Request sent to ${r.child}: they need to accept in their app.`)
-      : (r.status === "active" ? `${r.child} est déjà lié.` : `Demande envoyée à ${r.child} : il doit accepter dans son appli.`));
+    toast("ok", en ? `You now follow ${r.child}'s account.` : `Vous suivez maintenant le compte de ${r.child}.`);
     setCode(""); load();
   }
   async function respond(link: string, accept: boolean) {
@@ -107,16 +108,23 @@ export default function FamilyPage() {
           </section>
         ))}
 
-        {/* Côté parent */}
+        {/* Côté parent (compte parent uniquement) */}
+        {isParent ? (
         <section className="rounded-[24px] bg-card p-4 shadow-[var(--shadow-card)]">
           <p className="flex items-center gap-2 font-bold"><UserPlus className="size-[18px]" />{t("Suivre le compte de mon enfant")}</p>
-          <p className="mt-0.5 text-sm text-muted">{t("Entrez son code Vatel (dans son profil, ex. DB-2026). Votre enfant accepte dans son appli.")}</p>
+          <p className="mt-0.5 text-sm text-muted">{t("Entrez son code Vatel (dans son profil, ex. DB-2026). Votre numéro WhatsApp doit être enregistré par l'école comme parent de cet élève.")}</p>
           <form onSubmit={(e) => { e.preventDefault(); add(); }} className="mt-3 flex gap-2">
             <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="DB-0000" maxLength={10}
               className="h-11 min-w-0 flex-1 rounded-full border border-line bg-canvas px-4 font-bold tracking-wider outline-none focus:border-ink" aria-label={t("Code de l'enfant")} />
             <Button loading={busy && !recharge} disabled={code.length < 6}>{t("Ajouter")}</Button>
           </form>
         </section>
+        ) : (
+          <section className="rounded-[24px] bg-card p-4 text-sm shadow-[var(--shadow-card)]">
+            <p className="flex items-center gap-2 font-bold"><ShieldCheck className="size-[18px] text-lime-deep" />{t("Tes parents suivent ton compte")}</p>
+            <p className="mt-1 text-muted">{t("Seul un parent dont le numéro est enregistré par l'école peut suivre et recharger ton compte : il crée un compte « parent » avec ce numéro.")}</p>
+          </section>
+        )}
 
         {o === null && <div className="h-40 animate-pulse rounded-[24px] bg-card" />}
 

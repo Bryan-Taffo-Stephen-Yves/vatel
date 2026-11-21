@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { useStaff } from "@/components/admin/admin-shell";
 import { dateTime, fcfa } from "@/lib/format";
 import { SchoolStaff } from "@/components/admin/school-staff";
+import { Guardians } from "@/components/admin/guardians";
 
 type P = { id: string; full_name: string; short_code: string; role: string; is_blocked: boolean };
 type Log = { id: number; action: string; target: string | null; payload: Record<string, unknown>; created_at: string; actor: { full_name: string } | null };
@@ -63,7 +64,7 @@ export default function TeamPage() {
       <PageTitle title="Équipe" subtitle="Comptes du personnel et journal des actions">
         <Button size="sm" variant="dark" onClick={() => setAdding(true)}><UserPlus className="size-4" />Ajouter un membre</Button>
       </PageTitle>
-      <div className="mb-4"><SchoolStaff /></div>
+      <div className="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]"><SchoolStaff /><Guardians /></div>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
         <Card title="Équipe de la cantine" pad>
           <div className="divide-y divide-line">

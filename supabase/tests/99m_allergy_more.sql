@@ -18,9 +18,12 @@ select tests.as_service();
 select short_code as code from public.profiles where id = tests.uid('alice') \gset
 select tests.login('bob');
 select tests.code(public.parent_set_child_diet(tests.uid('alice'), array['céleri'], '{}'), 'FORBIDDEN', 'pas avant que l''enfant accepte');
+select tests.as_service();
+update public.profiles set is_parent = true where id = tests.uid('bob');
+insert into public.whatsapp_links (user_id, phone) values (tests.uid('bob'), '+2250505050505') on conflict do nothing;
+insert into public.guardian_phones (child_id, phone) values (tests.uid('alice'), '+2250505050505') on conflict do nothing;
+select tests.login('bob');
 select (public.family_request(:'code') ->> 'link_id')::uuid as l \gset
-select tests.login('alice');
-select public.family_respond(:'l', true);
 
 -- Le parent pose céleri (grave) et arachide ; l'enfant ne peut pas les retirer
 select tests.login('bob');
