@@ -28,7 +28,7 @@ import { queueOrder, queuedOrders } from "@/lib/offline-orders";
 
 type Slot = { at: string; left: number };
 type Win = { open: string | null; close: string | null; paused?: boolean };
-type OrderCfg = { windows?: Partial<Record<ServiceKind, Win>>; slot_minutes?: number; min_lead_minutes?: number };
+type OrderCfg = { windows?: Partial<Record<ServiceKind, Win>>; slot_minutes?: number; min_lead_minutes?: number; same_day_only?: boolean; max_days_ahead?: number };
 
 /** État des commandes du jour pour un repas (plage fixée par la cuisine, pause) */
 function windowState(win: Win | undefined, isToday: boolean, lang: Lang, now = new Date()) {
@@ -103,7 +103,6 @@ function Order() {
   const [orderCfg, setOrderCfg] = useState<OrderCfg>({});
 
   useEffect(() => {
-    fetchMenu(today, today).then(setItems); // commandes du jour uniquement
     fetchServices().then(setServices);
     // Suppléments et règles de commande gardés sur le téléphone pour commander hors ligne
     setExtras(readCache<Extra[]>("vatel:extras") ?? []);
@@ -114,6 +113,9 @@ function Order() {
     supabase().from("settings").select("value").eq("key", "orders").maybeSingle()
       .then(({ data }) => { if (data?.value) { setOrderCfg(data.value as OrderCfg); writeCache("vatel:orders-cfg", data.value); } });
   }, [today]);
+  // Réservation à l'avance : les jours ouverts par la cuisine (réglage « orders » : same_day_only / max_days_ahead)
+  const ahead = orderCfg.same_day_only === false ? Math.min(orderCfg.max_days_ahead ?? 7, 14) : 0;
+  useEffect(() => { fetchMenu(today, addDays(today, ahead)).then(setItems); }, [today, ahead]);
 
   // Repas encore commandables (service pas terminé)
   const open = useMemo(() => (items ?? []).filter((i) => !serviceEnded(i.service_date, i.service, services)), [items, services]);
