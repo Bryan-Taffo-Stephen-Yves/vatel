@@ -6,7 +6,6 @@ import { nextFromUrl } from "@/lib/next-path";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { Sheet } from "@/components/ui/sheet";
 import { homeFor } from "@/lib/roles";
 
 import { LangSwitch, useT } from "@/lib/i18n";
@@ -14,12 +13,12 @@ import { LangSwitch, useT } from "@/lib/i18n";
 // « Tester l'app » : un compte de démonstration par rôle, chacun avec ce qu'il permet de voir
 const DEMO = [
   { label: "Client", email: "client@dabali.ci", who: "Élève · Aya", what: "Menu, réserver un plat, payer, QR, avis" },
-  { label: "Client 2", email: "client02@dabali.ci", who: "Élève · Adjoua", what: "Suggestions IA, historique détaillé" },
   { label: "Client 1", email: "client01@dabali.ci", who: "Élève", what: "Un autre compte élève" },
+  { label: "Client 2", email: "client02@dabali.ci", who: "Élève · Adjoua", what: "Suggestions IA, historique détaillé" },
   { label: "Parent", email: "parent@dabali.ci", who: "Parent d'Aya", what: "Recharger son enfant, suivre ses repas" },
   { label: "Agent", email: "agent@dabali.ci", who: "Agent du comptoir", what: "Scanner les QR, repas du personnel" },
-  { label: "Caisse", email: "caisse@dabali.ci", who: "Caissier", what: "Recharges en espèces, bilan, invités" },
   { label: "Chef", email: "chef@dabali.ci", who: "Chef de cuisine", what: "Menus IA, prévisions, stock, courses" },
+  { label: "Caisse", email: "caisse@dabali.ci", who: "Caissier", what: "Recharges en espèces, bilan, invités" },
   { label: "Admin", email: "admin@dabali.ci", who: "Administration", what: "Tableau de bord, rapports, équipe" },
 ];
 
@@ -29,9 +28,8 @@ export default function ConnexionPage() {
   const [nx, setNx] = useState<string | null>(null);
   useEffect(() => setNx(nextFromUrl()), []);
   const [email, setEmail] = useState("");
-  // Panneau « Tester l'app » (ouvert d'office depuis la page d'accueil : /connexion?demo=1)
-  const [demoOpen, setDemoOpen] = useState(false);
-  useEffect(() => { try { if (new URLSearchParams(location.search).get("demo") === "1") setDemoOpen(true); } catch {} }, []);
+  // Depuis la page d'accueil (« Tester l'app » : /connexion?demo=1) : on descend jusqu'aux comptes de démo
+  useEffect(() => { try { if (new URLSearchParams(location.search).get("demo") === "1") document.getElementById("demo")?.scrollIntoView({ block: "center" }); } catch {} }, []);
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -83,29 +81,19 @@ export default function ConnexionPage() {
         {t("Pas encore de compte ?")} <Link href={`/inscription${nx ? `?next=${encodeURIComponent(nx)}` : ""}`} className="font-bold text-ink underline decoration-lime decoration-[3px] underline-offset-4">{t("Créer un compte")}</Link>
       </p>
 
-      <div className="mt-auto pt-10">
-        <button type="button" onClick={() => setDemoOpen(true)}
-          className="flex h-14 w-full items-center justify-center gap-2 rounded-full border-2 border-ink text-[15px] font-extrabold active:scale-[0.99]">
-          ✨ {t("Tester l'app")} <span className="text-sm font-semibold text-muted">· {t("sans créer de compte")}</span>
-        </button>
-      </div>
-
-      <Sheet open={demoOpen} onClose={() => setDemoOpen(false)} title={t("Tester l'app")}>
-        <p className="-mt-2 mb-4 text-sm text-muted">{t("Choisissez un rôle : vous entrez directement dans son espace, avec des données de démonstration.")}</p>
-        <div className="grid gap-2">
+      {/* Comptes de démo : un bouton par rôle (la page d'accueil « Tester l'app » mène ici) */}
+      <div id="demo" className="mt-auto pt-10">
+        <p className="mb-2 text-center text-xs font-bold uppercase tracking-wider text-off">{t("Comptes de démo")}</p>
+        <div className="flex flex-wrap justify-center gap-2">
           {DEMO.map((d) => (
-            <button key={d.email} type="button" disabled={busy} aria-label={d.label}
+            <button key={d.email} type="button" disabled={busy} title={`${t(d.who)} · ${t(d.what)}`}
               onClick={() => signIn(undefined, { email: d.email, password: "Dabali2026!" })}
-              className="flex items-center gap-3 rounded-2xl border border-line bg-card p-3 text-left transition hover:border-ink active:scale-[0.99] disabled:opacity-50">
-              <span className="min-w-0 flex-1">
-                <span className="block font-extrabold">{t(d.who)}</span>
-                <span className="block text-xs text-muted">{t(d.what)}</span>
-              </span>
-              <span className="text-lg text-muted" aria-hidden>›</span>
+              className="rounded-full border border-line bg-card px-3.5 py-2 text-xs font-bold transition hover:border-ink active:scale-95">
+              {d.label}
             </button>
           ))}
         </div>
-      </Sheet>
+      </div>
     </>
   );
 }
