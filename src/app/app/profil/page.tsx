@@ -134,16 +134,20 @@ export default function ProfilePage() {
           </button>
           <h2 className="mt-3 text-xl font-extrabold">{profile?.full_name}</h2>
           <p className="text-sm text-muted">{profile?.phone}</p>
+          {profile?.is_parent ? (
+            <p className="mt-3 rounded-full bg-lime px-4 py-1.5 text-sm font-extrabold">{t("Compte parent")}</p>
+          ) : (<>
           <div className="mt-5 w-44 rounded-2xl bg-white p-2 ring-1 ring-line">
             {profile && <Qr value={`DABALI:${profile.short_code}`} size={180} />}
           </div>
           <p className="mt-3 rounded-full bg-ink px-4 py-1.5 text-lg font-extrabold tracking-wider text-lime">{profile?.short_code}</p>
           <p className="mt-2 max-w-[240px] text-xs text-muted">{t("Montrez ce QR pour recevoir un transfert ou un repas offert.")}</p>
+          </>)}
         </section>
 
-        <FamilyPeek invite />
+        {!profile?.is_parent && <FamilyPeek invite />}
 
-        <section id="fidelite" className="mt-4 rounded-[24px] bg-lime p-5">
+        {!profile?.is_parent && <section id="fidelite" className="mt-4 rounded-[24px] bg-lime p-5">
           <div className="flex items-center gap-2"><Sparkles className="size-5" /><h3 className="font-extrabold">{t("Fidélité")}</h3></div>
           <p className="mt-1 text-sm font-semibold text-ink/70">{t("1 repas servi = 1 point · 10 points = 1 petit-déjeuner offert")}</p>
           <p className="mt-3 text-[34px] font-extrabold leading-none">{points} <span className="text-base font-bold text-ink/60">point{points > 1 ? "s" : ""}</span></p>
@@ -159,14 +163,14 @@ export default function ProfilePage() {
                 : `${Math.floor(points / 10)} petit-déjeuner${points >= 20 ? "s" : ""} offert${points >= 20 ? "s" : ""} à utiliser dans « Acheter »${points % 10 ? ` · ${points % 10}/10 vers le suivant` : ""}`}</span>
               : en ? `${10 - points} more meal${10 - points > 1 ? "s" : ""} until your free breakfast` : `Encore ${10 - points} repas avant votre petit-déjeuner offert`}
           </p>
-        </section>
+        </section>}
 
         <section className="mt-4 flex items-center justify-between rounded-[24px] bg-card p-4 shadow-[var(--shadow-card)]">
           <p className="font-bold">🌍 {t("Langue")} <span className="block text-xs font-semibold text-muted">Français · English</span></p>
           <LangSwitch />
         </section>
 
-        <DietSection />
+        {!profile?.is_parent && <DietSection />}
 
         <section className="mt-4 flex gap-3 rounded-[24px] bg-card p-4 shadow-[var(--shadow-card)]">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-canvas"><Smartphone className="size-[18px]" /></span>

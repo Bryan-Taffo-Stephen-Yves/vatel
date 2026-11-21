@@ -11,6 +11,7 @@ import { TicketRow } from "@/components/app/ticket-row";
 import { NextMenu } from "@/components/app/next-menu";
 import { MealSuggestions } from "@/components/app/meal-suggestions";
 import { FamilyPeek } from "@/components/app/family-peek";
+import { ParentHome } from "@/components/app/parent-home";
 import { useT, useLang } from "@/lib/i18n";
 import { cachedTickets, displayStatus, fetchMyTickets, syncTokens } from "@/lib/tickets";
 import { fcfa, firstName } from "@/lib/format";
@@ -21,7 +22,13 @@ function greeting() {
   return h < 12 ? "Bonne matinée" : h < 18 ? "Bon après-midi" : "Bonne soirée";
 }
 
+// Compte parent : accueil dédié (il suit et recharge ses enfants, il ne mange pas à la cantine)
 export default function HomePage() {
+  const { profile } = useAppData();
+  return profile?.is_parent ? <ParentHome /> : <StudentHome />;
+}
+
+function StudentHome() {
   const { profile, balance, unread } = useAppData();
   const t = useT();
   const lang = useLang();

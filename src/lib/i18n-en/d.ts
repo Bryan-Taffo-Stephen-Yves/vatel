@@ -88,4 +88,16 @@ export const EN_D: Record<string, string> = {
   "Entrez son code Vatel (dans son profil, ex. DB-2026). Votre numéro WhatsApp doit être enregistré par l'école comme parent de cet élève.": "Enter their Vatel code (in their profile, e.g. DB-2026). Your WhatsApp number must be registered by the school as this student's parent.",
   "Tes parents suivent ton compte": "Your parents follow your account",
   "Seul un parent dont le numéro est enregistré par l'école peut suivre et recharger ton compte : il crée un compte « parent » avec ce numéro.": "Only a parent whose number is registered by the school can follow and top up your account: they create a \"parent\" account with that number.",
+  // Accueil parent
+  "Espace parent": "Parent space",
+  "Solde de la cantine": "Canteen balance",
+  "Dépensé cette semaine": "Spent this week",
+  "Repas (14 jours)": "Meals (14 days)",
+  "Dernier repas": "Last meal",
+  "Pas encore de repas": "No meals yet",
+  "Repas et stats": "Meals & stats",
+  "Ajouter mon enfant": "Add my child",
+  "Ajouter un autre enfant": "Add another child",
+  "Alertes": "Alerts",
+  "Compte parent": "Parent account",
 };

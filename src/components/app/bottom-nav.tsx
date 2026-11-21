@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, UtensilsCrossed, QrCode, ReceiptText, UserRound } from "lucide-react";
+import { Home, UtensilsCrossed, QrCode, ReceiptText, UserRound, Users, Bell } from "lucide-react";
+import { useAppData } from "@/components/app/app-data";
 import clsx from "clsx";
 import { useT } from "@/lib/i18n";
 
@@ -12,16 +13,25 @@ const TABS = [
   { href: "/app/historique", label: "Historique", icon: ReceiptText },
   { href: "/app/profil", label: "Profil", icon: UserRound },
 ];
+// Compte parent : pas de menu ni de QR (il ne mange pas à la cantine) ; ses enfants, ses alertes, son profil
+const PARENT_TABS = [
+  { href: "/app", label: "Accueil", icon: Home, exact: true },
+  { href: "/app/famille", label: "Ma famille", icon: Users },
+  { href: "/app/notifications", label: "Alertes", icon: Bell },
+  { href: "/app/profil", label: "Profil", icon: UserRound },
+];
 
 export function BottomNav() {
   const path = usePathname();
   const t = useT();
+  const { profile } = useAppData();
+  const tabs: { href: string; label: string; icon: typeof Home; exact?: boolean; center?: boolean }[] = profile?.is_parent ? PARENT_TABS : TABS;
   // Écrans avec leur propre bouton d'action en bas : pas de barre d'onglets
   if (/^\/app\/(menu\/.+|recharger|transferer|acheter)/.test(path)) return null;
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-3 pb-[max(0.6rem,env(safe-area-inset-bottom))]">
       <div className="flex items-end justify-between rounded-[26px] border border-line bg-card/95 px-2 pb-2 pt-1.5 shadow-[var(--shadow-float)] backdrop-blur">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const active = tab.exact ? path === tab.href : path.startsWith(tab.href);
           const Icon = tab.icon;
           if (tab.center) {
