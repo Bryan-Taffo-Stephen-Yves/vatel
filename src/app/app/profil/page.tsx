@@ -172,7 +172,7 @@ export default function ProfilePage() {
 
         {!profile?.is_parent && <DietSection />}
 
-        <section className="mt-4 flex gap-3 rounded-[24px] bg-card p-4 shadow-[var(--shadow-card)]">
+        {!profile?.is_parent && <section className="mt-4 flex gap-3 rounded-[24px] bg-card p-4 shadow-[var(--shadow-card)]">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-canvas"><Smartphone className="size-[18px]" /></span>
           <div>
             <p className="font-bold">{t("Téléphone éteint ou oublié ?")}</p>
@@ -180,7 +180,7 @@ export default function ProfilePage() {
               ? <>You can still eat: at the counter, give your name or your code <b className="text-ink">{profile?.short_code}</b>, then type your PIN on the staff member&apos;s phone.</>
               : <>Vous pouvez quand même manger : au comptoir, donnez votre nom ou votre code <b className="text-ink">{profile?.short_code}</b>, puis tapez votre code PIN sur le téléphone de l&apos;agent.</>}</p>
           </div>
-        </section>
+        </section>}
 
         <div className="mt-4 space-y-3"><InstallApp variant="row" /><PushToggle /></div>
         <div className="mt-4 divide-y divide-line overflow-hidden rounded-[24px] bg-card shadow-[var(--shadow-card)]">
