@@ -7,6 +7,7 @@ import { Card, PageTitle, Kpi, Badge, input } from "@/components/admin/ui";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { useStaff } from "@/components/admin/admin-shell";
+import { CameraZonesEditor } from "@/components/admin/camera-zones-editor";
 import { AreaLine, Heatmap } from "@/components/admin/charts";
 import { addDays, dayShort, dayNum, time, todayISO, SERVICE_LABEL } from "@/lib/format";
 import type { Occupancy } from "@/lib/types";
@@ -70,6 +71,9 @@ export default function OccupancyPage() {
           hint={now?.status === "open" ? (now.wait_source === "queue" ? "caméra (couloir) ÷ rythme du comptoir"
             : now.wait_source === "trays" ? "retour du premier plateau" : "estimation sans caméra de file") : undefined} />
       </div>
+
+      {/* Réglage de la caméra à la souris (cuisine, admin) */}
+      {(me?.role === "admin" || me?.role === "chef") && <div className="mt-4"><CameraZonesEditor /></div>}
 
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <Card title="Plan de salle" subtitle={live ? "Mis à jour toutes les 10 s par le module vision" : "En attente du module vision"}>

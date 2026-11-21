@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { X, Play, Square, Pencil, Check, Trash2, Minus, Plus, ShieldCheck, Video } from "lucide-react";
+import { X, Play, Square, Pencil, Check, Trash2, Minus, Plus, ShieldCheck, Video, Monitor } from "lucide-react";
 import { rpc } from "@/lib/supabase/client";
 
 type Kind = "table" | "queue";
@@ -14,6 +14,8 @@ type Box = { x: number; y: number; w: number; h: number };                      
 type TableState = { occupied: boolean; since: number | null; gone: number | null; people: number };
 
 const KEY = "dabali:camera-zones";
+const KEY_AT = "dabali:camera-zones-at"; // date des zones reçues de l'ordinateur (ou envoyées par ce téléphone)
+const SYNC_EVERY = 10_000;               // le téléphone regarde s'il y a de nouvelles zones ou une demande de photo
 const DETECT_EVERY = 600;   // ms entre deux analyses
 const SEND_EVERY = 10_000;  // envoi des chiffres
 const OCCUPY_AFTER = 5_000; // table occupée après 5 s de présence (anti-passage)
@@ -47,15 +49,58 @@ export default function CameraPage() {
   const [saved, setSaved] = useState<string | null>(null); // confirmation après chaque zone tracée
   const [model, setModel] = useState<{ status: "idle" | "loading" | "ready" | "error"; pct?: number; msg?: string; mode?: "GPU" | "CPU" }>({ status: "idle" });
 
-  // Zones gardées sur ce téléphone (la caméra reste au même endroit)
+  // Zones gardées sur ce téléphone ET en base : on peut les tracer à la souris depuis l'ordinateur (Admin → Affluence)
   useEffect(() => { try { const z = JSON.parse(localStorage.getItem(KEY) ?? "[]"); if (Array.isArray(z)) setZones(z); } catch { /* rien */ } }, []);
-  const saveZones = (z: Zone[]) => { setZones(z); try { localStorage.setItem(KEY, JSON.stringify(z)); } catch { /* rien */ } };
+  const keepLocal = (z: Zone[], at?: string | null) => {
+    setZones(z);
+    try { localStorage.setItem(KEY, JSON.stringify(z)); if (at) localStorage.setItem(KEY_AT, at); } catch { /* rien */ }
+  };
+  const saveZones = (z: Zone[]) => {
+    keepLocal(z);
+    rpc<{ zones_updated_at: string }>("vision_zones_save", { p_zones: z }).then((r) => { if (r.ok) keepLocal(z, r.zones_updated_at); });
+  };
 
   const stop = useCallback(() => {
     stream.current?.getTracks().forEach((t) => t.stop()); stream.current = null;
     setRunning(false); setBoxes([]);
   }, []);
   useEffect(() => () => { stop(); detector.current?.close(); }, [stop]);
+
+  // Photo de réglage demandée par l'ordinateur : UNE image réduite, envoyée seulement à la demande
+  const sendSnapshot = useCallback(async () => {
+    const v = video.current;
+    if (!v || v.readyState < 2 || !v.videoWidth) return false;
+    const c = document.createElement("canvas");
+    c.width = 960; c.height = Math.round((960 * v.videoHeight) / v.videoWidth);
+    c.getContext("2d")!.drawImage(v, 0, 0, c.width, c.height);
+    let q = 0.7, data = c.toDataURL("image/jpeg", q);
+    while (data.length > 550_000 && q > 0.3) { q -= 0.15; data = c.toDataURL("image/jpeg", q); }
+    const r = await rpc("vision_snapshot_put", { p_image: data });
+    setSaved(r.ok ? "📷 Photo envoyée à l'ordinateur : trace les tables à la souris (Admin → Affluence)." : `Photo non envoyée : ${r.message}`);
+    return r.ok;
+  }, []);
+
+  // Synchronisation avec l'ordinateur : nouvelles zones → reprises ici ; demande de photo → envoyée
+  useEffect(() => {
+    let alive = true;
+    const sync = async () => {
+      const r = await rpc<{ zones: Zone[]; zones_updated_at: string | null; snapshot_requested_at: string | null }>("vision_setup_get");
+      if (!alive || !r.ok) return; // fonction pas encore en ligne, ou hors réseau : on garde les zones du téléphone
+      let localAt: string | null = null; let local: Zone[] = [];
+      try { localAt = localStorage.getItem(KEY_AT); local = JSON.parse(localStorage.getItem(KEY) ?? "[]"); } catch { /* rien */ }
+      if (r.zones_updated_at && (!localAt || r.zones_updated_at > localAt)) {
+        keepLocal(r.zones, r.zones_updated_at); tables.current = {};
+        if (r.zones.length) setEdit(false); // zones tracées sur l'ordinateur : plus rien à faire sur le téléphone
+        setSaved("🖥️ Zones mises à jour depuis l'ordinateur ✓");
+      } else if (!r.zones_updated_at && local.length) {
+        saveZones(local); // premières zones tracées sur ce téléphone : partagées avec l'ordinateur
+      }
+      if (r.snapshot_requested_at && running) await sendSnapshot();
+    };
+    sync();
+    const id = setInterval(sync, SYNC_EVERY);
+    return () => { alive = false; clearInterval(id); };
+  }, [running, sendSnapshot]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Télécharge un fichier en affichant la progression (le navigateur le garde ensuite en cache)
   async function download(url: string, onBytes: (n: number) => void): Promise<Uint8Array> {
@@ -117,7 +162,7 @@ export default function CameraPage() {
       // L'écran reste allumé pendant l'analyse
       try { await (navigator as unknown as { wakeLock?: { request: (t: string) => Promise<unknown> } }).wakeLock?.request("screen"); } catch { /* facultatif */ }
       setRunning(true);
-      if (!zones.length) { setEdit(true); setTool("table"); } // étape suivante : tracer les zones
+      if (!zones.length) { setEdit(true); setTool("table"); } // étape suivante : tracer les zones (ici ou depuis l'ordinateur)
     } catch (e) {
       setError(String(e).includes("Permission") || String(e).includes("NotAllowed") ? "Autorise l'accès à la caméra dans le navigateur (réglages du navigateur → Caméra), puis réessaie." : "Impossible d'ouvrir la caméra sur ce téléphone.");
       stop(); return;
@@ -245,7 +290,7 @@ export default function CameraPage() {
                 <ol className="space-y-1 text-left text-sm font-semibold text-white/80">
                   <li>1. Pose le téléphone en hauteur, face aux tables et à la file.</li>
                   <li>2. Touche « Démarrer » et autorise la caméra.</li>
-                  <li>3. Trace au doigt un rectangle par table, puis la file d&apos;attente.</li>
+                  <li>3. Trace un rectangle par table, puis la file d&apos;attente : au doigt ici, ou à la souris sur l&apos;ordinateur (Admin → Affluence).</li>
                 </ol>
               )}
               {!loading && <button onClick={start} className="mx-auto mt-4 flex h-12 items-center gap-2 rounded-full bg-lime px-6 font-extrabold text-ink"><Play className="size-5" />Démarrer</button>}
@@ -267,7 +312,7 @@ export default function CameraPage() {
           <button onClick={loadModel} className="rounded-full bg-white px-3 py-1.5 text-ink">Réessayer</button>
         </div>
       )}
-      {running && edit && saved && zones.length > 0 && <p className="mx-4 mt-3 rounded-2xl bg-white/10 px-4 py-2.5 text-sm font-bold text-lime">{saved}</p>}
+      {running && saved && <p className="mx-4 mt-3 rounded-2xl bg-white/10 px-4 py-2.5 text-sm font-bold text-lime">{saved}</p>}
       {running && !zones.length && model.status !== "error" && (
         <p className="mx-4 mt-3 rounded-2xl bg-lime px-4 py-3 text-sm font-extrabold text-ink">
           Étape 2 : sur l&apos;image, trace au doigt UN rectangle qui couvre une table ET ses chaises (là où les gens s&apos;assoient). La zone est enregistrée dès que tu lèves le doigt. Ensuite « + File d&apos;attente » pour la zone de la queue.
@@ -302,6 +347,9 @@ export default function CameraPage() {
             {edit ? <><Check className="size-4" />Terminer les zones</> : <><Pencil className="size-4" />Tracer les zones</>}
           </button>
         )}
+        {running && !edit && (
+          <button onClick={sendSnapshot} className="flex h-11 items-center gap-2 rounded-full bg-white/10 px-4 text-sm font-bold"><Monitor className="size-4" />Tracer depuis l&apos;ordinateur</button>
+        )}
         {edit && running && (["table", "queue"] as Kind[]).map((k) => (
           <button key={k} onClick={() => setTool(k)} className={clsx("h-11 rounded-full px-4 text-sm font-bold", tool === k ? "bg-white text-ink" : "bg-white/10")}>
             {k === "table" ? "+ Table" : "+ File d'attente"}
@@ -331,7 +379,7 @@ export default function CameraPage() {
 
       <p className="mx-4 mt-5 flex gap-2 text-xs font-semibold text-white/60">
         <ShieldCheck className="size-4 shrink-0 text-lime" />
-        L&apos;analyse se fait sur ce téléphone. Aucune image n&apos;est enregistrée ni envoyée, pas de reconnaissance de visage : seuls les nombres (file, places libres) partent vers Vatel.
+        L&apos;analyse se fait sur ce téléphone, pas de reconnaissance de visage : seuls les nombres (file, places libres) partent vers Vatel. Seule exception : la photo de réglage, envoyée quand on la demande pour tracer les zones sur l&apos;ordinateur, visible par l&apos;équipe seulement et effacée sous 24 h.
       </p>
     </main>
   );
