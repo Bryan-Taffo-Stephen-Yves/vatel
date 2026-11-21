@@ -29,6 +29,11 @@ export default function StockPage() {
   const [reason, setReason] = useState("");
   const [creating, setCreating] = useState(false);
   const [shelf, setShelf] = useState<Record<string, number | null> | null>(null);
+  // Risques de rupture : besoin prévu aujourd'hui / demain plus grand que stock + en route
+  const [risks, setRisks] = useState<{ name: string; unit: string; day_label: string; missing: number; need: number }[]>([]);
+  useEffect(() => {
+    supabase().rpc("stock_risks").then(({ data }) => setRisks(((data as { risks?: typeof risks } | null)?.risks) ?? []));
+  }, [ings]);
   async function setShelfLife(i: Ing, v: string) {
     const r = await rpc("ingredient_set_shelf_life", { p_ingredient: i.id, p_days: v ? +v : null });
     if (!r.ok) return toast("err", r.message);
@@ -81,6 +86,15 @@ export default function StockPage() {
       <PageTitle title="Stock" subtitle="Les portions servies sont déduites automatiquement selon les recettes">
         <Button size="sm" variant="dark" onClick={() => setCreating(true)}><Plus className="size-4" />Ingrédient</Button>
       </PageTitle>
+      {risks.length > 0 && (
+        <div className="mb-4 rounded-2xl bg-err-soft px-4 py-3 text-sm font-semibold text-err">
+          <p className="flex items-center gap-2 font-extrabold"><AlertTriangle className="size-4" />Risque de rupture (d&apos;après les prévisions)</p>
+          <ul className="mt-1 list-disc pl-6">
+            {risks.map((r) => <li key={r.name}>{r.name} : il manque {Number(r.missing).toLocaleString("fr-FR")} {r.unit} pour {r.day_label} (besoin {Number(r.need).toLocaleString("fr-FR")} {r.unit})</li>)}
+          </ul>
+          <a href="/admin/courses" className="mt-1 inline-block underline">Voir le point des achats</a>
+        </div>
+      )}
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
         <Kpi label="Ingrédients suivis" value={String(ings.length)} />
         <Kpi tone={low.length ? "dark" : undefined} icon={AlertTriangle} label="Sous le seuil" value={String(low.length)} hint={low.map((i) => i.name).join(", ") || "Aucun"} />

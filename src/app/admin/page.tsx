@@ -21,6 +21,8 @@ type Overview = {
   alerts: { kind: string; level: "warn" | "err" | "info"; text: string }[];
 };
 
+const num = (n: number) => Number(n).toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+
 export default function OverviewPage() {
   const me = useStaff();
   const [o, setO] = useState<Overview | null>(null);
@@ -28,8 +30,17 @@ export default function OverviewPage() {
   const [metric, setMetric] = useState<"sales" | "scans">("sales");
 
   const load = useCallback(async () => {
-    const { data } = await supabase().rpc("admin_overview");
-    if (data) { setO(data as Overview); setUpdated(new Date()); }
+    const sb = supabase();
+    const [{ data }, risks] = await Promise.all([sb.rpc("admin_overview"), sb.rpc("stock_risks")]);
+    if (!data) return;
+    // Risques de rupture (besoin prévu aujourd'hui / demain > stock + en route) : en tête des alertes
+    type Risk = { name: string; unit: string; day_label: string; need: number; stock: number; transit: number; missing: number };
+    const rk = ((risks.data as { ok?: boolean; risks?: Risk[] } | null)?.risks ?? []).map((r) => ({
+      kind: "risk", level: "err" as const,
+      text: `Risque de rupture ${r.day_label} : ${r.name}, il manque ${num(r.missing)} ${r.unit} (besoin ${num(r.need)}, stock ${num(r.stock)}${r.transit ? `, en route ${num(r.transit)}` : ""})`,
+    }));
+    const ov = data as Overview;
+    setO({ ...ov, alerts: [...rk, ...ov.alerts] }); setUpdated(new Date());
   }, []);
 
   useEffect(() => {
@@ -91,6 +102,7 @@ export default function OverviewPage() {
                   <I className="mt-0.5 size-4 shrink-0" /><span className="flex-1">{a.text}</span>
                   {a.kind === "menu" && <Link href="/admin/menu" className="underline">Ouvrir</Link>}
                   {a.kind === "stock" && <Link href="/admin/stock" className="underline">Stock</Link>}
+                  {a.kind === "risk" && <Link href="/admin/courses" className="underline">Courses</Link>}
                 </div>
               );
             })}
