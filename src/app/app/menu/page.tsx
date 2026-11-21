@@ -125,17 +125,14 @@ function Menu() {
           </div>
         )}
         {list.map((i) => <DishCard key={i.id} item={i} stat={stats[i.dish.id]} warn={dietConflicts(profile, i.dish)} canBook={!ended} />)}
+        {/* Sans choisir le plat à l'avance : un ticket du repas, plat choisi au comptoir */}
+        {cfg && !ended && list.length > 0 && (
+          <Link href={`/app/acheter?service=${service}`} className="block pt-1 text-center text-sm font-bold text-muted underline underline-offset-2">
+            {lang === "en" ? `or buy a ${t(cfg.label)} ticket (${fcfa(cfg.price)}) and choose at the counter` : `ou acheter un ticket ${cfg.label} (${fcfa(cfg.price)}) et choisir au comptoir`}
+          </Link>
+        )}
       </section>
 
-      {cfg && (
-        <div className="fixed inset-x-0 bottom-[calc(5.6rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-md px-4">
-          <Link href={`/app/acheter?service=${service}`}
-            className="flex h-14 items-center justify-between rounded-full bg-ink pl-6 pr-2 text-white shadow-[var(--shadow-float)] active:scale-[0.99]">
-            <span className="font-bold">{lang === "en" ? `${t(cfg.label)} ticket` : `Ticket ${cfg.label}`} <span className="text-lime">·</span> {fcfa(cfg.price)}</span>
-            <span className="flex h-10 items-center gap-1 rounded-full bg-lime px-4 text-sm font-extrabold text-ink">{t("Acheter")} <ChevronRight className="size-4" /></span>
-          </Link>
-        </div>
-      )}
     </main>
   );
 }

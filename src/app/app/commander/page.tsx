@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { Clock, ChefHat, Info, Minus, Plus, WifiOff } from "lucide-react";
@@ -122,12 +122,21 @@ function Order() {
   const days = useMemo(() => [...new Set(open.map((i) => i.service_date))].sort(), [open]);
 
   // Sélection initiale : le plat passé en paramètre, sinon le premier jour / repas disponible
+  // (le menu arrive en deux temps : aujourd'hui, puis les jours suivants ; le plat de « Réserver » est appliqué dès qu'il apparaît)
+  const paramDone = useRef(false);
   useEffect(() => {
-    if (!items || day) return;
-    const fromParam = open.find((i) => i.id === itemId);
-    const d = fromParam?.service_date ?? days[0] ?? null;
+    if (!items) return;
+    const fromParam = itemId ? open.find((i) => i.id === itemId) : undefined;
+    if (fromParam && !paramDone.current) {
+      paramDone.current = true;
+      setDay(fromParam.service_date); setService(fromParam.service);
+      setCart((c) => (c[fromParam.id] ? c : { [fromParam.id]: 1 }));
+      return;
+    }
+    if (day) return;
+    const d = days[0] ?? null;
     setDay(d);
-    setService(fromParam?.service ?? (open.find((i) => i.service_date === d)?.service ?? null));
+    setService(open.find((i) => i.service_date === d)?.service ?? null);
   }, [items, open, days, day, itemId]);
 
   const servicesOfDay = SERVICES.filter((s) => open.some((i) => i.service_date === day && i.service === s));
@@ -164,7 +173,7 @@ function Order() {
   useEffect(() => {
     if (!items) return;
     setCart((c) => {
-      const bad = Object.keys(c).filter((id) => { const i = items.find((x) => x.id === id); return !i || soldOut(i) || severeHits(profile, i.dish).length > 0; });
+      const bad = Object.keys(c).filter((id) => { const i = items.find((x) => x.id === id); return !!i && (soldOut(i) || severeHits(profile, i.dish).length > 0); });
       if (!bad.length) return c;
       const y = { ...c }; bad.forEach((id) => delete y[id]); return y;
     });

@@ -28,7 +28,7 @@ export function BottomNav() {
   const { profile } = useAppData();
   const tabs: { href: string; label: string; icon: typeof Home; exact?: boolean; center?: boolean; also?: string[] }[] = profile?.is_parent ? PARENT_TABS : TABS;
   // Écrans avec leur propre bouton d'action en bas : pas de barre d'onglets
-  if (/^\/app\/(menu\/.+|recharger|transferer|acheter)/.test(path)) return null;
+  if (/^\/app\/(menu\/.+|recharger|transferer|acheter|commander)/.test(path)) return null;
   // Profil pas encore connu (première ouverture) : pas d'onglets élève affichés à un parent, même un instant
   if (!profile) return null;
   return (
