@@ -4,7 +4,7 @@ Site : **https://vatel-cantine.netlify.app** (sur ordinateur ou téléphone).
 
 ## Tester sans créer de compte
 
-Sur la page d’accueil ou l’écran de connexion, toucher **« Tester l’app »** : les comptes de démo s’affichent et connectent en un clic.
+Sur l’écran de connexion, les boutons des **comptes de démo** connectent en un clic (le bouton « Tester l’app » de la page d’accueil y mène).
 Mot de passe commun des comptes de démo : `Dabali2026!` · code PIN des élèves de démo : `2580`.
 
 | Bouton | Qui | À essayer |
