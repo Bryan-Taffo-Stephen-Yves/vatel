@@ -71,13 +71,9 @@ export default function RechargePage() {
     const ref = q.get("ref");
     if (ref) setWait({ reference: ref, ussd: false, state: "pending" });
   }, []);
-  // Numéro du profil proposé UNE seule fois : si l'élève vide le champ pour mettre un autre numéro, on ne le réécrit pas
-  const prefilled = useRef(false);
-  useEffect(() => {
-    if (prefilled.current || !profile) return;
-    prefilled.current = true;
-    if (profile.phone) setPhone((cur) => cur || digits10(profile.phone));
-  }, [profile]);
+  // Le numéro qui paie n'est JAMAIS rempli d'office (souvent un autre téléphone : celui d'un parent, d'un ami) :
+  // on propose seulement « Mon numéro » en un toucher.
+  const myPhone = digits10(profile?.phone);
 
   // Attente de la confirmation : interrogation toutes les 4 s (3 min au plus)
   const tries = useRef(0);
@@ -200,6 +196,11 @@ export default function RechargePage() {
         <label className="mt-5 block">
           <span className="text-[15px] font-extrabold">{t("Numéro qui paie")}</span>
           <PhoneInput className="mt-2" value={phone} onChange={setPhone} invalid={phone.length === 10 && !phoneOk} />
+          {myPhone.length === 10 && phone !== myPhone && (
+            <button type="button" onClick={() => setPhone(myPhone)} className="mt-2 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-bold text-ink-2 active:scale-95">
+              {t("Mon numéro")} · {myPhone.replace(/(\d{2})(?=\d)/g, "$1 ")}
+            </button>
+          )}
           {phone.length === 10 && !phoneOk && (
             <span className="mt-1 block text-[13px] font-semibold text-err">
               {operator.prefix
