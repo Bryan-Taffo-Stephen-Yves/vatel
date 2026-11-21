@@ -3,13 +3,14 @@ import { Bitmoji } from "@/components/bitmoji";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Check, X, AlertTriangle, Camera, Video, LogOut, CameraOff, PhoneOff, ShoppingCart, History, Volume2, VolumeX, Volume1 } from "lucide-react";
+import { Check, X, AlertTriangle, Camera, Video, LogOut, CameraOff, PhoneOff, HardHat, ShoppingCart, History, Volume2, VolumeX, Volume1 } from "lucide-react";
 import Link from "next/link";
 import { edge, rpc, supabase } from "@/lib/supabase/client";
 import { Logo } from "@/components/logo";
 import { ServiceIcon } from "@/components/app/service-icon";
 import { DishImage } from "@/components/app/dish-image";
 import { NoPhoneSheet } from "@/components/scan/no-phone-sheet";
+import { StaffSheet } from "@/components/scan/staff-sheet";
 import { PlateScan } from "@/components/plate-scan";
 import { currentService, fetchServices, type Services } from "@/lib/menu";
 import { todayISO, SERVICE_LABEL } from "@/lib/format";
@@ -65,9 +66,10 @@ export default function ScanPage() {
   const [agent, setAgent] = useState("");
   const [role, setRole] = useState("");
   const [manual, setManual] = useState(false);
+  const [staffQ, setStaffQ] = useState<string | null>(null); // repas du personnel (carte QR scannée ou recherche)
   const [plate, setPlate] = useState(false); // photo d'une assiette rendue (gaspillage)
   const manualRef = useRef(false); // caméra en pause pendant la recherche « sans téléphone »
-  useEffect(() => { manualRef.current = manual; }, [manual]);
+  useEffect(() => { manualRef.current = manual || staffQ !== null; }, [manual, staffQ]);
   const [audioMode, setAudioMode] = useState<AudioPref>("on");
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
@@ -126,7 +128,10 @@ export default function ScanPage() {
     busy.current = true;
     lastToken.current = { t: token, at: now };
     if (/^DABALI:/i.test(token.trim())) {
-      // QR de profil (transferts) présenté par erreur à la place du ticket
+      // Carte du personnel : repas subventionné
+      const st = await rpc<{ results: unknown[] }>("staff_lookup", { p_query: token.trim() });
+      if (st.ok && st.results.length === 1) { busy.current = false; setStaffQ(token.trim()); return; }
+      // Sinon : QR de profil (transferts) présenté par erreur à la place du ticket
       soundError(); say("QR de profil, pas un ticket");
       setFail({ code: "PROFILE_QR", message: "C'est le QR de profil du client, pas un ticket. Il doit ouvrir « Mes tickets » et toucher son ticket." });
       setTimeout(reset, 3500);
@@ -249,12 +254,20 @@ export default function ScanPage() {
           <p className="text-2xl font-extrabold"><span className="text-lime">{counters?.served ?? "–"}</span>
             <span className="text-base font-bold text-white/50"> · {counters?.outstanding ?? "–"} tickets en circulation</span></p>
         </div>
+        <button onClick={() => setStaffQ("")} className="flex h-[68px] w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl bg-white/10 text-[11px] font-bold leading-tight" aria-label="Repas du personnel">
+          <HardHat className="size-5" />Personnel
+        </button>
         <button onClick={() => setManual(true)} className="flex h-[68px] w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl bg-white/10 text-[11px] font-bold leading-tight" aria-label="Client sans téléphone">
           <PhoneOff className="size-5" />Sans<br />téléphone
         </button>
       </footer>
 
       <PlateScan open={plate} onClose={() => { setPlate(false); manualRef.current = false; }} />
+
+      {staffQ !== null && <StaffSheet initial={staffQ || undefined} onClose={() => setStaffQ(null)} onServed={(msg) => {
+        setStaffQ(null); soundOk(); say("Repas du personnel servi"); setServed(msg);
+        setTimeout(() => setServed(null), 4000);
+      }} />}
 
       {manual && <NoPhoneSheet service={service} date={date} onClose={() => setManual(false)} onSuccess={(r) => {
         const sc = r as unknown as Scan;
