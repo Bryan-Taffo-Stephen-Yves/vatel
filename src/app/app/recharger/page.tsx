@@ -3,7 +3,7 @@ import { sfx } from "@/lib/sfx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { Smartphone, Banknote, Info, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Banknote, Info, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { edge, rpc, supabase } from "@/lib/supabase/client";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,7 @@ const OPERATORS = [
   { id: "wave", logo: "/landing/pay/wave.png", name: "Wave", color: "#1DC3FF", prefix: null },
   { id: "orange", logo: "/landing/pay/orange.svg", name: "Orange Money", color: "#FF7900", prefix: "07" },
   { id: "mtn", logo: "/landing/pay/mtn.svg", name: "MTN MoMo", color: "#FFCB05", prefix: "05" },
-  { id: "moov", logo: "/landing/pay/moov.png", name: "Moov Money", color: "#0066B3", prefix: "01" },
+  { id: "moov", logo: "/landing/pay/moov-money.png", name: "Moov Money", color: "#0066B3", prefix: "01" },
   { id: "djamo", logo: "/landing/pay/djamo.png", name: "Djamo", color: "#111827", prefix: null },
 ] as const;
 
@@ -187,10 +187,8 @@ export default function RechargePage() {
             <button key={o.id} onClick={() => setOp(o.id)}
               className={clsx("flex h-14 items-center gap-2.5 rounded-2xl border-2 bg-card px-3 text-left text-sm font-bold transition",
                 op === o.id ? "border-ink" : "border-transparent shadow-[var(--shadow-card)]")}>
-              {o.logo
-                // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={o.logo} alt="" width={32} height={32} className="size-8 shrink-0 rounded-xl bg-white object-contain ring-1 ring-black/5" />
-                : <span className="grid size-8 shrink-0 place-items-center rounded-xl text-white" style={{ background: o.color }}><Smartphone className="size-4" /></span>}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={o.logo} alt="" width={32} height={32} className="size-8 shrink-0 rounded-xl bg-white object-contain ring-1 ring-black/5" />
               {o.name}
             </button>
           ))}
