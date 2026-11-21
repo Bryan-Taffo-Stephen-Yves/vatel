@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase/client";
 import { DishImage } from "@/components/app/dish-image";
 import { fcfa } from "@/lib/format";
 import { useT, useLang } from "@/lib/i18n";
+import { useAppData } from "@/components/app/app-data";
 
 type Res = { label: string; intro: string; items: { menu_item_id: string; dish: string; price: number; photo_url: string | null; raison: string }[]; empty?: boolean; message?: string };
 
@@ -17,16 +18,26 @@ export function MealSuggestions() {
   const t = useT();
   const lang = useLang();
 
+  // Gardées 30 min sur le téléphone : l'accueil s'affiche tout de suite, sans rappeler l'IA à chaque ouverture
+  const uid = useAppData().profile?.id;
+  const KEY = `vatel:suggest:${uid}:${lang}`;
   async function load(refresh = false) {
+    if (!refresh && uid) {
+      try {
+        const c = JSON.parse(localStorage.getItem(KEY) ?? "null") as { at: number; data: Res } | null;
+        if (c?.data) { setR(c.data); if (Date.now() - c.at < 30 * 60_000) return; }
+      } catch {}
+    }
     if (!navigator.onLine) return;
     setBusy(true); setErr(false);
     const { data, error } = await supabase().functions.invoke("meal-suggest", { body: { refresh, lang } });
     setBusy(false);
-    if (error || !data?.ok) { setErr(true); return; }
+    if (error || !data?.ok) { setR((cur) => { if (!cur) setErr(true); return cur; }); return; }
     setR(data as Res);
+    if (uid) try { localStorage.setItem(KEY, JSON.stringify({ at: Date.now(), data })); } catch {}
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load(); }, [lang]);
+  useEffect(() => { if (uid) load(); }, [lang, uid]);
 
   if (err || r?.empty) return null;
   return (

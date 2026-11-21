@@ -1,7 +1,7 @@
 "use client";
 import { Bitmoji } from "@/components/bitmoji";
 import { sfx } from "@/lib/sfx";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import clsx from "clsx";
 import { Minus, Plus, Check, Gift, Sparkles, Clock } from "lucide-react";
@@ -14,7 +14,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { BiometricConfirm } from "@/components/app/biometric-confirm";
 import { useToast } from "@/components/ui/toast";
 import { useAppData } from "@/components/app/app-data";
-import { currentService, fetchServices, type Services } from "@/lib/menu";
+import { cachedServices, currentService, fetchServices, type Services } from "@/lib/menu";
 import { syncTokens } from "@/lib/tickets";
 import { fcfa } from "@/lib/format";
 import { SERVICES, type Extra, type ServiceKind } from "@/lib/types";
@@ -48,6 +48,8 @@ function Buy() {
   const [validity, setValidity] = useState(48);
 
   useEffect(() => {
+    const cs = cachedServices();
+    if (cs) { setServices((cur) => cur ?? cs); setService((cur) => cur ?? currentService(cs)); }
     fetchServices().then((s) => { setServices(s); setService((cur) => cur ?? currentService(s)); });
     const sb = supabase();
     sb.from("extras").select("id, name, price, kind").eq("is_active", true).in("kind", ["starter", "dessert"]).order("sort")
@@ -58,7 +60,7 @@ function Buy() {
 
   const cfg = services && service ? services[service] : null;
   const withExtras = !!cfg?.extras;
-  const chosen = withExtras ? extras.filter((e) => (counts[e.id] ?? 0) > 0) : [];
+  const chosen = useMemo(() => (withExtras ? extras.filter((e) => (counts[e.id] ?? 0) > 0) : []), [withExtras, extras, counts]);
   const extrasTotal = chosen.reduce((s, e) => s + e.price * (counts[e.id] ?? 0), 0);
   const usedOf = (kind: Extra["kind"]) => extras.filter((e) => e.kind === kind).reduce((n, e) => n + (counts[e.id] ?? 0), 0);
   const canReward = false; // points de fidélité retirés

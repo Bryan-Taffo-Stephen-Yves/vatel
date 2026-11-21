@@ -9,6 +9,15 @@ export const MENU_ITEM_COLUMNS =
 
 export type DishStat = { dish_id: string; avg_stars: number | null; ratings_count: number };
 
+/** Affichage immédiat : ce que le téléphone a déjà (menu, notes, horaires), avant la réponse du serveur */
+export const cachedMenu = (from: string, to: string): MenuItem[] =>
+  (readCache<MenuItem[]>("dabali:menu") ?? []).filter((i) => i.service_date >= from && i.service_date <= to);
+export const cachedDishStats = (): Record<string, DishStat> => readCache<Record<string, DishStat>>("dabali:dish-stats") ?? {};
+export const cachedServices = (): Services | null => {
+  const saved = readCache<Partial<Services>>("dabali:services");
+  return saved ? { ...DEFAULT_SERVICES, ...saved } : null;
+};
+
 export async function fetchMenu(from: string, to: string): Promise<MenuItem[]> {
   // Hors ligne : dernier menu gardé sur le téléphone, limité aux jours demandés
   const offline = () => (readCache<MenuItem[]>("dabali:menu") ?? []).filter((i) => i.service_date >= from && i.service_date <= to);

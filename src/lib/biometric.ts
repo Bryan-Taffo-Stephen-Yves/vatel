@@ -8,7 +8,7 @@ const CREDS_KEY = "dabali:bio-creds";
 
 /** Nom affiché selon l'appareil */
 export function biometricLabel(): string {
-  if (typeof navigator === "undefined") return "Face ID";
+  if (typeof window === "undefined" || typeof navigator === "undefined") return "Face ID"; // rendu serveur (Node a aussi un navigator)
   const ua = navigator.userAgent;
   if (/iPhone|iPad|iPod/.test(ua)) return "Face ID";
   if (/Macintosh/.test(ua)) return "Touch ID";

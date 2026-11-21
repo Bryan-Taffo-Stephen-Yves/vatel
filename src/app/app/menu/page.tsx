@@ -7,7 +7,7 @@ import { Flame, Star, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { DishImage } from "@/components/app/dish-image";
 import { ServiceIcon } from "@/components/app/service-icon";
-import { currentService, fetchDishStats, fetchMenu, fetchServices, serviceEnded, soldOut, tagsFor, TAG_STYLE, type DishStat, type Services } from "@/lib/menu";
+import { cachedDishStats, cachedMenu, cachedServices, currentService, fetchDishStats, fetchMenu, fetchServices, serviceEnded, soldOut, tagsFor, TAG_STYLE, type DishStat, type Services } from "@/lib/menu";
 import { addDays, dayNum, dayShort, fcfa, todayISO } from "@/lib/format";
 import { SERVICES, type MenuItem, type ServiceKind } from "@/lib/types";
 import { useAppData } from "@/components/app/app-data";
@@ -51,6 +51,11 @@ function Menu() {
   };
 
   useEffect(() => {
+    // Ce que le téléphone a déjà s'affiche tout de suite, puis la réponse du serveur remplace
+    const c = cachedMenu(today, addDays(today, 7));
+    if (c.length) setItems((cur) => cur ?? c);
+    setStats((cur) => (Object.keys(cur).length ? cur : cachedDishStats()));
+    setServices((cur) => cur ?? cachedServices());
     fetchMenu(today, addDays(today, 7)).then(setItems);
     fetchDishStats().then(setStats);
     fetchServices().then(setServices);

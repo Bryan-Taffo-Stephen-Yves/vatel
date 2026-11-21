@@ -14,7 +14,7 @@ import { useToast } from "@/components/ui/toast";
 import { useAppData } from "@/components/app/app-data";
 import { sfx } from "@/lib/sfx";
 import { ChefPopup } from "@/components/chef";
-import { fetchMenu, fetchServices, serviceEnded, soldOut, type Services } from "@/lib/menu";
+import { cachedMenu, cachedServices, fetchMenu, fetchServices, serviceEnded, soldOut, type Services } from "@/lib/menu";
 import { syncTokens } from "@/lib/tickets";
 import { addDays, dayNum, dayShort, fcfa, time, todayISO } from "@/lib/format";
 import { SERVICES, type Extra, type MenuItem, type ServiceKind } from "@/lib/types";
@@ -104,6 +104,7 @@ function Order() {
   const [orderCfg, setOrderCfg] = useState<OrderCfg>({});
 
   useEffect(() => {
+    setServices((cur) => cur ?? cachedServices());
     fetchServices().then(setServices);
     // Suppléments et règles de commande gardés sur le téléphone pour commander hors ligne
     setExtras(readCache<Extra[]>("vatel:extras") ?? []);
@@ -116,7 +117,11 @@ function Order() {
   }, [today]);
   // Réservation à l'avance : les jours ouverts par la cuisine (réglage « orders » : same_day_only / max_days_ahead)
   const ahead = orderCfg.same_day_only === false ? Math.min(orderCfg.max_days_ahead ?? 7, 14) : 0;
-  useEffect(() => { fetchMenu(today, addDays(today, ahead)).then(setItems); }, [today, ahead]);
+  useEffect(() => {
+    const c = cachedMenu(today, addDays(today, ahead));
+    if (c.length) setItems((cur) => cur ?? c);
+    fetchMenu(today, addDays(today, ahead)).then(setItems);
+  }, [today, ahead]);
 
   // Repas encore commandables (service pas terminé)
   const open = useMemo(() => (items ?? []).filter((i) => !serviceEnded(i.service_date, i.service, services)), [items, services]);

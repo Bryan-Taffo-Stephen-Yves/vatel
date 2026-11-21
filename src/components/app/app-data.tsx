@@ -38,12 +38,19 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Affichage immédiat depuis le cache (utile hors ligne)
-    try {
-      const c = JSON.parse(localStorage.getItem("dabali:me") ?? "null");
-      if (c?.profile) { setProfile(c.profile); setBalance(c.balance ?? null); }
-    } catch {}
-    refresh();
+    // Affichage immédiat depuis le cache (utile hors ligne) — seulement s'il appartient au compte connecté ;
+    // sinon (autre compte sur ce téléphone) les données personnelles gardées sont effacées
+    myId().then((uid) => {
+      try {
+        const c = JSON.parse(localStorage.getItem("dabali:me") ?? "null");
+        if (c?.profile && uid && c.profile.id === uid) { setProfile(c.profile); setBalance(c.balance ?? null); }
+        else if (c?.profile && uid) {
+          ["dabali:me", "dabali:tickets", "dabali:qr", "dabali:tx"].forEach((k) => localStorage.removeItem(k));
+          Object.keys(localStorage).filter((k) => k.startsWith("vatel:suggest:") || k.startsWith("dabali:family:")).forEach((k) => localStorage.removeItem(k));
+        }
+      } catch {}
+      refresh();
+    });
 
     const sb = supabase();
     let channel: ReturnType<typeof sb.channel> | undefined;
