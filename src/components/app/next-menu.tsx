@@ -17,7 +17,7 @@ export function NextMenu({ favorite }: { favorite?: string | null }) {
 
   useEffect(() => {
     const today = todayISO();
-    Promise.all([fetchMenu(today, addDays(today, 6)), fetchServices()]).then(([items, services]) => {
+    Promise.all([fetchMenu(today, addDays(today, 7)), fetchServices()]).then(([items, services]) => {
       const slots = [...new Set(items.map((i) => `${i.service_date}|${i.service}`))]
         .map((k) => { const [date, service] = k.split("|") as [string, ServiceKind]; return { date, service }; })
         .filter((s) => !serviceEnded(s.date, s.service, services))

@@ -63,7 +63,7 @@ export default function ConnexionPage() {
           <div className="flex -space-x-3">
             {["attieke-poisson", "alloco-poulet", "garba", "poulet-frites"].map((d, i) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={d} src={`/dishes/${d}.jpg`} alt="" style={{ animationDelay: `${i * 70}ms` }}
+              <img key={d} src={`/dishes/${d}.webp`} alt="" style={{ animationDelay: `${i * 70}ms` }}
                 className="animate-pop size-12 rounded-full object-cover ring-[3px] ring-canvas" />
             ))}
           </div>

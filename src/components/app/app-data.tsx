@@ -82,6 +82,9 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         // Données aussi : historique et menu de la semaine, même jamais ouverts
         const uid = await myId();
         if (!uid || !navigator.onLine) return;
+        // Une fois toutes les 5 minutes suffit (sinon chaque retour en ligne/ouverture recharge tout)
+        if (Date.now() - lastWarm < 5 * 60_000) return;
+        lastWarm = Date.now();
         // Compte parent : ni historique ni menu à préparer (il ne mange pas à la cantine)
         try { if (JSON.parse(localStorage.getItem("dabali:me") ?? "null")?.profile?.is_parent) return; } catch {}
         const { data } = await supabase().from("transactions").select("id, type, amount, balance_after, note, created_at, counterpart_name")
@@ -98,5 +101,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   return <Ctx.Provider value={{ profile, balance, unread, refresh }}>{children}</Ctx.Provider>;
 }
+
+let lastWarm = 0;
 
 export const useAppData = () => useContext(Ctx);

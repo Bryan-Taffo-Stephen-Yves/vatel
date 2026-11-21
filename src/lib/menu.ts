@@ -18,7 +18,20 @@ export const cachedServices = (): Services | null => {
   return saved ? { ...DEFAULT_SERVICES, ...saved } : null;
 };
 
-export async function fetchMenu(from: string, to: string): Promise<MenuItem[]> {
+// Même demande dans la minute (accueil + préchargement + page Menu) : une seule requête réseau partagée
+const recent = new Map<string, { at: number; p: Promise<MenuItem[]> }>();
+
+export function fetchMenu(from: string, to: string): Promise<MenuItem[]> {
+  const key = `${from}|${to}`;
+  const hit = recent.get(key);
+  if (hit && Date.now() - hit.at < 60_000) return hit.p;
+  const p = loadMenu(from, to);
+  recent.set(key, { at: Date.now(), p });
+  p.catch(() => recent.delete(key));
+  return p;
+}
+
+async function loadMenu(from: string, to: string): Promise<MenuItem[]> {
   // Hors ligne : dernier menu gardé sur le téléphone, limité aux jours demandés
   const offline = () => (readCache<MenuItem[]>("dabali:menu") ?? []).filter((i) => i.service_date >= from && i.service_date <= to);
   if (!navigator.onLine) return offline();
