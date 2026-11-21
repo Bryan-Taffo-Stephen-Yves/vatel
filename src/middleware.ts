@@ -78,7 +78,7 @@ export async function middleware(req: NextRequest) {
   if (!user) {
     // Lien profond (ex. invitation parent /app/famille?code=…) : on y revient après la connexion
     if (area) return redirect(`/connexion?next=${encodeURIComponent(path + req.nextUrl.search)}`);
-    if (path === "/") return redirect("/connexion");
+    // « / » : page d'accueil publique (présentation de l'appli, bouton « Tester l'app »)
     return res;
   }
 
